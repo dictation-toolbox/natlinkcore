@@ -34,7 +34,7 @@ pythonpath = [
     "src/natlinkcore/test",
 ]
 testpaths= [
-    "src/natlinkcore/test",
+    "tests",
 ]
 
 [project.scripts]
