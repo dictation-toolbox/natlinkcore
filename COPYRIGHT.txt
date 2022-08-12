@@ -1,0 +1,98 @@
+NatLink
+	(c) Copyright 1997-1999 by Joel Gould.
+		Portions (c) Copyright 1997-1999 by Dragon Systems,
+	Inc. All Rights Reserved.  Permission to use, copy, modify and
+	distribute this software (except for the files noted below) and
+	documentation for any purpose and without fee is hereby granted,
+	provided that this copyright notice appear in all copies and
+	that both the copyright notice and this permission notice appear
+	in supporting documentation, and that the name Joel Gould not be
+	used in advertising or publicity pertaining to distribution of
+	the software without specific, written permission.
+	
+	The following files are NOT covered by the previous previous
+	paragraph: NatlinkSource\speech.h and
+	NatlinkSource\dspeech.h. These files may not be redistributed
+	although they can be freely downloaded from
+	http://www.synapseadaptive.com/joel/PythonMacroSystem.html and
+	used on one machine.
+	
+	Joel Gould disclaim all warranties with regard to this software,
+	including all implied warranties of merchantability and fitness,
+	in no event shall Joel Gould be liable for any special, indirect
+	or consequential damages or any damages whatsoever resulting
+	from the loss of use, data or profits whether in an action of
+	contract, negligence or tortious action, arising out of
+	connection with the use or performance of this software.
+	Possession of this software does NOT grant the possessor any
+	license to Dragon NaturallySpeaking or any other Dragon Systems
+	product, except where license to Dragon NaturallySpeaking or any
+	other Dragon Systems products is purchased or otherwise obtained
+	separately.  This copyright only applies to NatLink, including
+	source and object code and not to Dragon NaturallySpeaking or
+	any other Dragon Systems product.  Software on this web site is
+	not available from Dragon Systems, nor is Dragon Systems
+	formally associated with this software in any way.
+
+2021-2022 python3 version for Natlink, 
+        written by kb100, fusenthasticus, lexiconcode, 
+	Doug Ransom, Quintijn Hoogenboom
+-----------------------------------
+
+Vocola
+	Copyright (c) 2002-2012 by Rick Mohr
+
+	Portions Copyright (c) 2012-15 by Hewlett-Packard Development
+	Company, L.P.
+
+	Permission is hereby granted, free of charge, to any person
+	obtaining a copy of this software and associated documentation
+	files (the "Software"), to deal in the Software without
+	restriction, including without limitation the rights to use,
+	copy, modify, merge, publish, distribute, sublicense, and/or
+	sell copies of the Software, and to permit persons to whom the
+	Software is furnished to do so, subject to the following
+	conditions:
+
+	The above copyright notice and this permission notice shall be
+	included in all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+	EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+	OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+	NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+	HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+	WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+	FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+	OTHER DEALINGS IN THE SOFTWARE.
+
+-----------------------------------
+
+Unimacro (c) 2002-2011 Quintijn Hoogenboom, Ben Staniford, Bart Jan 
+	     van Os 2011 Frank Olaf Sem-Jacobsen
+	     2022 Quintijn Hoogenboom, Doug Ransom, python3 distribution
+	
+		"unimacro" is free software; you can redistribute it
+		and/or modify it under the terms of the GNU General
+		Public License, see: http://www.gnu.org/licenses/gpl.txt
+
+		"unimacro" is distributed in the hope that it will be
+		useful, but WITHOUT ANY WARRANTY; See the GNU General
+		Public License details.
+
+"unimacro" makes use of another SourceForge project "natlink",
+which has the copyright notice shown above.
+
+-----------------------------------
+
+XPCommonControls.dll
+From http://www.steepvalley.net
+
+The controls plus the source code are completely free to use. There are
+no cost at all attached to this project.
+
+This means also that I cannot take any responsibility for bugs and
+errors resulting from this code.
+
+
+----------------------------
