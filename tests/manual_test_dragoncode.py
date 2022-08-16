@@ -4,11 +4,18 @@ import pathlib as p
 import sys
 import sysconfig
 import os
+import itertools as i
 #mock_userdir copied from test_config.py
 
 
 #workaround for monkeypatching at module scope
 #see https://stackoverflow.com/questions/53963822/python-monkeypatch-setattr-with-pytest-fixture-at-module-scope
+
+
+def test_explanation():
+    stars=''.join(i.repeat("*",80))
+    print(f"\n {stars} \n{__file__} tests are not autodiscovered, as they will hang Visual Studio when run.  \n"
+    f"tests in this module interact or fake out the keyboard like dragon does.  Weirds out some tools.\n{stars}\n" )
 
 @pytest.fixture(scope='module')
 def monkeymodule():
