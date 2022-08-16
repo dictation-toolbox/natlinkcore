@@ -57,7 +57,21 @@ def test_playstring(string_to_play,natlink_connection):
     print(f"\nread {i}")
     assert s == i
 
-    
+def sendkeys(x):  
+    return f'SendKeys "{x}"'
+sk=sendkeys
 
- 
+scripts=[sk("hello"),sk("goodbye"),sk(test2),sk(test4)]
+script_results = ["hello","goodbye",test2,test4]
+script_and_results=zip(scripts,script_results)
+
+@pytest.mark.parametrize('script_and_result',script_and_results)
+def test_execScript(script_and_result,natlink_connection):
+        (script,expected_result) = script_and_result
+        print(f"script to test: {script}")
+        n.execScript(script)
+        n.playString("\n")
+        i=input("Script Result")
+        print(f"\n {i}")
+        assert expected_result == i
 
