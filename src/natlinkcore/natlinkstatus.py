@@ -340,12 +340,12 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             self.UnimacroUserDirectory = value
             return abspath(value)
         # for future use:
-        expanded = loader.expand_path(value)
+        expanded = config.expand_path(value)
         if expanded and isdir(expanded):
             self.UnimacroUserDirectory = expanded
             return abspath(expanded)
         # nothing or wrong directory:
-        print(f'invalid path for UnimacroUserDirectory: "{value}", return ""')
+        print(f'invalid path for UnimacroUserDirectory: "{value}", return "" (expanded is: "{expanded}")vocola')
 
         self.UnimacroUserDirectory = ''
         return ''
@@ -418,6 +418,11 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             return self.UserDirectory
         key = 'UserDirectory'
         value =  self.natlinkmain.getconfigsetting(section='directories', option=key)
+        if not value:
+            # no UserDirectory specified
+            self.UserDirectory = ''
+            return ''
+            
         if value and isdir(value):
             self.UserDirectory = abspath(value)
             return self.UserDirectory
@@ -453,7 +458,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             self.VocolaUserDirectory = abspath(expanded)
             return self.VocolaUserDirectory
 
-        print(f'invalid path for VocolaUserDirectory: "{value}"')
+        print(f'invalid path for VocolaUserDirectory: "{value}" (expanded: "{expanded}")')
         self.VocolaUserDirectory = ''
         return ''
     
