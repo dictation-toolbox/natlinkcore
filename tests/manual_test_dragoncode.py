@@ -82,3 +82,6 @@ def test_execScript(script_and_result,natlink_connection):
         print(f"\n {i}")
         assert expected_result == i
 
+if __name__ == "__main__":
+    pytest.main([f'{__file__}'])
+    
