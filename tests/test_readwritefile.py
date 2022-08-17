@@ -4,19 +4,25 @@ import os
 import configparser
 import pytest
 from natlinkcore.readwritefile import ReadWriteFile
-
+from shutil import copytree,rmtree
 thisFile = __file__
 thisDir, Filename = os.path.split(thisFile)
 
 
 @pytest.fixture(scope="module")
 def testDir(tmpdir_factory):
-    temp_path = tmpdir_factory.mktemp("readwritefiletest")
+    test_dir = tmpdir_factory.mktemp("readwritefiletest")
 
-    global test_dir
-    test_dir=temp_path
-    print(f"\n{__file__} temp folder is : {temp_path}]\n")
-    return temp_path
+    #pytest will only retain 3 temp directories, so not a problem to leave them
+    print(f"\n{__file__} temp folder is : {test_dir}]\n")
+
+    #copy the sample files we need for input
+    sampleDir =   os.path.join(thisDir, 'readwritefiletest')
+    copytree(sampleDir,test_dir,dirs_exist_ok=True)
+
+    yield test_dir
+    #in theory can clean up resources here
+ 
 
 def test_only_write_file(testDir):
     join, isfile = os.path.join, os.path.isfile
