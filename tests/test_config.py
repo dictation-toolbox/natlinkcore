@@ -29,12 +29,10 @@ def empty_config():
     return config
 
 
-def test_empty_config():
+def test_empty_config(empty_config):
     """does not test really
     """
-    print(f'empty_config: {empty_config}')
-
-
+    assert repr(empty_config) == "NatlinkConfig(directories_by_user={}, ...)"
 
 settings1 =  make_sample_config_fixture("settings_1.ini")
 settings2 = make_sample_config_fixture("settings_2.ini")
@@ -118,8 +116,8 @@ def test_expand_path(mock_syspath,mock_userdir):
     result=expand_path('fake_package1.fake_subpackage1')
     assert os.path.isdir(result)
 
-    result=expand_path('fake_package1.nonexistant_subpackage1')
-    assert  not os.path.isdir(result)
+    # result=expand_path('fake_package1.nonexistant_subpackage1')
+    # assert  not os.path.isdir(result)
 
 
     result=expand_path('pytest')

@@ -56,7 +56,6 @@ import getopt
 import cmd
 from pathlib import Path
 import configparser
-from turtle import up
 # from win32com.shell import shell
 from natlinkcore import natlinkstatus
 from natlinkcore import config
@@ -132,6 +131,13 @@ class NatlinkConfig:
         
         if not self.config.has_section(section):
             self.config.add_section(section)
+            
+        value = str(value)
+        if Path(value).is_dir():
+            homedir = Path.home()
+            try_natlink_userdir = homedir/'.natlink'
+            pass
+            
         self.config.set(section, option, str(value))
         self.config_write()
         self.status.__init__()
@@ -337,17 +343,17 @@ class NatlinkConfig:
         toFolder = self.status.getVocolaUserDirectory()
         if subDirectory:
             toFolder = os.path.join(toFolder, subDirectory)
-            includeLine = 'include ..\\%s;\n'% uscFile
+            includeLine = f'include ..\\{uscFile};\n'
         else:
-            includeLine = 'include %s;\n'%uscFile
-        oldIncludeLines = ['include %s;'% oldUscFile,
-                           'include ..\\%s;'% oldUscFile,
-                           'include %s;'% uscFile.lower(),
-                           'include ..\\%s;'% uscFile.lower(),
+            includeLine = f'include {uscFile};\n'
+        oldIncludeLines = [f'include {oldUscFile};',
+                           f'include ..\\{oldUscFile};',
+                           f'include {uscFile.lower()};',
+                           f'include ..\\{uscFile.lower()};',
                            ]
             
         if not os.path.isdir(toFolder):
-            mess = 'cannot find Vocola command files directory, not a valid path: %s'% toFolder
+            mess = f'cannot find Vocola command files directory, not a valid path: {toFolder}'
             print(mess)
             return mess
         nFiles = 0
@@ -394,20 +400,20 @@ class NatlinkConfig:
         else:
             toFolder = self.status.getVocolaUserDirectory()
             
-        oldIncludeLines = ['include %s;'% oldUscFile,
-                           'include ..\\%s;'% oldUscFile,
-                           'include %s;'% uscFile,
-                           'include ..\\%s;'% uscFile,
-                           'include ../%s;'% oldUscFile,
-                           'include ../%s;'% uscFile,
-                           'include %s;'% uscFile.lower(),
-                           'include ..\\%s;'% uscFile.lower(),
-                           'include ../%s;'% uscFile.lower(),
+        oldIncludeLines = [f'include {oldUscFile};',
+                           f'include ..\\{oldUscFile};',
+                           f'include {uscFile};',
+                           f'include ..\\{uscFile};',
+                           f'include ../{oldUscFile};',
+                           f'include ../{uscFile};',
+                           f'include {uscFile.lower()};',
+                           f'include ..\\{uscFile.lower()};',
+                           f'include ../{uscFile.lower()};'
                            ]
 
             
         if not os.path.isdir(toFolder):
-            mess = 'cannot find Vocola command files directory, not a valid path: %s'% toFolder
+            mess = f'cannot find Vocola command files directory, not a valid path: {toFolder}'
             print(mess)
             return mess
         nFiles = 0
@@ -521,18 +527,18 @@ def _main(Options=None):
     try:
         options, args = getopt.getopt(Options, shortOptions+shortArgOptions)
     except getopt.GetoptError:
-        print('invalid option: %s'% repr(Options))
+        print(f'invalid option: {Options}')
         cli.usage()
         return
 
     if args:
-        print('should not have extraneous arguments: %s'% repr(args))
+        print(f'should not have extraneous arguments: {args}')
     for o, v in options:
         o = o.lstrip('-')
-        funcName = 'do_%s'% o
+        funcName = f'do_{o}'
         func = getattr(cli, funcName, None)
         if not func:
-            print('option %s not found in cli functions: %s'% (o, funcName))
+            print(f'option "{o}" not found in cli functions: "{funcName}"')
             cli.usage()
             continue
         if o in shortOptions:
@@ -574,7 +580,7 @@ class CLI(cmd.Cmd):
         
         if os.path.isdir(n):    
             return n
-        print('not a valid directory: %s (%s)'% (n, dirName))
+        print(f'not a valid directory: "{n}" ({dirName})')
         return ''
 
     def usage(self):
@@ -718,17 +724,17 @@ This is the folder where your own Dragonfly python grammar files are/will be loc
         uni_dir = self.Config.status.getUnimacroDirectory()
 
         self.Config.setDirectory('UnimacroUserDirectory', arg, section='unimacro')
-        unimacro_user_dir = self.Config.config_get('unimacro', 'UnimacroUserDirectory')
+        unimacro_user_dir = self.Config.config_get('unimacro', 'UnimacroUser')
         if not unimacro_user_dir:
             return
         uniGrammarsDir = self.Config.status.getUnimacroGrammarsDirectory()
         self.Config.setDirectory('unimacro','unimacro')  #always unimacro
 
-        self.Config.setDirectory('UnimacroGrammarsDirectory', uniGrammarsDir)
+        self.Config.setDirectory('UnimacroGrammars', uniGrammarsDir)
             
     def do_O(self, arg):
         self.Config.clearDirectory('UnimacroUserDirectory', section='unimacro')
-        self.Config.config_remove('directories', 'unimacrogrammarsdirectory')
+        self.Config.config_remove('directories', 'unimacrogrammars')
         self.Config.config_remove('directories', 'unimacro')
         self.Config.status.refresh()
 
@@ -783,7 +789,7 @@ You can even specify Wordpad, maybe Microsoft Word...
     # can be called from the Vocola compatibility button in the config GUI.
     def do_l(self, arg):
         self.message = "Copy include file Unimacro.vch into Vocola User Directory"
-        print('do action: %s'% self.message)
+        print(f'do action: {self.message}')
         self.Config.copyUnimacroIncludeFile()
 
     def help_l(self):
@@ -831,13 +837,13 @@ Vocola command.
         if voc_dir:
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "vocola2"])
-            except subprocess.CalledProcessError as e:
+            except subprocess.CalledProcessError:
                 print('====\ncould not pip install --upgrade vocola2\n====\n')
                 return
         else:
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "vocola2"])
-            except subprocess.CalledProcessError as e:
+            except subprocess.CalledProcessError:
                 print('====\ncould not pip install vocola2\n====\n')
                 return
         self.Config.status.refresh()   # refresh status
@@ -849,14 +855,13 @@ Vocola command.
             return
         vocGrammarsDir = self.Config.status.getVocolaGrammarsDirectory()
         self.Config.setDirectory('vocola','vocola2')  #always vocola2
-        self.Config.setDirectory('VocolaGrammarsDirectory', vocGrammarsDir)
+        self.Config.setDirectory('VocolaGrammars', vocGrammarsDir)
 
             
     def do_V(self, arg):
         self.Config.clearDirectory('VocolaUserDirectory', section='vocola')
-        self.Config.config_remove('directories', 'vocolagrammarsdirectory')
-        self.Config.config_remove('directories', 'vocoladirectory')
-        self.Config.config_remove('directories','vocola')
+        self.Config.config_remove('directories', 'vocolagrammars')
+        self.Config.config_remove('directories', 'vocola')
         self.Config.status.refresh()
 
     def help_v(self):
@@ -876,11 +881,11 @@ if <path> does not exist, but "one up" does, the sub directory is created.
     # enable/disable Natlink debug output...
     def do_x(self, arg):
         self.message = 'Print debug output to "Messages from Natlink" window'
-        print('do action: %s'% self.message)
+        print(f'do action: {self.message}')
         self.Config.enableDebugOutput()
     def do_X(self, arg):
         self.message = 'Disable printing debug output to "Messages from Natlink" window'
-        print('do action: %s'% self.message)
+        print(f'do action: {self.message}')
         self.Config.disableDebugOutput()
 
     def help_x(self):
@@ -904,20 +909,20 @@ This sends (sometimes lengthy) debug messages to the
     # different Vocola options
     def do_b(self, arg):
         self.message = "Enable Vocola different user directories for different languages"
-        print('do action: %s'% self.message)
+        print(f'do action: {self.message}')
         self.Config.enableVocolaTakesLanguages()
     def do_B(self, arg):
         self.message = "Disable Vocola different user directories for different languages"
-        print('do action: %s'% self.message)
+        print(f'do action: {self.message}')
         self.Config.disableVocolaTakesLanguages()
 
     def do_a(self, arg):
         self.message = "Enable Vocola taking Unimacro actions"
-        print('do action: %s'% self.message)
+        print(f'do action: {self.message}')
         self.Config.enableVocolaTakesUnimacroActions()
     def do_A(self, arg):
         self.message = "Disable Vocola taking Unimacro actions"
-        print('do action: %s'% self.message)
+        print(f'do action: {self.message}')
         self.Config.disableVocolaTakesUnimacroActions()
 
     def help_a(self):
@@ -960,22 +965,22 @@ When you use your English speech profile again, ("enx") the Vocola Command files
     # autohotkey settings:
     def do_h(self, arg):
         self.message = 'set directory of AutoHotkey.exe to: %s'% arg
-        print('do action: %s'% self.message)
+        print(f'do action: {self.message}')
         self.Config.setAhkExeDir(arg)
 
     def do_H(self, arg):
         self.message = 'clear directory of AutoHotkey.exe, return to default'
-        print('do action: %s'% self.message)
+        print(f'do action: {self.message}')
         self.Config.clearAhkExeDir()
 
     def do_k(self, arg):
         self.message = 'set user directory for AutoHotkey scripts to: %s'% arg
-        print('do action: %s'% self.message)
+        print(f'do action: {self.message}')
         self.Config.setAhkUserDir(arg)
 
     def do_K(self, arg):
         self.message = 'clear user directory of AutoHotkey scripts, return to default'
-        print('do action: %s'% self.message)
+        print(f'do action: {self.message}')
         self.Config.clearAhkUserDir()
             
     def help_h(self):
@@ -1090,4 +1095,8 @@ def main_cli():
         except (KeyboardInterrupt, SystemExit):
             pass
 
-main_cli() if __name__ == "__main__" else _main()
+if __name__ == "__main__":
+    main_cli()
+else:
+    _main()
+
