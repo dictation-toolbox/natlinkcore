@@ -197,7 +197,10 @@ class NatlinkConfig:
             else:
                 print(f'Cannot set "{option}", the given path is invalid: "{directory}" ("{dir_path}")')
             return
-        self.config_set(section, option, dir_path)
+        
+        nice_dir_path = self.prefix_home(dir_path)
+        
+        self.config_set(section, option, nice_dir_path)
         self.config_remove('previous settings', option)
         if section == 'directories':
             print(f'Set option "{option}" to "{dir_path}"')
@@ -220,6 +223,16 @@ class NatlinkConfig:
             
         self.config_remove(section, option)
         print(f'cleared "{option}"')
+ 
+ 
+    def prefix_home(self, dir_path):
+        """if dir_path startswith home directory, replace this with "~"
+        """
+        home_path = str(Path.home())
+        if dir_path.startswith(home_path):
+            dir_path = dir_path.replace(home_path, "~")
+        return dir_path
+            
  
     def setFile(self, option, file_path, section):
         """set the file, specified with "key", to file_path
@@ -560,8 +573,8 @@ class CLI(cmd.Cmd):
         self.info = "type 'u' for usage"
         self.Config = None
         self.message = ''
-        if __name__ == "__main__":
-            print("Type 'u' for usage ")
+        # if __name__ == "__main__":
+        #     print("Type 'u' for usage ")
 
     def stripCheckDirectory(self, dirName):
         """allow quotes in input, and strip them.
@@ -711,23 +724,23 @@ This is the folder where your own Dragonfly python grammar files are/will be loc
         if uni_dir:
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "unimacro"])
-            except subprocess.CalledProcessError as e:
+            except subprocess.CalledProcessError:
                 print('====\ncould not pip install --upgrade unimacro\n====\n')
                 return
         else:
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "unimacro"])
-            except subprocess.CalledProcessError as e:
+            except subprocess.CalledProcessError:
                 print('====\ncould not pip install unimacro\n====\n')
                 return
         self.Config.status.refresh()   # refresh status
         uni_dir = self.Config.status.getUnimacroDirectory()
 
         self.Config.setDirectory('UnimacroUserDirectory', arg, section='unimacro')
-        unimacro_user_dir = self.Config.config_get('unimacro', 'UnimacroUser')
+        unimacro_user_dir = self.Config.config_get('unimacro', 'unimacrouserdirectory')
         if not unimacro_user_dir:
             return
-        uniGrammarsDir = self.Config.status.getUnimacroGrammarsDirectory()
+        uniGrammarsDir = r'natlink_userdir\unimacrogrammars'
         self.Config.setDirectory('unimacro','unimacro')  #always unimacro
 
         self.Config.setDirectory('UnimacroGrammars', uniGrammarsDir)
@@ -735,7 +748,9 @@ This is the folder where your own Dragonfly python grammar files are/will be loc
     def do_O(self, arg):
         self.Config.clearDirectory('UnimacroUserDirectory', section='unimacro')
         self.Config.config_remove('directories', 'unimacrogrammars')
+        self.Config.config_remove('directories', 'unimacrogrammarsdirectory')   # could still be there...
         self.Config.config_remove('directories', 'unimacro')
+        self.Config.config_remove('directories', 'unimacrodirectory')  # could still be there...
         self.Config.status.refresh()
 
     def help_o(self):
@@ -853,15 +868,18 @@ Vocola command.
         vocola_user_dir = self.Config.config_get('vocola', 'VocolaUserDirectory')
         if not vocola_user_dir:
             return
-        vocGrammarsDir = self.Config.status.getVocolaGrammarsDirectory()
+        # vocGrammarsDir = self.Config.status.getVocolaGrammarsDirectory()
+        vocGrammarsDir = r'natlink_userdir\vocolagrammars'
         self.Config.setDirectory('vocola','vocola2')  #always vocola2
-        self.Config.setDirectory('VocolaGrammars', vocGrammarsDir)
+        self.Config.setDirectory('Vocolagrammars', vocGrammarsDir)
 
             
     def do_V(self, arg):
         self.Config.clearDirectory('VocolaUserDirectory', section='vocola')
         self.Config.config_remove('directories', 'vocolagrammars')
+        self.Config.config_remove('directories', 'vocolagrammarsdirectory')   # could still be there
         self.Config.config_remove('directories', 'vocola')
+        self.Config.config_remove('directories', 'vocoladirectory')   #could still be there...
         self.Config.status.refresh()
 
     def help_v(self):
@@ -1089,7 +1107,10 @@ def main_cli():
     if len(sys.argv) == 1:
         Cli = CLI()
         Cli.Config = NatlinkConfig()
-        Cli.info = "type u for usage"
+        Cli.info = ""
+        print('\nWelcome to the NatlinkConfig Command Line Interface\n')
+        print('Type "I" for manual editing the "natlink.ini" config file\n')
+        print('Type "u" for Usage\n')
         try:
             Cli.cmdloop()
         except (KeyboardInterrupt, SystemExit):

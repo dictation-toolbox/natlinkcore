@@ -95,8 +95,8 @@ import logging
 from typing import Any
 from pathlib import Path
 
-from natlink import _natlink_core as natlink
-
+import natlink
+import natlinkcore # __init__
 from natlinkcore import loader
 from natlinkcore import config
 from natlinkcore import singleton
@@ -120,6 +120,7 @@ shiftKeyDict = {"nld": "Shift",
                 "esp": "may\xfas"}
 
 thisDir, thisFile = os.path.split(__file__)
+thisDirSymlink = natlinkcore.getThisDir(__file__)
 
 class NatlinkStatus(metaclass=singleton.Singleton):
     """this class holds the Natlink status functions.
@@ -142,8 +143,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         self.natlinkmain = natlinkmain  # global
         self.DNSVersion = None
         self.DNSIniDir = None
-        self.NatlinkDirectory = None    # CoreDirectory and NatlinkDirectory same...
-        self.CoreDirectory = None
+        self.NatlinkDirectory = None
+        self.NatlinkcoreDirectory = None
         self.UserDirectory = None
         ## Unimacro:
         self.UnimacroDirectory = None
@@ -156,11 +157,14 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         ## AutoHotkey:
         self.AhkUserDir = None
         self.AhkExeDir = None
-
+        self.symlink_line = ''
+        
         if self.NatlinkDirectory is None:
-            self.NatlinkDirectory = thisDir
-            self.CoreDirectory = thisDir   # maybe becoming obsolete
-
+            self.NatlinkDirectory = natlink.__path__[0]   
+            self.NatlinkcoreDirectory = thisDirSymlink    # equal to thisDir if no symlinking is there.
+            if thisDirSymlink != thisDir:
+                self.symlink_line = f'NatlinkcoreDirectory is symlinked, for developing purposes.\n\tFiles seem to be in "{thisDirSymlink}",\n\tbut they can be edited in "{thisDir}".\n\tWhen debugging files from this directory, open and set breakpoints in files in the (source) directory!'
+        
     def refresh(self):
         """rerun the __init__, refreshing all variables
         
@@ -397,14 +401,14 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         return um_grammars_dir
     
     def getNatlinkDirectory(self):
-        """return the path of the NatlinkDirectory
+        """return the path of the NatlinkDirectory, where the _natlink_core.pyd package (C++ code) is
         """
         return self.NatlinkDirectory
 
-    def getCoreDirectory(self):
-        """return the path of the coreDirectory, same as NatlinkDirectory, obsolete
+    def getNatlinkcoreDirectory(self):
+        """return the path of the natlinkcore package directory, same as thisDir!
         """
-        return self.CoreDirectory
+        return self.NatlinkcoreDirectory
     
     def getUserDirectory(self):
         """return the path to the Natlink User directory
@@ -648,6 +652,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
                 print(f'no valid function for getting key: "{key}" ("{func_name}")')
 
         D['NatlinkDirectory'] = self.getNatlinkDirectory()
+        D['NatlinkcoreDirectory'] = self.getNatlinkcoreDirectory()
         D['UserDirectory'] = self.getUserDirectory()
         D['vocolaIsEnabled'] = self.VocolaIsEnabled()
 
@@ -659,6 +664,9 @@ class NatlinkStatus(metaclass=singleton.Singleton):
     def getNatlinkStatusString(self):
         L = []
         D = self.getNatlinkStatusDict()
+        if self.symlink_line:
+            L.append('--- warning:')
+            L.append(self.symlink_line)
         L.append('--- properties:')
         self.appendAndRemove(L, D, 'user')
         self.appendAndRemove(L, D, 'profile')
@@ -667,7 +675,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         # Natlink::
         L.append('')
-        for key in ['NatlinkDirectory', 'InstallVersion', 'NatlinkIni', 'NatlinkUserDirectory']:
+        for key in ['NatlinkDirectory', 'NatlinkcoreDirectory', 'InstallVersion', 'NatlinkIni', 'NatlinkUserDirectory']:
             self.appendAndRemove(L, D, key)
 
         ## Vocola::
