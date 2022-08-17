@@ -7,19 +7,18 @@ from natlinkcore.readwritefile import ReadWriteFile
 
 thisFile = __file__
 thisDir, Filename = os.path.split(thisFile)
-testDir = os.path.join(thisDir, 'readwritefiletest')
 
 
-def setup_module(module):
-    pass
+@pytest.fixture(scope="module")
+def testDir(tmpdir_factory):
+    temp_path = tmpdir_factory.mktemp("readwritefiletest")
 
-def teardown_module(module):
-    for F in os.listdir(testDir):
-        if F.startswith('output-'):
-            F_path = os.path.join(testDir, F)
-            os.remove(F_path)
+    global test_dir
+    test_dir=temp_path
+    print(f"\n{__file__} temp folder is : {temp_path}]\n")
+    return temp_path
 
-def test_only_write_file():
+def test_only_write_file(testDir):
     join, isfile = os.path.join, os.path.isfile
     newFile = join(testDir, 'output-newfile.txt')
     if isfile(newFile):
@@ -36,7 +35,7 @@ def test_only_write_file():
     assert rwfile.bom == ''
     assert text == ''
     
-def test_accented_characters_write_file():
+def test_accented_characters_write_file(testDir):
     join, isfile = os.path.join, os.path.isfile
     newFile = join(testDir, 'output-accented.txt')
     if isfile(newFile):
@@ -72,7 +71,7 @@ def test_accented_characters_write_file():
     text_back = rwfile_utf.readAnything(newFile)
     assert text == text_back
 
-def test_other_encodings_write_file():
+def test_other_encodings_write_file(testDir):
     join = os.path.join
     oldFile = join(testDir, 'latin1 accented.txt')
     rwfile = ReadWriteFile(encodings=['latin1'])  # optional encoding
@@ -83,7 +82,7 @@ def test_other_encodings_write_file():
     
 
 
-def test_latin1_cp1252_write_file():
+def test_latin1_cp1252_write_file(testDir):
     join = os.path.join
     _newFile = join(testDir, 'latin1.txt')
     _newFile = join(testDir, 'cp1252.txt')
@@ -91,7 +90,7 @@ def test_latin1_cp1252_write_file():
     # and need special attention.
     # (as long as the "fallback" is utf-8, all write files should go well!)
 
-def test_read_write_file():
+def test_read_write_file(testDir):
     listdir, join, splitext = os.listdir, os.path.join, os.path.splitext
     for F in listdir(testDir):
         if not F.startswith('output-'):
@@ -105,7 +104,7 @@ def test_read_write_file():
             rwfile.writeAnything(Fout_path, text)
             assert open(F_path, 'rb').read() == open(Fout_path, 'rb').read()
             
-def test_read_config_file():
+def test_read_config_file(testDir):
     listdir, join, splitext = os.listdir, os.path.join, os.path.splitext
     for F in listdir(testDir):
         if F.endswith('.ini'):
@@ -135,5 +134,5 @@ def test_read_config_file():
                 Config.write(open(Fout_path, 'w', encoding=rwfile.encoding))
 
 if __name__ == "__main__":
-    pytest.main(['test_readwritefile.py'])
+    pytest.main([f'test_readwritefile.py'])
     

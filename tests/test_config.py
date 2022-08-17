@@ -166,4 +166,4 @@ if __name__ == "__main__":
     print("-----------------------------------------")
     pprint(sys.path)
 
-    pytest.main([f'{__file__}'])
+    pytest.main([f'test_config.py'])
