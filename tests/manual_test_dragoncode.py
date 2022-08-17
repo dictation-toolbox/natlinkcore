@@ -53,6 +53,22 @@ test4 = f"{test2} in {test3} phrase"     #phrase
 phrases = [test0,test1,test2,test3,test4]
 strings_to_play=zip(phrases,phrases)
 
+@pytest.mark.parametrize('string_to_play',phrases)
+def test_playstring_input_method(string_to_play,natlink_connection):
+    #leave lots of print statements in as the test might hang.
+    print("\nWarning, if this test seems to hang, kill any shells where you have run this test through pytest.  \n"
+            "This test is fragile and can hang your shell if something goes wrong") 
+    s=string_to_play
+    print(f"\ntest_playstring: playing {s}")
+    n.playString(s)
+    n.playString("\n")
+    time.sleep(1)
+    collected = input()
+    collected = n.getClipboard()
+    print(f" collected {collected}")
+    assert collected == s
+    pass
+
  
 @pytest.mark.parametrize('string_to_play',phrases)
 def test_playstring(string_to_play,natlink_connection):
