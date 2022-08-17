@@ -60,13 +60,14 @@ def test_playstring(string_to_play,natlink_connection):
     print("\nWarning, if this test seems to hang, kill any shells where you have run this test through pytest.  \n"
             "This test is fragile and can hang your shell if something goes wrong") 
     s=string_to_play
-    print(f"\nplaying {s}")
+    print(f"\ntest_playstring: playing {s}")
     n.playString(s)
+    n.playString("\n")
     time.sleep(1)
     n.playString(f'{{shift+left {len(s)}}}{{ctrl+x}}')
-    time.sleep(0.2)
+    time.sleep(1)
     collected = n.getClipboard()
-    print(f"\ncollected {collected}")
+    print(f" collected {collected}")
     assert collected == s
     pass
 
