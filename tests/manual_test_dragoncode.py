@@ -83,7 +83,7 @@ script_and_results=zip(scripts,script_results)
 def test_execScript(script_and_result,natlink_connection):
     (script,expected_result) = script_and_result
     print(f"script to test: {script}")
-    # n.execScript(script)
+    n.execScript(script)
     n.playString("\n")
     i=input("Script Result")
     print(f"\n {i}")
