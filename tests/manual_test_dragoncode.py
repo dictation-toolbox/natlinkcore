@@ -1,12 +1,13 @@
+#pylint:disable=E1101, W0621, C0415
+#nQna
+
+import os
+import time
+import pathlib as p
+import itertools as i
 import pytest
 import natlink as n
-import pathlib as p
-import sys
-import sysconfig
-import os
-import itertools as i
 #mock_userdir copied from test_config.py
-
 
 #workaround for monkeypatching at module scope
 #see https://stackoverflow.com/questions/53963822/python-monkeypatch-setattr-with-pytest-fixture-at-module-scope
@@ -59,10 +60,16 @@ def test_playstring(string_to_play,natlink_connection):
             "This test is fragile and can hang your shell if something goes wrong") 
     s=string_to_play
     print(f"\nplaying {s}")
-    n.playString(s+"\n")
-    i=input(f"\nattemtping to read {s}\n")
-    print(f"\nread {i}")
-    assert s == i
+    n.playString(s)
+    time.sleep(1)
+    n.playString(f'{{shift+left {len(s)}}}{{ctrl+x}}')
+    time.sleep(0.2)
+    collected = n.getClipboard()
+    assert collected == s
+    pass
+
+#
+
 
 def sendkeys(x):  
     return f'SendKeys "{x}"'
@@ -74,13 +81,13 @@ script_and_results=zip(scripts,script_results)
 
 @pytest.mark.parametrize('script_and_result',script_and_results)
 def test_execScript(script_and_result,natlink_connection):
-        (script,expected_result) = script_and_result
-        print(f"script to test: {script}")
-        n.execScript(script)
-        n.playString("\n")
-        i=input("Script Result")
-        print(f"\n {i}")
-        assert expected_result == i
+    (script,expected_result) = script_and_result
+    print(f"script to test: {script}")
+    # n.execScript(script)
+    n.playString("\n")
+    i=input("Script Result")
+    print(f"\n {i}")
+    assert expected_result == i
 
 if __name__ == "__main__":
     pytest.main([f'{__file__}'])
