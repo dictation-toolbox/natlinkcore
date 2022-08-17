@@ -83,7 +83,7 @@ script_and_results=zip(scripts,script_results)
 @pytest.mark.parametrize('script_and_result',script_and_results)
 def test_execScript(script_and_result,natlink_connection):
     (script,expected_result) = script_and_result
-    print(f"script to test: {script}")
+    print(f"script to test: {script} expecting result {expected_result}")
     n.execScript(script)
     time.sleep(1.2)
     rl = len(expected_result)
