@@ -66,6 +66,7 @@ def test_playstring(string_to_play,natlink_connection):
     n.playString(f'{{shift+left {len(s)}}}{{ctrl+x}}')
     time.sleep(0.2)
     collected = n.getClipboard()
+    print(f"\ncollected {collected}")
     assert collected == s
     pass
 
