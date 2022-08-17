@@ -53,6 +53,7 @@ test4 = f"{test2} in {test3} phrase"     #phrase
 phrases = [test0,test1,test2,test3,test4]
 strings_to_play=zip(phrases,phrases)
 
+ 
 @pytest.mark.parametrize('string_to_play',phrases)
 def test_playstring(string_to_play,natlink_connection):
     #leave lots of print statements in as the test might hang.
@@ -84,10 +85,14 @@ def test_execScript(script_and_result,natlink_connection):
     (script,expected_result) = script_and_result
     print(f"script to test: {script}")
     n.execScript(script)
-    n.playString("\n")
-    i=input("Script Result")
-    print(f"\n {i}")
-    assert expected_result == i
+    time.sleep(1.2)
+    rl = len(expected_result)
+    #try and copy the lenght of execpected_result from the clipboard.
+    n.playString(f'{{shift+left {rl}}}{{ctrl+x}}')
+    time.sleep(0.2)
+    collected = n.getClipboard()
+    print(f"\n playstring{script} received  {collected} expected {expected_result}")
+    assert expected_result == collected
 
 if __name__ == "__main__":
     pytest.main([f'{__file__}'])
