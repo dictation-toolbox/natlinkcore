@@ -146,6 +146,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         self.NatlinkDirectory = None
         self.NatlinkcoreDirectory = None
         self.UserDirectory = None
+        ## Dragonfly:
+        self.DragonflyUserDirectory = None
         ## Unimacro:
         self.UnimacroDirectory = None
         self.UnimacroUserDirectory = None
@@ -163,7 +165,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             self.NatlinkDirectory = natlink.__path__[0]   
             self.NatlinkcoreDirectory = thisDirSymlink    # equal to thisDir if no symlinking is there.
             if thisDirSymlink != thisDir:
-                self.symlink_line = f'NatlinkcoreDirectory is symlinked, for developing purposes.\n\tFiles seem to be in "{thisDirSymlink}",\n\tbut they can be edited in "{thisDir}".\n\tWhen debugging files from this directory, open and set breakpoints in files in the (source) directory!'
+                self.symlink_line = f'NatlinkcoreDirectory is symlinked, for developing purposes.\n\tFiles seem to be in "{thisDirSymlink}",\n\tbut they can be edited in "{thisDir}".\n\tWhen debugging files from this directory, open and set breakpoints in files in the first (site-packages) directory!'
         
     def refresh(self):
         """rerun the __init__, refreshing all variables
@@ -317,7 +319,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             raise OSError(f'getNatlinkIni: not a valid file: "{path}"')
         return path
     
-    def getNatlinkUserDirectory(self):
+    def getNatlink_Userdir(self):
         """get the directory where "natlink.ini" should be stored
         
         This must be a local directory, default `~`, but can be changed by
@@ -390,7 +392,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         if self.UnimacroGrammarsDirectory is not None:
             return self.UnimacroGrammarsDirectory
         
-        natlink_user_dir = self.getNatlinkUserDirectory()
+        natlink_user_dir = self.getNatlink_Userdir()
         
         um_grammars_dir = Path(natlink_user_dir)/'UnimacroGrammars'
         if not um_grammars_dir.is_dir():
@@ -435,10 +437,37 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             self.UserDirectory = abspath(expanded)
             return self.UserDirectory
             
-        print('invalid path for UserDirectory: "%s"'% value)
+        print('invalid path for UserDirectory: "{value}"')
         self.UserDirectory = ''
         return ''
+  
+    def getDragonflyUserDirectory(self):
+        """return the path to the Dragonfly User directory
 
+        Dragonfly users can also choose for  UserDirectory. 
+
+        """
+        isdir, abspath = os.path.isdir, os.path.abspath
+        if not self.DragonflyUserDirectory is None:
+            return self.DragonflyUserDirectory
+        key = 'DragonflyUserDirectory'
+        value =  self.natlinkmain.getconfigsetting(section='directories', option=key)
+        if not value:
+            # no DragonflyUserDirectory specified
+            self.DragonflyUserDirectory = ''
+            return ''
+            
+        if value and isdir(value):
+            self.DragonflyUserDirectory = abspath(value)
+            return self.DragonflyUserDirectory
+        expanded = config.expand_path(value)
+        if expanded and isdir(expanded):
+            self.DragonflyUserDirectory = abspath(expanded)
+            return self.DragonflyUserDirectory
+            
+        print('invalid path for DragonflyUserDirectory: "{value}"')
+        self.DragonflyUserDirectory = ''
+        return ''
     
     
     def getVocolaUserDirectory(self):
@@ -501,7 +530,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         if self.VocolaGrammarsDirectory is not None:
             return self.VocolaGrammarsDirectory
         
-        natlink_user_dir = self.getNatlinkUserDirectory()
+        natlink_user_dir = self.getNatlink_Userdir()
         
         voc_grammars_dir = Path(natlink_user_dir)/'VocolaGrammars'
         if not voc_grammars_dir.is_dir():
@@ -570,13 +599,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         return [s for s in result if s not in self.known_directory_options]
 
     def getUnimacroIniFilesEditor(self):
-        key = 'UnimacroIniFilesEditor'
-        value =  self.natlinkmain.getconfigsetting(section='unimacro', option=key)
-        if not value:
-            value = 'notepad'
-        if self.UnimacroIsEnabled():
-            return value
-        return ''
+        raise DeprecationWarning('this option is no longer available: getUnimacroIniFilesEditor')
     
     def getShiftKey(self):
         """return the shiftkey, for setting in natlinkmain when user language changes.
@@ -634,11 +657,12 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         for key in ['DNSIniDir', 'WindowsVersion', 'DNSVersion',
                     'PythonVersion',
-                    'DNSName', 'NatlinkIni', 'NatlinkUserDirectory',
+                    'DNSName', 'NatlinkIni', 'Natlink_Userdir',
+                    'DragonflyUserDirectory', 
                     'UnimacroDirectory', 'UnimacroUserDirectory', 'UnimacroGrammarsDirectory',
                     'VocolaDirectory', 'VocolaUserDirectory', 'VocolaGrammarsDirectory',
                     'VocolaTakesLanguages', 'VocolaTakesUnimacroActions',
-                    'UnimacroIniFilesEditor',
+                    'UserDirectory', 
                     'ExtraGrammarDirectories',
                     'InstallVersion',
                     # 'IncludeUnimacroInPythonPath',
@@ -650,10 +674,11 @@ class NatlinkStatus(metaclass=singleton.Singleton):
                 D[key] = func()
             else:
                 print(f'no valid function for getting key: "{key}" ("{func_name}")')
-
+        
+        
         D['NatlinkDirectory'] = self.getNatlinkDirectory()
         D['NatlinkcoreDirectory'] = self.getNatlinkcoreDirectory()
-        D['UserDirectory'] = self.getUserDirectory()
+        # D['UserDirectory'] = self.getUserDirectory()
         D['vocolaIsEnabled'] = self.VocolaIsEnabled()
 
         D['unimacroIsEnabled'] = self.UnimacroIsEnabled()
@@ -675,8 +700,15 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         # Natlink::
         L.append('')
-        for key in ['NatlinkDirectory', 'NatlinkcoreDirectory', 'InstallVersion', 'NatlinkIni', 'NatlinkUserDirectory']:
+        for key in ['NatlinkDirectory', 'NatlinkcoreDirectory', 'InstallVersion', 'NatlinkIni', 'Natlink_Userdir']:
             self.appendAndRemove(L, D, key)
+
+        ## Dragonfly:
+        key = 'DragonflyUserDirectory'
+        if D[key]:
+            L.append('---Dragonfly is enabled')
+            self.appendAndRemove(L, D, key)
+            
 
         ## Vocola::
         if D['vocolaIsEnabled']:
@@ -696,8 +728,6 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         if D['unimacroIsEnabled']:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is enabled")
             for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroGrammarsDirectory'):
-                self.appendAndRemove(L, D, key)
-            for key in ('UnimacroIniFilesEditor',):
                 self.appendAndRemove(L, D, key)
         else:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is disabled")

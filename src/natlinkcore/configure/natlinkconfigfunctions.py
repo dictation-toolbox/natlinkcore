@@ -182,6 +182,7 @@ class NatlinkConfig:
         """
         section = section or 'directories'
         if not dir_path:
+            print('==== Please specify the wanted directory in Dialog window ====\n')
             prev_path = self.config_get('previous settings', option) or self.config_dir
             dir_path = wxdialogs.GetDirFromDialog(f'Please choose a "{option}"', prev_path)
             if not dir_path:
@@ -340,6 +341,27 @@ class NatlinkConfig:
             print(mess)
             return
         return
+
+    def removeUnimacroIncludeFile(self):
+        """remove Unimacro include file from Vocola user directory
+
+        """
+        uscFile = 'Unimacro.vch'
+        # also remove usc.vch from VocolaUserDirectory
+        toFolder = Path(self.status.getVocolaUserDirectory())
+        if not toFolder.is_dir():
+            mess = f'removeUnimacroIncludeFile: vocolaUserDirectory does not exist "{str(toFolder)}" (is not a directory)'
+            print(mess)
+            return
+        
+        toFile = toFolder/uscFile
+        if toFolder.is_file():
+            print(f'remove Unimacro include file "{str(toFile)}"')
+            try:
+                os.remove(toFile)
+            except:
+                mess = f'copyUnimacroIncludeFile: Could not remove previous version of "{str(toFile)}"'
+                print(mess)
 
     def includeUnimacroVchLineInVocolaFiles(self, subDirectory=None):
         """include the Unimacro wrapper support line into all Vocola command files
@@ -528,8 +550,8 @@ def _main(Options=None):
     """
     cli = CLI()
     cli.Config = NatlinkConfig()
-    shortOptions = "DVNOPHKaAiIxXbBlmMuq"
-    shortArgOptions = "d:v:n:o:p:h:k:"
+    shortOptions = "DVNOHKaAiIxXbBlmMuq"
+    shortArgOptions = "d:v:n:o:h:k:"
     if Options:
         if isinstance(Options, str):
             Options = Options.split(" ", 1)
@@ -627,7 +649,6 @@ a/A     - enable/disable the possibility to use Unimacro actions in Vocola
 
 o/O     - enable/disable Unimacro, by setting/clearing the UnimacroUserDirectory, where
           the Unimacro user INI files are located, and several other directories (~ or %HOME% allowed)
-p/P     - set/clear path for program that opens Unimacro INI files.
 l       - copy header file Unimacro.vch into Vocola User Directory
 m/M     - insert/remove an include line for Unimacro.vch in all Vocola
           command files
@@ -635,6 +656,7 @@ m/M     - insert/remove an include line for Unimacro.vch in all Vocola
 [DragonflyDirectory]
 d/D     - enable/disable the DragonflyDirectory, the directory where
           you can put your Dragonfly scripts (UserDirectory can also be used)
+
 [UserDirectory]
 n/N     - enable/disable UserDirectory, the directory where
           User Natlink grammar files are located (e.g., "~\UserDirectory")
@@ -722,6 +744,7 @@ This is the folder where your own Dragonfly python grammar files are/will be loc
 
         uni_dir = self.Config.status.getUnimacroDirectory()
         if uni_dir:
+            print('==== instal and/or update unimacro====\n')            
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "unimacro"])
             except subprocess.CalledProcessError:
@@ -741,9 +764,9 @@ This is the folder where your own Dragonfly python grammar files are/will be loc
         if not unimacro_user_dir:
             return
         uniGrammarsDir = r'natlink_userdir\unimacrogrammars'
-        self.Config.setDirectory('unimacro','unimacro')  #always unimacro
+        self.Config.setDirectory('unimacrodirectory','unimacro')  #always unimacro
 
-        self.Config.setDirectory('UnimacroGrammars', uniGrammarsDir)
+        self.Config.setDirectory('unimacrogrammarsdirectory', uniGrammarsDir)
             
     def do_O(self, arg):
         self.Config.clearDirectory('UnimacroUserDirectory', section='unimacro')
@@ -771,33 +794,18 @@ another environment variable (%%...%%). (example: "o ~\Documents\.natlink\\Unima
     help_O = help_o
 
     # Unimacro Command Files Editor-----------------------------------------------
-    def do_p(self, arg):
-        self.message = "Set Unimacro INI file editor"
-        print(f'do action: {self.message}')
-        key = "UnimacroIniFilesEditor"
-        self.Config.setFile(key, arg, section='unimacro')
-            
-    def do_P(self, arg):
-        self.message = "Clear Unimacro INI file editor, go back to default Notepad"
-        print(f'do action: {self.message}')
-        key = "UnimacroIniFilesEditor"
-        self.Config.clearFile(key, section='unimacro')
-
-    def help_p(self):
-        print('-'*60)
-        print("""set/clear path to Unimacro INI files editor (p <path>/P)
-
-By default (when you clear this setting) "notepad" is used, but:
-
-You can specify a program you like, for example,
-TextPad, NotePad++, UltraEdit, or win32pad
-
-You can even specify Wordpad, maybe Microsoft Word...
-
-""")
-        print('='*60)
-
-    help_P = help_p
+    # not needed for Aaron's GUI:
+    # def do_p(self, arg):
+    #     self.message = "Set Unimacro INI file editor"
+    #     print(f'do action: {self.message}')
+    #     key = "UnimacroIniFilesEditor"
+    #     self.Config.setFile(key, arg, section='unimacro')
+    #         
+    # def do_P(self, arg):
+    #     self.message = "Clear Unimacro INI file editor, go back to default Notepad"
+    #     print(f'do action: {self.message}')
+    #     key = "UnimacroIniFilesEditor"
+    #     self.Config.clearFile(key, section='unimacro')
 
     # Unimacro Vocola features-----------------------------------------------
     # managing the include file wrapper business.
@@ -850,6 +858,7 @@ Vocola command.
 
         voc_dir = self.Config.status.getVocolaDirectory()
         if voc_dir:
+            print('==== instal and/or update vocola2====\n')
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "vocola2"])
             except subprocess.CalledProcessError:
@@ -870,8 +879,8 @@ Vocola command.
             return
         # vocGrammarsDir = self.Config.status.getVocolaGrammarsDirectory()
         vocGrammarsDir = r'natlink_userdir\vocolagrammars'
-        self.Config.setDirectory('vocola','vocola2')  #always vocola2
-        self.Config.setDirectory('Vocolagrammars', vocGrammarsDir)
+        self.Config.setDirectory('vocoladirectory','vocola2')  #always vocola2
+        self.Config.setDirectory('vocolagrammarsdirectory', vocGrammarsDir)
 
             
     def do_V(self, arg):
@@ -938,10 +947,19 @@ This sends (sometimes lengthy) debug messages to the
         self.message = "Enable Vocola taking Unimacro actions"
         print(f'do action: {self.message}')
         self.Config.enableVocolaTakesUnimacroActions()
+        print('copy UnimacroIncludeFile')
+        self.Config.copyUnimacroIncludeFile()
+        print('put includeUnimacroVchLine in each Vocola command file')
+        self.Config.includeUnimacroVchLineInVocolaFiles()
+        
     def do_A(self, arg):
         self.message = "Disable Vocola taking Unimacro actions"
         print(f'do action: {self.message}')
         self.Config.disableVocolaTakesUnimacroActions()
+        print('remove UnimacroIncludeFile')
+        self.Config.removeUnimacroIncludeFile()        
+        print('remove UnimacroVchLine from each Vocola command file')
+        self.Config.removeUnimacroVchLineInVocolaFiles()
 
     def help_a(self):
         print('-'*60)
