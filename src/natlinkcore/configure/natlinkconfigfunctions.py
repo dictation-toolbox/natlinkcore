@@ -2,8 +2,8 @@
 #
 # natlinkconfigfunctions.py
 #   This module performs the configuration functions.
-#   called from natlinkconfig (a wxPython GUI),
-#   or directly, see below
+#   called from nalinkgui (a PySimpleGUI window)),
+#   or CLI, see below
 #
 #   Quintijn Hoogenboom, January 2008 (...), April 2022
 #
@@ -15,8 +15,6 @@ This can be done in three ways:
 -Through the command line interface (CLI) which is started automatically
  when this module is run (with Pythonwin, IDLE, or command line of Python)
 -On the command line, using one of the different command line options 
--Through the configure GUI (natlinkconfig.py), which calls into this module
- This last one needs wxPython to be installed.
 
 *** the core directory is relative to this directory ...
     ...and will be searched for first.
@@ -62,7 +60,6 @@ from natlinkcore import natlinkstatus
 from natlinkcore import config
 from natlinkcore import loader
 from natlinkcore import readwritefile
-from natlinkcore import wxdialogs
 
 isfile, isdir, join = os.path.isfile, os.path.isdir, os.path.join
 
@@ -171,16 +168,11 @@ class NatlinkConfig:
 
     def setDirectory(self, option, dir_path, section=None):
         """set the directory, specified with "key", to dir_path
-        
-        If dir_path None or invalid, go via GetDirFromDialog
         """
         section = section or 'directories'
         if not dir_path:
-            prev_path = self.config_get('previous settings', option) or self.config_dir
-            dir_path = wxdialogs.GetDirFromDialog(f'Please choose a "{option}"', prev_path)
-            if not dir_path:
-                print('No valid directory specified')
-                return
+            print('No valid directory specified')
+            return
         dir_path = dir_path.strip()
         directory = createIfNotThere(dir_path, level_up=1)
         if not (directory and Path(directory).is_dir()):
@@ -217,15 +209,10 @@ class NatlinkConfig:
  
     def setFile(self, option, file_path, section):
         """set the file, specified with "key", to file_path
-        
-        If file_path None or invalid, go via GetFileFromDialog
         """
         if not file_path:
-            prev_path = self.config_get('previous settings', option) or ""
-            file_path = wxdialogs.GetFileFromDialog(f'Please choose a "{option}"', prev_path)
-            if not file_path:
-                print('No valid file specified')
-                return
+            print('No valid file specified')
+            return
         file_path = file_path.strip()
         if not Path(file_path).is_file():
             print(f'No valid file specified ("{file_path}")')
