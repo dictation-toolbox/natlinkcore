@@ -46,7 +46,7 @@ unimacro_section = [[sg.T('Unimacro', text_color='black')],
                     [sg.T('Unimacro User Directory:', tooltip=r'Where the Unimacro user INI files are located, and several other directories (~ or %HOME% allowed)'), sg.I(Status.getUnimacroUserDirectory(), key='Set_UserDir_Unimacro', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Unimacro', enable_events=True)]]
 
 autohotkey_section = [[sg.T('Autohotkey', text_color='black')],
-                      [sg.T('Autohotkey Exe:'), sg.I(Status.getAhkExeDir(), key='Set_Exe_Ahk', enable_events=True), sg.FileBrowse(file_types=("Executable ", "*.exe")), sg.B("Clear", key='Clear_Exe_Ahk', enable_events=True)],
+                      [sg.T('Autohotkey Exe:'), sg.I(Status.getAhkExeDir(), key='Set_Exe_Ahk', enable_events=True), sg.FileBrowse(file_types=(('Executable ', '*.exe'),)), sg.B("Clear", key='Clear_Exe_Ahk', enable_events=True)],
                       [sg.T('Autohotkey Scripts Dir:'), sg.I(Status.getAhkUserDir(), key='Set_ScriptsDir_Ahk', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_ScriptsDir_Ahk', enable_events=True)]]
 
 #### Main UI Layout ####
