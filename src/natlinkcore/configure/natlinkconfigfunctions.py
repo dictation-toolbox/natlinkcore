@@ -1,15 +1,50 @@
 #
 # natlinkconfigfunctions.py
+
+#   This module performs the configuration functions.
+#   called from nalinkgui (a PySimpleGUI window)),
+#   or CLI, see below
 #
 #   Quintijn Hoogenboom, January 2008 (...), August 2022
 #
+
 #pylint:disable=C0302, W0702, R0904, R0201, C0116, W0613, R0914, R0912
 """With the functions in this module Natlink can be configured.
 
-These can (at least) be called in three ways:
--Through the command line interface (CLI) which is in natlinkconfig_cli.py
--On the command line, using one of the different command line options, running natlinkconfig_cli.py
--Through the configure GUI (natlinkconfig_gui.py), which calls into this module
+This can be done in three ways:
+-Through the command line interface (CLI) which is started automatically
+ when this module is run (with Pythonwin, IDLE, or command line of Python)
+-On the command line, using one of the different command line options 
+
+*** the core directory is relative to this directory ...
+    ...and will be searched for first.
+
+Afterwards can be set:
+
+DNSInstallDir
+    - if not found in one of the predefined subfolders of %PROGRAMFILES%,
+      this directory can be set in HKCU\Software\Natlink.
+      Functions: setDNSInstallDir(path) (d path) and clearDNSInstallDir() (D)
+      
+DNSINIDir
+    - if not found in one of the subfolders of %COMMON_APPDATA%
+      where they are expected, this one can be set in HKCU\Software\Natlink.
+      Functions: setDNSIniDir(path) (c path) and clearDNSIniDir() (C)
+
+When Natlink is enabled natlink.pyd is registered with
+      win32api.WinExec("regsvr32 /s pathToNatlinkPyd") (silent)
+
+It can be unregistered through function unregisterNatlinkPyd() see below.      
+
+Other functions inside this module, with calls from CLI or command line:
+
+enableNatlink()  (e)/disableNatlink() (E)
+
+setUserDirectory(path) (n path) or clearUserDirectory() (N)
+etc.
+
+More at the bottom, with the CLI description...
+
 
 """
 import os
@@ -135,8 +170,6 @@ class NatlinkConfig:
 
     def setDirectory(self, option, dir_path, section=None):
         """set the directory, specified with "key", to dir_path
-        
-        If dir_path None or invalid, go via GetDirFromDialog
         """
         section = section or 'directories'
         if not dir_path:
@@ -146,6 +179,7 @@ class NatlinkConfig:
             if not dir_path:
                 print('No valid directory specified')
                 return
+
         dir_path = dir_path.strip()
         directory = createIfNotThere(dir_path, level_up=1)
         if not (directory and Path(directory).is_dir()):
@@ -195,10 +229,9 @@ class NatlinkConfig:
  
     def setFile(self, option, file_path, section):
         """set the file, specified with "key", to file_path
-        
-        If file_path None or invalid, go via GetFileFromDialog
         """
         if not file_path:
+
             prev_path = self.config_get('previous settings', option) or ""
             file_path = tkinter_dialogs.GetFileFromDialog(title=f'Please choose a "{option}"', initialdir=prev_path)
             if not file_path:
