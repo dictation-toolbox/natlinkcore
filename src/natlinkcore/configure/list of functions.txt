@@ -1,0 +1,34 @@
+-a    enableVocolaTakesUnimacroActions()    (including the two additional options, which have been removed,
+-A    disableVocolaTakesUnimacroActions()   -M, -m, -l)
+
+-b    enableVocolaTakesLanguages()
+-B    disableVocolaTakesLanguages()
+
+-d    self.Config.setDirectory('DragonflyUserDirectory', arg)
+-D    self.Config.clearDirectory('DragonflyUserDirectory')
+
+-h    setAhkExeDir(arg)
+-H    clearAhkExeDir()
+
+-i    print natlink status string  (self.status.getNatlinkStatusString())
+-I    open natlink.ini (self.openConfigFile())
+
+-j    print python path  (printPythonPath())
+
+-k    setAhkUserDir(arg)
+-K    clearAhkUserDir()
+
+-n    self.Config.setDirectory('DragonflyUserDirectory', arg)
+-N    self.Config.clearDirectory('UserDirectory')
+
+-o    enable_unimacro(arg)
+-O    disable_unimacro()   (arg maybe given, is ignored)
+
+-v    enable_vocola(arg)
+-V    disable_vocola()
+
+-x    enableDebugOutput
+-X    disableDebugOutput
+
+
+
