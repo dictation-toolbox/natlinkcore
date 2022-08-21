@@ -31,15 +31,9 @@ Python Macro Language for Dragon NaturallySpeaking
       match and None on mismatch. Note that moduleInfo may be ("","",0)
       which we should handle cleanly.
 
-  playString(string, hooks=None)
-      Send keystrokes to the foreground window.
-      
-      Due to problems with duplicating or dropping the first character of a string
-      when sending to the foreground window, this function is obsolete, and you should
-      use sendkeys from dragonfly via dtactions
 
 """
-#pylint:disable=C0116, C0302, R0902, W0702, E1101, W0703
+#pylint:disable=C0116, C0209, C0302, R0902, W0702, E1101, W0703
 
 import os
 import os.path
@@ -50,14 +44,6 @@ import traceback
 
 from natlink import _natlink_core as natlink
 from natlinkcore import gramparser
-
-
-useDtactionsSendkeys = 1   ## via dtactions to dragonfly
-if useDtactionsSendkeys:
-    try:
-        from dtactions.sendkeys import sendkeys
-    except ImportError:
-        print('natlinkutils, cannot find sendkeys function')
 
 # was set in config program, and passed via natlinkstatus.py but now removed...
 debugLoad = 0
@@ -301,31 +287,16 @@ def getModifierKeyCodes(modifiers):
     return [modifier_dict[m] for m in modifiers]
 
 def playString(keys, hooks=None):
-    """do smarter and faster playString than natlink.playString
+    """Deprecated.
     
-    If useDtactionsSendkeys is set to 1 (True) (top of this file)
+    natlink.playString, but sometimes has a drop or double of the first character it plays on the screen.
     
-    TODO: Disadvantage: hooks only partially work, and probably not in elevated windows.
-    
-    This behaviour can be circumvented by adding a hook in the call,
-    or by using SendDragonKeys, SendSystemKeys or SSK (Unimacro).
-    
-    If useDtactionsSendkeys is set to 0 (False), or a hook is added
-    (0x100 for normal behaviour, 0x200 for systemkeys behaviour)
-    then natlink.playString is used. 
-    
-    (if original behaviour is wanted, you can call natlink.playString directly)
+    dtactions has a sendkeys function, which can replace playSting most of the time...
+    from dtactions.sendkeys import sendkeys
+    (...)
+    sendkeys('hello world')
     """
-    if not keys:
-        return
-    if hooks is None:
-        if useDtactionsSendkeys:
-            sendkeys(keys)
-        else:
-            natlink.playString(keys)
-        return
-    # with hooks:
-    natlink.playString(keys, hooks)
+    raise DeprecationWarning('use natlink.playString or another sendkeys or sendinput function...')
  
 #Classes--------------------------------------------------------------------
 
