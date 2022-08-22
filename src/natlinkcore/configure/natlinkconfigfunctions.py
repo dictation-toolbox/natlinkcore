@@ -11,41 +11,10 @@
 #pylint:disable=C0302, W0702, R0904, R0201, C0116, W0613, R0914, R0912
 """With the functions in this module Natlink can be configured.
 
-This can be done in three ways:
--Through the command line interface (CLI) which is started automatically
- when this module is run (with Pythonwin, IDLE, or command line of Python)
--On the command line, using one of the different command line options 
-
-*** the core directory is relative to this directory ...
-    ...and will be searched for first.
-
-Afterwards can be set:
-
-DNSInstallDir
-    - if not found in one of the predefined subfolders of %PROGRAMFILES%,
-      this directory can be set in HKCU\Software\Natlink.
-      Functions: setDNSInstallDir(path) (d path) and clearDNSInstallDir() (D)
-      
-DNSINIDir
-    - if not found in one of the subfolders of %COMMON_APPDATA%
-      where they are expected, this one can be set in HKCU\Software\Natlink.
-      Functions: setDNSIniDir(path) (c path) and clearDNSIniDir() (C)
-
-When Natlink is enabled natlink.pyd is registered with
-      win32api.WinExec("regsvr32 /s pathToNatlinkPyd") (silent)
-
-It can be unregistered through function unregisterNatlinkPyd() see below.      
-
-Other functions inside this module, with calls from CLI or command line:
-
-enableNatlink()  (e)/disableNatlink() (E)
-
-setUserDirectory(path) (n path) or clearUserDirectory() (N)
-etc.
-
-More at the bottom, with the CLI description...
-
-
+These functions are called in different ways:
+-Through the natlinkconfig program (GUI)
+-Via the natlinkconfig_cli.py (command line interface)
+-By running natlinkconfig_cli in batch mode.
 """
 import os
 import shutil
