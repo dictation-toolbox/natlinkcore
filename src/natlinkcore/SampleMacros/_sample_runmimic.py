@@ -8,31 +8,45 @@
 
 This script tests the commands with alternatives in interactive mode
 
-With recognitionMimic this grammar (from unittestNatlink.py) fails, October 2021.
+August 2022, with new python3 release coming, this test works.
 
-when calling "mimic runzero" or "mimic north", the following lines should be printed in the Messages from Natlink window:
+1. Load this file in one of your "directories"
+2. Toggle your microphone
+3. Say: "mimic runzero".
 
-Heard macro "mimic runsimplezero", "['mimic', 'runzero']"
-Heard macro "mimic runsimpleone", "['mimic', 'north']"
+Expected output:
+
+Heard macro "mimic run_zero", "['mimic', 'runzero']"
+Heard macro "mimic run_one", "['mimic', 'north']"
+Heard macro "mimic run_two", "['mimic', 'table']"
 
 """
+import natlink
 from natlinkcore.natlinkutils import GrammarBase
 
 class ThisGrammar(GrammarBase):
 
     gramSpec = """
-        <runsimplezero> exported = mimic runzero;
-        <runsimpleone> exported = mimic (north | east | south | west) ;
+        <run_zero> exported = mimic runzero;
+        <run_one> exported = mimic (north | east | south | west) ;
+        <run_two> exported = mimic {furniture}[(north | east | south | west)+];
     """
     
     def initialize(self):
         self.load(self.gramSpec)
+        self.setList('furniture', ['table', 'chair'])
         self.activateAll()
 
-    def gotResults_runsimplezero(self,words,fullResults):
-        print(f'Heard macro "mimic runsimplezero", "{words}"')
-    def gotResults_runsimpleone(self,words,fullResults):
-        print(f'Heard macro "mimic runsimpleone", "{words}"')
+    def gotResults_run_zero(self,words,fullResults):
+        print(f'\nHeard macro "mimic run_zero", "{words}"')
+        natlink.recognitionMimic(['mimic', 'north'])
+    
+    def gotResults_run_one(self,words,fullResults):
+        print(f'Heard macro "mimic run_one", "{words}"')
+        natlink.recognitionMimic(['mimic', 'table'])
+        
+    def gotResults_run_two(self,words,fullResults):
+        print(f'Heard macro "mimic run_two", "{words}"')
         
 thisGrammar = ThisGrammar()
 thisGrammar.initialize()

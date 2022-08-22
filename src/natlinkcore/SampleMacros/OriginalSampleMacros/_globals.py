@@ -22,7 +22,8 @@
 # its filename begins with an underscore (the signal for a global module).
 #
 # Please see the example wordpad.py for more comments.
-# 
+#
+# This example seems not to work (any more), Quintijn Hoogenboom, 2022
 
 import natlink
 from natlinkcore import natlinkutils

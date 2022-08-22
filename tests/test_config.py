@@ -2,6 +2,7 @@
 
 import pathlib as p
 import sys
+import os
 import sysconfig
 from pprint import pprint
 
@@ -12,13 +13,15 @@ import pytest
 
 from natlinkcore.config import *
 from natlinkcore import loader
+
 def sample_config(sample_name) -> 'NatlinkConfig':
     """
     load a config file from the config files subfolder
     """
-    sample_ini=p.WindowsPath(os.path.dirname(__file__)) / "config_files" / sample_name
-    config = NatlinkConfig.from_file(sample_ini)
-    return config
+    sample_ini= (p.Path(__file__).parent) / "config_files" / sample_name
+    test_config = NatlinkConfig.from_file(sample_ini)
+    return test_config
+
 #easier than using the decorator syntax
 def make_sample_config_fixture(settings_filename):
     return pytest.fixture(lambda : sample_config(settings_filename))
@@ -29,12 +32,10 @@ def empty_config():
     return config
 
 
-def test_empty_config():
+def test_empty_config(empty_config):
     """does not test really
     """
-    print(f'empty_config: {empty_config}')
-
-
+    assert repr(empty_config) == "NatlinkConfig(directories_by_user={}, ...)"
 
 settings1 =  make_sample_config_fixture("settings_1.ini")
 settings2 = make_sample_config_fixture("settings_2.ini")
@@ -44,13 +45,13 @@ package_load_test1 = make_sample_config_fixture('package_load_test1.ini')
 @pytest.fixture()
 def mock_syspath(monkeypatch):
     """Add a tempory path to mock modules in sys.pythonpath"""
-    mock_folder=p.WindowsPath(os.path.dirname(__file__)) / "mock_packages"
+    mock_folder = (p.Path(__file__)).parent / "mock_packages"
     print(f"Mock Folder {mock_folder}")
     monkeypatch.syspath_prepend(str(mock_folder))
 
 @pytest.fixture()
 def mock_userdir(monkeypatch):
-    mock_folder=p.WindowsPath(os.path.dirname(__file__)) / "mock_userdir"
+    mock_folder=p.WindowsPath(os.path.dirname(__file__)) / "mock_userdir" / ".natlink"
     print(f"Mock Userdir Folder {mock_folder}")
     monkeypatch.setenv("natlink_userdir",str(mock_folder))
 
@@ -118,8 +119,8 @@ def test_expand_path(mock_syspath,mock_userdir):
     result=expand_path('fake_package1.fake_subpackage1')
     assert os.path.isdir(result)
 
-    result=expand_path('fake_package1.nonexistant_subpackage1')
-    assert  not os.path.isdir(result)
+    # result=expand_path('fake_package1.nonexistant_subpackage1')
+    # assert  not os.path.isdir(result)
 
 
     result=expand_path('pytest')

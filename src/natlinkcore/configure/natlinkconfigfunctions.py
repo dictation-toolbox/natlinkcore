@@ -1,68 +1,34 @@
-# coding=latin-1
 #
 # natlinkconfigfunctions.py
+
 #   This module performs the configuration functions.
-#   called from natlinkconfig (a wxPython GUI),
-#   or directly, see below
+#   called from nalinkgui (a PySimpleGUI window)),
+#   or CLI, see below
 #
-#   Quintijn Hoogenboom, January 2008 (...), April 2022
+#   Quintijn Hoogenboom, January 2008 (...), August 2022
 #
+
 #pylint:disable=C0302, W0702, R0904, R0201, C0116, W0613, R0914, R0912
-r"""
-With the functions in this module Natlink can be configured.
+"""With the functions in this module Natlink can be configured.
 
-This can be done in three ways:
--Through the command line interface (CLI) which is started automatically
- when this module is run (with Pythonwin, IDLE, or command line of Python)
--On the command line, using one of the different command line options 
--Through the configure GUI (natlinkconfig.py), which calls into this module
- This last one needs wxPython to be installed.
-
-*** the core directory is relative to this directory ...
-    ...and will be searched for first.
-
-Afterwards can be set:
-
-DNSInstallDir
-    - if not found in one of the predefined subfolders of %PROGRAMFILES%,
-      this directory can be set in HKCU\Software\Natlink.
-      Functions: setDNSInstallDir(path) (d path) and clearDNSInstallDir() (D)
-      
-DNSINIDir
-    - if not found in one of the subfolders of %COMMON_APPDATA%
-      where they are expected, this one can be set in HKCU\Software\Natlink.
-      Functions: setDNSIniDir(path) (c path) and clearDNSIniDir() (C)
-
-When Natlink is enabled natlink.pyd is registered with
-      win32api.WinExec("regsvr32 /s pathToNatlinkPyd") (silent)
-
-It can be unregistered through function unregisterNatlinkPyd() see below.      
-
-Other functions inside this module, with calls from CLI or command line:
-
-enableNatlink()  (e)/disableNatlink() (E)
-
-setUserDirectory(path) (n path) or clearUserDirectory() (N)
-etc.
-
-More at the bottom, with the CLI description...
-
+These functions are called in different ways:
+-Through the natlinkconfig program (GUI)
+-Via the natlinkconfig_cli.py (command line interface)
+-By running natlinkconfig_cli in batch mode.
 """
 import os
 import shutil
 import sys
 import subprocess
-import getopt
-import cmd
+from pprint import pprint
 from pathlib import Path
 import configparser
-from turtle import up
-# from win32com.shell import shell
+
 from natlinkcore import natlinkstatus
 from natlinkcore import config
 from natlinkcore import loader
 from natlinkcore import readwritefile
-from natlinkcore import wxdialogs
+from natlinkcore import tkinter_dialogs
 
 isfile, isdir, join = os.path.isfile, os.path.isdir, os.path.join
 
@@ -70,12 +36,12 @@ class NatlinkConfig:
     """performs the configuration tasks of Natlink
     
     setting UserDirectory, UnimacroDirectory and options, VocolaDirectory and options,
-    Autohotkey options (ahk), and Debug option of Natlink.
+    DragonflyDirectory, Autohotkey options (ahk), and Debug option of Natlink.
+    and also clearing the different directories.
 
     Changes are written in the config file, from which the path is taken from the loader instance.
     """
     def __init__(self):
-        self.DNSName = 'Dragon'
         self.config_path = self.get_check_config_locations()
         self.config_dir = str(Path(self.config_path).parent)
         self.status = natlinkstatus.NatlinkStatus()
@@ -95,7 +61,7 @@ class NatlinkConfig:
         return config_path
 
     def check_config(self):
-        """check config_file for unwanted settings
+        """check config_file for possibly unwanted settings
         """
         self.config_remove(section='directories', option='default_config')
 
@@ -132,6 +98,8 @@ class NatlinkConfig:
         
         if not self.config.has_section(section):
             self.config.add_section(section)
+            
+        value = str(value)
         self.config.set(section, option, str(value))
         self.config_write()
         self.status.__init__()
@@ -171,16 +139,16 @@ class NatlinkConfig:
 
     def setDirectory(self, option, dir_path, section=None):
         """set the directory, specified with "key", to dir_path
-        
-        If dir_path None or invalid, go via GetDirFromDialog
         """
         section = section or 'directories'
         if not dir_path:
+            print('==== Please specify the wanted directory in Dialog window ====\n')
             prev_path = self.config_get('previous settings', option) or self.config_dir
-            dir_path = wxdialogs.GetDirFromDialog(f'Please choose a "{option}"', prev_path)
+            dir_path = tkinter_dialogs.GetDirFromDialog(title=f'Please choose a "{option}"', initialdir=prev_path)
             if not dir_path:
                 print('No valid directory specified')
                 return
+
         dir_path = dir_path.strip()
         directory = createIfNotThere(dir_path, level_up=1)
         if not (directory and Path(directory).is_dir()):
@@ -191,7 +159,10 @@ class NatlinkConfig:
             else:
                 print(f'Cannot set "{option}", the given path is invalid: "{directory}" ("{dir_path}")')
             return
-        self.config_set(section, option, dir_path)
+        
+        nice_dir_path = self.prefix_home(dir_path)
+        
+        self.config_set(section, option, nice_dir_path)
         self.config_remove('previous settings', option)
         if section == 'directories':
             print(f'Set option "{option}" to "{dir_path}"')
@@ -215,14 +186,23 @@ class NatlinkConfig:
         self.config_remove(section, option)
         print(f'cleared "{option}"')
  
+ 
+    def prefix_home(self, dir_path):
+        """if dir_path startswith home directory, replace this with "~"
+        """
+        home_path = str(Path.home())
+        if dir_path.startswith(home_path):
+            dir_path = dir_path.replace(home_path, "~")
+        return dir_path
+            
+ 
     def setFile(self, option, file_path, section):
         """set the file, specified with "key", to file_path
-        
-        If file_path None or invalid, go via GetFileFromDialog
         """
         if not file_path:
+
             prev_path = self.config_get('previous settings', option) or ""
-            file_path = wxdialogs.GetFileFromDialog(f'Please choose a "{option}"', prev_path)
+            file_path = tkinter_dialogs.GetFileFromDialog(title=f'Please choose a "{option}"', initialdir=prev_path)
             if not file_path:
                 print('No valid file specified')
                 return
@@ -282,6 +262,96 @@ class NatlinkConfig:
         self.config_set(section, key, old_value)
         return True
 
+    def enable_unimacro(self, arg):
+        unimacro_user_dir = self.status.getUnimacroUserDirectory()
+        if unimacro_user_dir and isdir(unimacro_user_dir):
+            print(f'UnimacroUserDirectory is already defined: "{unimacro_user_dir}"\n\tto change, first clear (option "O") and then set again')
+            print('\nWhen you want to upgrade Unimacro, also first clear ("O"), then choose this option ("o") again.\n')
+            return
+
+        uni_dir = self.status.getUnimacroDirectory()
+        if uni_dir:
+            print('==== instal and/or update unimacro====\n')            
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "unimacro"])
+            except subprocess.CalledProcessError:
+                print('====\ncould not pip install --upgrade unimacro\n====\n')
+                return
+        else:
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "unimacro"])
+            except subprocess.CalledProcessError:
+                print('====\ncould not pip install unimacro\n====\n')
+                return
+        self.status.refresh()   # refresh status
+        uni_dir = self.status.getUnimacroDirectory()
+
+        self.setDirectory('UnimacroUserDirectory', arg, section='unimacro')
+        unimacro_user_dir = self.config_get('unimacro', 'unimacrouserdirectory')
+        if not unimacro_user_dir:
+            return
+        uniGrammarsDir = r'natlink_userdir\unimacrogrammars'
+        self.setDirectory('unimacrodirectory','unimacro')  #always unimacro
+
+        self.setDirectory('unimacrogrammarsdirectory', uniGrammarsDir)
+
+    def disable_unimacro(self, arg=None):
+        """disable unimacro, do not expect arg
+        """
+        self.clearDirectory('UnimacroUserDirectory', section='unimacro')
+        self.config_remove('directories', 'unimacrogrammars')
+        self.config_remove('directories', 'unimacrogrammarsdirectory')   # could still be there...
+        self.config_remove('directories', 'unimacro')
+        self.config_remove('directories', 'unimacrodirectory')  # could still be there...
+        self.status.refresh()
+
+
+    def enable_vocola(self, arg):
+        """enable vocola, by setting arg (prompting if False), and other settings
+        """
+        vocola_user_dir = self.status.getVocolaUserDirectory()
+        if vocola_user_dir and isdir(vocola_user_dir):
+            print(f'VocolaUserDirectory is already defined: "{vocola_user_dir}"\n\tto change, first clear (option "V") and then set again')
+            print('\nWhen you want to upgrade Vocola (vocola2), also first clear ("V"), then choose this option ("v") again.\n')
+            return
+
+        voc_dir = self.status.getVocolaDirectory()
+        if voc_dir:
+            print('==== instal and/or update vocola2====\n')
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "vocola2"])
+            except subprocess.CalledProcessError:
+                print('====\ncould not pip install --upgrade vocola2\n====\n')
+                return
+        else:
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "vocola2"])
+            except subprocess.CalledProcessError:
+                print('====\ncould not pip install vocola2\n====\n')
+                return
+        self.status.refresh()   # refresh status
+        voc_dir = self.status.getVocolaDirectory()
+
+        self.setDirectory('VocolaUserDirectory', arg, section='vocola')
+        vocola_user_dir = self.config_get('vocola', 'VocolaUserDirectory')
+        if not vocola_user_dir:
+            return
+        # vocGrammarsDir = self.status.getVocolaGrammarsDirectory()
+        vocGrammarsDir = r'natlink_userdir\vocolagrammars'
+        self.setDirectory('vocoladirectory','vocola2')  #always vocola2
+        self.setDirectory('vocolagrammarsdirectory', vocGrammarsDir)
+        self.copyUnimacroIncludeFile()
+        
+
+    def disable_vocola(self, arg=None):
+        """disable vocola, arg not needed/used
+        """
+        self.clearDirectory('VocolaUserDirectory', section='vocola')
+        self.config_remove('directories', 'vocolagrammars')
+        self.config_remove('directories', 'vocolagrammarsdirectory')   # could still be there
+        self.config_remove('directories', 'vocola')
+        self.config_remove('directories', 'vocoladirectory')   #could still be there...
+
     def copyUnimacroIncludeFile(self):
         """copy Unimacro include file into Vocola user directory
 
@@ -322,6 +392,27 @@ class NatlinkConfig:
             return
         return
 
+    def removeUnimacroIncludeFile(self):
+        """remove Unimacro include file from Vocola user directory
+
+        """
+        uscFile = 'Unimacro.vch'
+        # also remove usc.vch from VocolaUserDirectory
+        toFolder = Path(self.status.getVocolaUserDirectory())
+        if not toFolder.is_dir():
+            mess = f'removeUnimacroIncludeFile: vocolaUserDirectory does not exist "{str(toFolder)}" (is not a directory)'
+            print(mess)
+            return
+        
+        toFile = toFolder/uscFile
+        if toFolder.is_file():
+            print(f'remove Unimacro include file "{str(toFile)}"')
+            try:
+                os.remove(toFile)
+            except:
+                mess = f'copyUnimacroIncludeFile: Could not remove previous version of "{str(toFile)}"'
+                print(mess)
+
     def includeUnimacroVchLineInVocolaFiles(self, subDirectory=None):
         """include the Unimacro wrapper support line into all Vocola command files
         
@@ -337,17 +428,17 @@ class NatlinkConfig:
         toFolder = self.status.getVocolaUserDirectory()
         if subDirectory:
             toFolder = os.path.join(toFolder, subDirectory)
-            includeLine = 'include ..\\%s;\n'% uscFile
+            includeLine = f'include ..\\{uscFile};\n'
         else:
-            includeLine = 'include %s;\n'%uscFile
-        oldIncludeLines = ['include %s;'% oldUscFile,
-                           'include ..\\%s;'% oldUscFile,
-                           'include %s;'% uscFile.lower(),
-                           'include ..\\%s;'% uscFile.lower(),
+            includeLine = f'include {uscFile};\n'
+        oldIncludeLines = [f'include {oldUscFile};',
+                           f'include ..\\{oldUscFile};',
+                           f'include {uscFile.lower()};',
+                           f'include ..\\{uscFile.lower()};',
                            ]
             
         if not os.path.isdir(toFolder):
-            mess = 'cannot find Vocola command files directory, not a valid path: %s'% toFolder
+            mess = f'cannot find Vocola command files directory, not a valid path: {toFolder}'
             print(mess)
             return mess
         nFiles = 0
@@ -394,20 +485,20 @@ class NatlinkConfig:
         else:
             toFolder = self.status.getVocolaUserDirectory()
             
-        oldIncludeLines = ['include %s;'% oldUscFile,
-                           'include ..\\%s;'% oldUscFile,
-                           'include %s;'% uscFile,
-                           'include ..\\%s;'% uscFile,
-                           'include ../%s;'% oldUscFile,
-                           'include ../%s;'% uscFile,
-                           'include %s;'% uscFile.lower(),
-                           'include ..\\%s;'% uscFile.lower(),
-                           'include ../%s;'% uscFile.lower(),
+        oldIncludeLines = [f'include {oldUscFile};',
+                           f'include ..\\{oldUscFile};',
+                           f'include {uscFile};',
+                           f'include ..\\{uscFile};',
+                           f'include ../{oldUscFile};',
+                           f'include ../{uscFile};',
+                           f'include {uscFile.lower()};',
+                           f'include ..\\{uscFile.lower()};',
+                           f'include ../{uscFile.lower()};'
                            ]
 
             
         if not os.path.isdir(toFolder):
-            mess = 'cannot find Vocola command files directory, not a valid path: %s'% toFolder
+            mess = f'cannot find Vocola command files directory, not a valid path: {toFolder}'
             print(mess)
             return mess
         nFiles = 0
@@ -450,19 +541,25 @@ class NatlinkConfig:
         self.config_set('vocola', key, 'False')
 
     def enableVocolaTakesUnimacroActions(self):
-        """setting registry  so Vocola can divide different languages
+        """do setting, so Vocola can take Unimacro Actions
+        also include correct include line in each Vcl file
+        and copy Unimacro.vch to the VocolaUserDirectory
 
         """
         key = "vocolatakesunimacroactions"
         self.config_set('vocola', key, 'True')
-        
+        self.includeUnimacroVchLineInVocolaFiles()
+        self.copyUnimacroIncludeFile()
 
     def disableVocolaTakesUnimacroActions(self):
         """disables so Vocola does not take Unimacro Actions
+        and remove Unimacro.vch and the include lines in each .vcl file
         """
         key = "vocolatakesunimacroactions"
         self.config_set('vocola', key, 'False')
-
+        self.removeUnimacroVchLineInVocolaFiles()
+        self.removeUnimacroIncludeFile()
+        
     def openConfigFile(self):
         """open the natlink.ini config file
         """
@@ -476,7 +573,7 @@ class NatlinkConfig:
         key = 'ahkexedir'
         self.setDirectory(key, arg, section='autohotkey')
 
-    def clearAhkExeDir(self):
+    def clearAhkExeDir(self, arg=None):
         """set ahkexedir to a valid folder
         """
         key = 'ahkexedir'
@@ -488,530 +585,16 @@ class NatlinkConfig:
         key = 'ahkuserdir'
         self.setDirectory(key, arg, section='autohotkey')
 
-    def clearAhkUserDir(self):
+    def clearAhkUserDir(self, arg=None):
         """clear Autohotkey user directory
         """
         key = 'ahkuserdir'
         self.clearDirectory(key, section='autohotkey')
 
     def printPythonPath(self):
-        raise NotImplementedError 
+        print('the python path:')
+        pprint(sys.path)
 
-
-def _main(Options=None):
-    """Catch the options and perform the resulting command line functions
-
-    options: -i, --info: give status info
-
-             -I, --reginfo: give the info in the registry about Natlink
-             etc., usage above...
-
-    """
-    cli = CLI()
-    cli.Config = NatlinkConfig()
-    shortOptions = "DVNOPHKaAiIxXbBlmMuq"
-    shortArgOptions = "d:v:n:o:p:h:k:"
-    if Options:
-        if isinstance(Options, str):
-            Options = Options.split(" ", 1)
-        Options = [_.strip() for _ in  Options]
-    else:
-        Options = sys.argv[1:]
-
-    try:
-        options, args = getopt.getopt(Options, shortOptions+shortArgOptions)
-    except getopt.GetoptError:
-        print('invalid option: %s'% repr(Options))
-        cli.usage()
-        return
-
-    if args:
-        print('should not have extraneous arguments: %s'% repr(args))
-    for o, v in options:
-        o = o.lstrip('-')
-        funcName = 'do_%s'% o
-        func = getattr(cli, funcName, None)
-        if not func:
-            print('option %s not found in cli functions: %s'% (o, funcName))
-            cli.usage()
-            continue
-        if o in shortOptions:
-            func(None) # dummy arg
-        elif o in shortArgOptions:
-            func(v)
-        else:
-            print('options should not come here')
-            cli.usage()
-
-
-          
-class CLI(cmd.Cmd):
-    """provide interactive shell control for the different options.
-    """
-    def __init__(self, Config=None):
-        cmd.Cmd.__init__(self)
-        self.prompt = '\nNatlink config> '
-        self.info = "type 'u' for usage"
-        self.Config = None
-        self.message = ''
-        if __name__ == "__main__":
-            print("Type 'u' for usage ")
-
-    def stripCheckDirectory(self, dirName):
-        """allow quotes in input, and strip them.
-        
-        Return "" if directory is not valid
-        """
-        if not dirName:
-            return ""
-        n = dirName.strip()
-        while n and n.startswith('"'):
-            n = n.strip('"')
-        while n and n.startswith("'"):
-            n = n.strip("'")
-        if n:
-            n.strip()
-        
-        if os.path.isdir(n):    
-            return n
-        print('not a valid directory: %s (%s)'% (n, dirName))
-        return ''
-
-    def usage(self):
-        """gives the usage of the command line options or options when
-        the command line interface  (CLI) is used
-        """
-        print('-'*60)
-        print(r"""Use either from the command line like 'natlinkconfigfunctions.py -i'
-or in an interactive session using the CLI (command line interface). 
-
-[Status]
-
-i       - info, print information about the Natlink status
-I       - show the natlink.ini file (in Notepad), you can manually edit.
-j       - print PythonPath variable
-
-[Natlink]
-
-x/X     - enable/disable debug output of Natlink
-
-[Vocola]
-
-v/V     - enable/disable Vocola by setting/clearing VocolaUserDirectory,
-          where the Vocola Command Files (.vcl) will be located.
-          (~ or %HOME% are allowed, for example "~/.natlink/VocolaUser")
-
-b/B     - enable/disable distinction between languages for Vocola user files
-a/A     - enable/disable the possibility to use Unimacro actions in Vocola
-
-[Unimacro]
-
-o/O     - enable/disable Unimacro, by setting/clearing the UnimacroUserDirectory, where
-          the Unimacro user INI files are located, and several other directories (~ or %HOME% allowed)
-p/P     - set/clear path for program that opens Unimacro INI files.
-l       - copy header file Unimacro.vch into Vocola User Directory
-m/M     - insert/remove an include line for Unimacro.vch in all Vocola
-          command files
-
-[DragonflyDirectory]
-d/D     - enable/disable the DragonflyDirectory, the directory where
-          you can put your Dragonfly scripts (UserDirectory can also be used)
-[UserDirectory]
-n/N     - enable/disable UserDirectory, the directory where
-          User Natlink grammar files are located (e.g., "~\UserDirectory")
-
-[AutoHotkey]
-h/H     - set/clear the AutoHotkey exe directory.
-k/K     - set/clear the User Directory for AutoHotkey scripts.
-[Other]
-
-u/usage - give this list
-q       - quit
-
-help <command>: give more explanation on <command>
-        """)
-        print('='*60)
-
-    # info----------------------------------------------------------
-    def do_i(self, arg):
-        self.Config.status.__init__()
-        S = self.Config.status.getNatlinkStatusString()
-        S = S + '\n\nIf you changed things, you must restart Dragon'
-        print(S)
-    def do_I(self, arg):
-        # inifile natlinkstatus.ini settings:
-        self.Config.status.__init__()
-        self.Config.openConfigFile()
-    def do_j(self, arg):
-        # print PythonPath:
-        self.Config.printPythonPath()
-
-    def help_i(self):
-        print('-'*60)
-        print("""The command info (i) gives an overview of the settings that are
-currently set inside the Natlink system.
-
-With command (I), you open the file "natlink.ini"
-
-The command (j) gives the PythonPath variable which should contain several
-Natlink directories after the config GUI runs succesfully
-
-Settings are set by either the Natlink/Vocola/Unimacro installer
-or by functions that are called by the CLI (command line interface).
-
-After you change settings, restart Dragon.
-""")
-        print('='*60)
-    help_j = help_I = help_i
-    
-    # User Directory, Dragonfly directory -------------------------------------------------
-    # for easier remembering, change n to d (DragonFly)
-    def do_d(self, arg):
-        self.Config.setDirectory('DragonflyUserDirectory', arg)
-    
-    def do_D(self, arg):
-        self.Config.clearDirectory('DragonflyUserDirectory')
-
-    def do_n(self, arg):
-        self.Config.setDirectory('UserDirectory', arg)
-    
-    def do_N(self, arg):
-        self.Config.clearDirectory('UserDirectory')
-    
-    def help_n(self):
-        print('-'*60)
-        print('''Sets (n [<path>]) or clears (N) the "UserDirectory" of Natlink.
-This is the folder where your own python grammar files are/will be located.
-''')
-    def help_d(self):
-        print('-'*60)
-        print('''Sets (d [<path>]) or clears (D) the "DragonflyUserDirectory".
-This is the folder where your own Dragonfly python grammar files are/will be located.
-''')
-        
-    help_N = help_n
-    help_D = help_d
-    
-    # Unimacro User directory and Editor or Unimacro INI files-----------------------------------
-    def do_o(self, arg):
-        
-        unimacro_user_dir = self.Config.status.getUnimacroUserDirectory()
-        if unimacro_user_dir and isdir(unimacro_user_dir):
-            print(f'UnimacroUserDirectory is already defined: "{unimacro_user_dir}"\n\tto change, first clear (option "O") and then set again')
-            print('\nWhen you want to upgrade Unimacro, also first clear ("O"), then choose this option ("o") again.\n')
-            return
-
-        uni_dir = self.Config.status.getUnimacroDirectory()
-        if uni_dir:
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "unimacro"])
-            except subprocess.CalledProcessError as e:
-                print('====\ncould not pip install --upgrade unimacro\n====\n')
-                return
-        else:
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "unimacro"])
-            except subprocess.CalledProcessError as e:
-                print('====\ncould not pip install unimacro\n====\n')
-                return
-        self.Config.status.refresh()   # refresh status
-        uni_dir = self.Config.status.getUnimacroDirectory()
-
-        self.Config.setDirectory('UnimacroUserDirectory', arg, section='unimacro')
-        unimacro_user_dir = self.Config.config_get('unimacro', 'UnimacroUserDirectory')
-        if not unimacro_user_dir:
-            return
-        uniGrammarsDir = self.Config.status.getUnimacroGrammarsDirectory()
-        self.Config.setDirectory('unimacro','unimacro')  #always unimacro
-
-        self.Config.setDirectory('UnimacroGrammarsDirectory', uniGrammarsDir)
-            
-    def do_O(self, arg):
-        self.Config.clearDirectory('UnimacroUserDirectory', section='unimacro')
-        self.Config.config_remove('directories', 'unimacrogrammarsdirectory')
-        self.Config.config_remove('directories', 'unimacro')
-        self.Config.status.refresh()
-
-    def help_o(self):
-        print('-'*60)
-        print(r"""set/clear UnimacroUserDirectory (o <path>/O)
-
-
-Setting this directory also enables Unimacro. Clearing it disables Unimacro
-
-In this directory, your user INI files (and possibly other user
-dependent files) will be put.
-
-You can use (if entered through the CLI) "~" for user home directory, or
-another environment variable (%%...%%). (example: "o ~\Documents\.natlink\\UnimacroUser")
-""")
-        print('='*60)
-
-    help_O = help_o
-
-    # Unimacro Command Files Editor-----------------------------------------------
-    def do_p(self, arg):
-        self.message = "Set Unimacro INI file editor"
-        print(f'do action: {self.message}')
-        key = "UnimacroIniFilesEditor"
-        self.Config.setFile(key, arg, section='unimacro')
-            
-    def do_P(self, arg):
-        self.message = "Clear Unimacro INI file editor, go back to default Notepad"
-        print(f'do action: {self.message}')
-        key = "UnimacroIniFilesEditor"
-        self.Config.clearFile(key, section='unimacro')
-
-    def help_p(self):
-        print('-'*60)
-        print("""set/clear path to Unimacro INI files editor (p <path>/P)
-
-By default (when you clear this setting) "notepad" is used, but:
-
-You can specify a program you like, for example,
-TextPad, NotePad++, UltraEdit, or win32pad
-
-You can even specify Wordpad, maybe Microsoft Word...
-
-""")
-        print('='*60)
-
-    help_P = help_p
-
-    # Unimacro Vocola features-----------------------------------------------
-    # managing the include file wrapper business.
-    # can be called from the Vocola compatibility button in the config GUI.
-    def do_l(self, arg):
-        self.message = "Copy include file Unimacro.vch into Vocola User Directory"
-        print('do action: %s'% self.message)
-        self.Config.copyUnimacroIncludeFile()
-
-    def help_l(self):
-        print('-'*60)
-        print("""Copy Unimacro.vch header file into Vocola User Files directory      (l)
-
-Insert/remove 'include Unimacro.vch' lines into/from each Vocola 
-command file                                                        (m/M)
-
-Using Unimacro.vch, you can call Unimacro shorthand commands from a
-Vocola command.
-""")
-        print('='*60)
-
-    def do_m(self, arg):
-        self.message = 'Insert "include Unimacro.vch" line in each Vocola Command File'
-        print(f'do action: {self.message}')
-        self.Config.includeUnimacroVchLineInVocolaFiles()
-        print('and do action: enableVocolaTakesUnimacroActions')
-        self.Config.enableVocolaTakesUnimacroActions()
-        
-    def do_M(self, arg):
-        self.message = 'Remove "include Unimacro.vch" line from each Vocola Command File'
-        print(f'do action: {self.message}')
-        self.Config.removeUnimacroVchLineInVocolaFiles()
-        print('and do action: disableVocolaTakesUnimacroActions')
-        self.Config.disableVocolaTakesUnimacroActions()
-        
-    help_m = help_M = help_l
-    
-    
-    # Vocola and Vocola User directory------------------------------------------------
-    def do_v(self, arg):
-        """specify the VocolaUserDirectory,
-        
-        but the config needs also the VocolaDirectory and the VocolaGrammarsDirectory
-        """
-        vocola_user_dir = self.Config.status.getVocolaUserDirectory()
-        if vocola_user_dir and isdir(vocola_user_dir):
-            print(f'VocolaUserDirectory is already defined: "{vocola_user_dir}"\n\tto change, first clear (option "V") and then set again')
-            print('\nWhen you want to upgrade Vocola (vocola2), also first clear ("V"), then choose this option ("v") again.\n')
-            return
-
-        voc_dir = self.Config.status.getVocolaDirectory()
-        if voc_dir:
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "vocola2"])
-            except subprocess.CalledProcessError as e:
-                print('====\ncould not pip install --upgrade vocola2\n====\n')
-                return
-        else:
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "vocola2"])
-            except subprocess.CalledProcessError as e:
-                print('====\ncould not pip install vocola2\n====\n')
-                return
-        self.Config.status.refresh()   # refresh status
-        voc_dir = self.Config.status.getVocolaDirectory()
-
-        self.Config.setDirectory('VocolaUserDirectory', arg, section='vocola')
-        vocola_user_dir = self.Config.config_get('vocola', 'VocolaUserDirectory')
-        if not vocola_user_dir:
-            return
-        vocGrammarsDir = self.Config.status.getVocolaGrammarsDirectory()
-        self.Config.setDirectory('vocola','vocola2')  #always vocola2
-        self.Config.setDirectory('VocolaGrammarsDirectory', vocGrammarsDir)
-
-            
-    def do_V(self, arg):
-        self.Config.clearDirectory('VocolaUserDirectory', section='vocola')
-        self.Config.config_remove('directories', 'vocolagrammarsdirectory')
-        self.Config.config_remove('directories', 'vocoladirectory')
-        self.Config.config_remove('directories','vocola')
-        self.Config.status.refresh()
-
-    def help_v(self):
-        print('-'*60)
-        print(r"""Enable/disable Vocola by setting/clearing the VocolaUserDirectory
-(v <path>/V).
-
-In this VocolaUserDirectory your Vocola Command File are/will be located.
-
-if <path> does not exist, but "one up" does, the sub directory is created.
-""")
-        print('='*60)
-
-    help_V = help_v
-    
-
-    # enable/disable Natlink debug output...
-    def do_x(self, arg):
-        self.message = 'Print debug output to "Messages from Natlink" window'
-        print('do action: %s'% self.message)
-        self.Config.enableDebugOutput()
-    def do_X(self, arg):
-        self.message = 'Disable printing debug output to "Messages from Natlink" window'
-        print('do action: %s'% self.message)
-        self.Config.disableDebugOutput()
-
-    def help_x(self):
-        print('-'*60)
-        print("""Enable (x)/disable (X) Natlink debug output
-
-This sends (sometimes lengthy) debug messages to the
-"Messages from Natlink" window.
-""")
-        print('='*60)
-
-    help_X = help_x
-    
-    # # register natlink.pyd
-    # def do_r(self, arg):
-    #     self.message = "(Re) register and enable natlink.pyd is done from the installer program"
-    #     
-    # def do_R(self, arg):
-    #     self.message = 'Unregister natlink.pyd and disable Natlink is done from the installer program,\nyou can uninstall Natlink via "Add or remove Programs" in Windows'
-    #     
-    # different Vocola options
-    def do_b(self, arg):
-        self.message = "Enable Vocola different user directories for different languages"
-        print('do action: %s'% self.message)
-        self.Config.enableVocolaTakesLanguages()
-    def do_B(self, arg):
-        self.message = "Disable Vocola different user directories for different languages"
-        print('do action: %s'% self.message)
-        self.Config.disableVocolaTakesLanguages()
-
-    def do_a(self, arg):
-        self.message = "Enable Vocola taking Unimacro actions"
-        print('do action: %s'% self.message)
-        self.Config.enableVocolaTakesUnimacroActions()
-    def do_A(self, arg):
-        self.message = "Disable Vocola taking Unimacro actions"
-        print('do action: %s'% self.message)
-        self.Config.disableVocolaTakesUnimacroActions()
-
-    def help_a(self):
-        print('-'*60)
-        print("""----Enable (a)/disable (A) Vocola taking Unimacro actions.
-        
-These actions (Unimacro Shorthand Commands) and "meta actions" are processed by
-the Unimacro actions module.
-
-If Unimacro is NOT enabled, it will also
-be necessary that the UnimacroDirectory is put in the python path.
-The special option for that is (f).
-
-Note this option (f) is only needed when you use Vocola with Unimacro actions,
-but you do not use Unimacro.
-""")
-        print('='*60)
-        
-    def help_b(self):
-        print('-'*60)
-        print("""----Enable (b)/disable (B) different Vocola User Directories
-
-If enabled, Vocola will look into a subdirectory "xxx" of
-VocolaUserDirectory IF the language code of the current user speech
-profile is "xxx" and  is NOT "enx".
-
-So for English users this option will have no effect.
-
-The first time a command file is opened in, for example, a
-Dutch speech profile (language code "nld"), a subdirectory "nld" 
-is created, and all existing Vocola Command files for this Dutch speech profile are copied into this folder.
-
-When you use your English speech profile again, ("enx") the Vocola Command files in the VocolaUserDirectory are taken again.
-""")
-        print('='*60)
-
-    help_B = help_b
-    help_A = help_a
-
-    # autohotkey settings:
-    def do_h(self, arg):
-        self.message = 'set directory of AutoHotkey.exe to: %s'% arg
-        print('do action: %s'% self.message)
-        self.Config.setAhkExeDir(arg)
-
-    def do_H(self, arg):
-        self.message = 'clear directory of AutoHotkey.exe, return to default'
-        print('do action: %s'% self.message)
-        self.Config.clearAhkExeDir()
-
-    def do_k(self, arg):
-        self.message = 'set user directory for AutoHotkey scripts to: %s'% arg
-        print('do action: %s'% self.message)
-        self.Config.setAhkUserDir(arg)
-
-    def do_K(self, arg):
-        self.message = 'clear user directory of AutoHotkey scripts, return to default'
-        print('do action: %s'% self.message)
-        self.Config.clearAhkUserDir()
-            
-    def help_h(self):
-        print('-'*60)
-        print("""----Set (h)/clear (return to default) (H) the AutoHotkey exe directory.
-       Assume autohotkey.exe is found there (if not AutoHotkey support will not be there)
-       If set to a invalid directory, AutoHotkey support will be switched off.
-       
-       Set (k)/clear (return to default) (K) the User Directory for AutoHotkey scripts.
-       
-       Note: currently these options can only be run from the natlinkconfigfunctions.py script.
-""")
-        print('='*60)
-
-    help_H = help_k = help_K = help_h
-
-    # enable/disable Natlink debug output...
-
-    def default(self, line):
-        print(f'no valid entry: "{line}", type "u" or "usage" for list of commands')
-        print()
-
-    def do_quit(self, arg):
-        sys.exit()
-    do_q = do_quit
-    def do_usage(self, arg):
-        self.usage()
-    do_u = do_usage
-    def help_u(self):
-        print('-'*60)
-        print("""u and usage give the list of commands
-lowercase commands usually set/enable something
-uppercase commands usually clear/disable something
-Informational commands: i and I
-""")
-    help_usage = help_u
 
 def isValidDir(path):
     """return the path, as str, if valid directory
@@ -1080,14 +663,3 @@ def createIfNotThere(path_name, level_up=None):
         
     return start_path
 
-def main_cli():
-    if len(sys.argv) == 1:
-        Cli = CLI()
-        Cli.Config = NatlinkConfig()
-        Cli.info = "type u for usage"
-        try:
-            Cli.cmdloop()
-        except (KeyboardInterrupt, SystemExit):
-            pass
-
-main_cli() if __name__ == "__main__" else _main()

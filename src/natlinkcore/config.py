@@ -34,7 +34,7 @@ class NatlinkConfig:
         self.config_path = ''  # to be defined in from_config_parser
 
     def __repr__(self) -> str:
-        return  f'NatlinkConfig(directories_by_user={self.directories_by_user}, '
+        return  f'NatlinkConfig(directories_by_user={self.directories_by_user}, ...)'
 
     @staticmethod
     def get_default_config() -> 'NatlinkConfig':
@@ -149,8 +149,7 @@ def expand_path(input_path: str) -> str:
         return normpath(env_expanded)
 
     if input_path.startswith('natlink_userdir/') or input_path.startswith('natlink_userdir\\'):
-        nud = os.getenv('natlink_userdir') or str(Path("~")/'.natlink')
-        nud = normpath(expand_path(nud))
+        nud = expand_natlink_userdir()
         if isdir(nud):
             dir_path = input_path.replace('natlink_userdir', nud)
             dir_path = normpath(dir_path)
@@ -174,5 +173,15 @@ def expand_path(input_path: str) -> str:
     # print(f'env_expanded: "{env_expanded}", from envvar: "{input_path}"')
     return normpath(env_expanded)
 
-
+def expand_natlink_userdir():
+    """not with envvariables, but special:
     
+    if NATLINK_USERDIR is set: return this, but... it should end with ".natlink"
+    if NATLINK_USERDIR is NOT set: return Path.home()/'.natlink'
+    """
+    normpath = os.path.normpath
+    nud = os.getenv('natlink_userdir') or str(Path.home()/'.natlink')
+    nud = normpath(expand_path(nud))
+    if not nud.endswith('.natlink'):
+        raise ValueError(f'expand_natlink_userdir: directory "{nud}" should end with ".natlink"')
+    return nud
