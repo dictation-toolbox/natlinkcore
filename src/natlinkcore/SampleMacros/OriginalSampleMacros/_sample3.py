@@ -23,13 +23,13 @@
 # See natlinkutils.py for more documentation.
 #
 # Put in MacroSystem folder and toggle the microphone.
-# Write "d\xe9mo" to force command recognition.
+# Write "d\xe9mo" to force command recognition, and to test non-ascii characters.
 #
 import natlink
 from natlinkcore.natlinkutils import *
 
 class ThisGrammar(GrammarBase):
-
+#
     gramSpec = """
         <mainRule> exported = <ruleOne>;
         <ruleOne> = d\xe9mo <ruleTwo> now please;

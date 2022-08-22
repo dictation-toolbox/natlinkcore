@@ -3,32 +3,44 @@
 #   (c) Copyright 2000 by Joel Gould
 #   Portions (c) Copyright 2000 by Dragon Systems, Inc.
 #
-# <dgletters> does not work any more (2020)
+# demonstrate dgndication, dgnwords and dgnletters...
 # Put in MacroSystem folder and toggle the microphone.
-# Write "d\xe9mo" to force command recognition.
-
 #
-
+# this test has been augmented a bit:
+#
+# the rule <dgnwords>, catching only one word has been added
+# optional words after the dictation have been added, in order
+# to perform additional actions.
+# the word "stop" is not useful, and is not caught in the <dgnletters> rule.
+# the copy commands seem to function quite well!
+# (Quintijn Hoogenboom, August 2022)
+#
+#pylint:disable=C0209
+import time
 import natlink
 from natlinkcore.natlinkutils import *
 from natlinkcore import nsformat
 
-class ThisGrammar(GrammarBase):
+class ThisGrammar(GrammarBase):   
 
     gramSpec = """
         <dgndictation> imported;
         <dgnletters> imported;
-        <ruleOne> exported = d\xe9mo sample eight <dgndictation> ([stop]|[copy (that|line|all)]);
-        <ruleTwo> exported = d\xe9mo sample eight spell <dgnletters> ([stop]|[copy (that|line|all)]);
+        <dgnwords> imported;
+        <ruleOne> exported = demodictate <dgndictation> [stop|<copythings>];
+        <ruleTwo> exported = demospell <dgnletters> [stop|<copythings>];
+        <ruleThree> exported = demooneword <dgnwords> [stop|<copythings>];
+        <copythings> = copy (that|line|all);
     """
-#Dgn dictation this is a test stop and I continue this is a test
+#hello
+
+
     def gotResults_dgndictation(self,words,fullResults):
         """format the words with nsformat and print.
         
         With more commands in succession, the lastState is used to fix spacing and capitalization of words.
         """
         formatted_words, self.lastState = nsformat.formatWords(words, self.lastState)
-        # text = ' '.join(words)
         self.lenOfWords = len(formatted_words)
         natlink.playString(formatted_words)
 
@@ -38,8 +50,15 @@ class ThisGrammar(GrammarBase):
            but... the "commented out" trick works in practice equally well.
         """
         print(f'words for dgnletters: {words}')
-        # words = map(lambda x: x[:1], words)
-        # text = ''.join(words)
+        letters = nsformat.formatLetters(words)
+        self.lenOfWords = len(letters)
+        natlink.playString(letters)
+
+    def gotResults_dgnwords(self,words,fullResults):
+        """only catching one word of dictation
+        
+        """
+        print(f'only one word for dgnwords: {words}')
         letters = nsformat.formatLetters(words)
         self.lenOfWords = len(letters)
         natlink.playString(letters)
@@ -49,23 +68,47 @@ class ThisGrammar(GrammarBase):
         """do an action if words at end of command are caught
         """
         print(f'words for ruleOne: {words}')
-        if words[0] != 'copy':
-            self.copyThings(which=words[-1])
-
            
     def gotResults_ruleTwo(self,words,fullResults):
         """this is to catch the fixed words of ruleTwo
         """
         print(f'words for ruleTwo: {words}')
-        if words[0] != 'copy':
-            self.copyThings(which=words[-1])
 
-    def copyThings(self, which):
+    def gotResults_ruleThree(self,words,fullResults):
+        """this is to catch the fixed words of ruleThree
+        """
+        print(f'words for ruleThree: {words}')
+
+    def gotResults_copythings(self, words, fullResults):
         """copy last, line or all
-        """ 
-        if which == 'line':
-            sendkeys('{home}{ctrl+c}')
-         
+        """
+        print(f'words for copythings: {words}')
+        if 'line' in words:
+            print('copy line!!')
+            natlink.playString('{shift+home}')
+        elif 'that' in words:
+            natlink.playString('{shift+left %s}'% self.lenOfWords)
+        elif 'all' in words:
+            natlink.playString('{ctrl+a}')
+        else:
+            raise ValueError('options should be "line", "that" and "all"')
+
+        if 'copy' in words:
+            natlink.playString('{ctrl+c}')
+            time.sleep(0.3)
+        else:
+            raise ValueError('word "copy" should be in words')
+        
+        if 'line' in words:
+            natlink.playString('{end}')
+        elif 'that' in words:
+            print(f'go back after copy that, {self.lenOfWords} characters')
+            natlink.playString('{right}')
+        elif 'all' in words:
+            natlink.playString('{right}')
+        else:
+            raise ValueError('options should be "line", "that" and "all"')           
+
 
     def initialize(self):
         self.lastState = None

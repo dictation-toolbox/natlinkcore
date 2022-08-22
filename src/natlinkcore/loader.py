@@ -398,7 +398,7 @@ class NatlinkMain(metaclass=Singleton):
         self.logger.debug(f'on_begin_callback called with: moduleInfo: {module_info}')
         self._on_begin_utterance_callback.run()
        
-        prog_name = Path(module_info[0]).stem
+        prog_name = Path(module_info[0].lower()).stem
         if prog_name not in self.prog_names_visited:
             self.prog_names_visited.add(prog_name)
             self.trigger_load()

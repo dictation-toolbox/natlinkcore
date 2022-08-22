@@ -42,7 +42,7 @@ import struct
 import sys
 import traceback
 
-from natlink import _natlink_core as natlink
+import natlink
 from natlinkcore import gramparser
 
 # was set in config program, and passed via natlinkstatus.py but now removed...
