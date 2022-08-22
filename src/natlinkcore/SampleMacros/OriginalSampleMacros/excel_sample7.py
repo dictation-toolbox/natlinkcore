@@ -18,14 +18,11 @@
 # http://starship.python.net/crew/pirx/spam7/ for more details os using OLE
 # automation from Python.
 #
-
-import natlink
 from natlinkcore.natlinkutils import *
 
-import string
 import win32api
 import win32com.client
-consts = win32com.client.constants
+# consts = win32com.client.constants
 
 colorMap = {
     'black':win32api.RGB(0,0,0),
@@ -56,14 +53,14 @@ colorMap = {
 class ThisGrammar(GrammarBase):
 
     gramSpec = """
-        <start> exported = d\xe9mo sample seven;
+        <start> exported = demo sample seven;
     """
 
     def initialize(self):
         self.load(self.gramSpec)
 
     def gotBegin(self,moduleInfo):
-        winHandle=matchWindow(moduleInfo,'excel','Microsoft Excel')
+        winHandle=matchWindow(moduleInfo,'excel','Excel')
         if winHandle:
             self.activateAll(window=winHandle)
 
@@ -73,14 +70,17 @@ class ThisGrammar(GrammarBase):
         for row in range(1,50):
             for col in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
                 cell=worksheet.Range(col+str(row))
-                if colorMap.has_key(cell.Value):
+                if cell.Value in colorMap:
                     cell.Font.Color=colorMap[cell.Value]
-                    cell.Borders.Weight = consts.xlThick
+                    xlThick = 4     # was: consts.xlThick
+                    cell.Borders.Weight = xlThick
 
 thisGrammar = ThisGrammar()
 thisGrammar.initialize()
 
 def unload():
+    #pylint:disable=W0603
     global thisGrammar
-    if thisGrammar: thisGrammar.unload()
+    if thisGrammar:
+        thisGrammar.unload()
     thisGrammar = None

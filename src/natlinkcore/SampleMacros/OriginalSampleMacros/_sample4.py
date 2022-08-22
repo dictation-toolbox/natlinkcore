@@ -7,7 +7,6 @@
 #   Sample macro file d\xe9mostrating mouse movement.
 #
 # Put in MacroSystem folder and toggle the microphone.
-# Write "d\xe9mo" to force command recognition.
 #
 import natlink
 from natlinkcore.natlinkutils import *
@@ -15,11 +14,12 @@ from natlinkcore.natlinkutils import *
 class ThisGrammar(GrammarBase):
 
     gramSpec = """
-        <start> exported = d\xe9mo sample four;
+        <start> exported = demo sample four;
     """
 
     def gotResults_start(self,words,fullResults):
         # execute a control-left drag down 30 pixels
+        print('_sample4 start: drags an item down 30 pixels... (needs checking!!)')
         x,y = natlink.getCursorPos()
         natlink.playEvents( [ (wm_keydown,vk_control,1),
                               (wm_lbuttondown,x,y),
@@ -40,3 +40,7 @@ def unload():
     if thisGrammar:
         thisGrammar.unload()
     thisGrammar = None
+
+
+
+

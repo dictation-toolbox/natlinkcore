@@ -20,9 +20,8 @@
 # (gotResults_xxx).  This file also d\xe9monstrates using the actual words
 # recognized to control the results (we type the name of the spoken color).
 # Put in MacroSystem folder and toggle the microphone.
-# Write "d\xe9mo" to force command recognition.
+# Write "d\xe9mo" to force command recognition, and to test non-ascii characters.
 #
-
 
 import natlink
 from natlinkcore.natlinkutils import *
