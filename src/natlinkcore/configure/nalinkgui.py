@@ -95,10 +95,10 @@ def DragonflyUserDir(values, event):
         window['Set_UserDir_Dragonfly'].update("")
 
 # Vocola
-# TODO: Handle Vocola package not installed
 def VocolaUserDir(valuesm, event):
     if event.startswith('Set'):
-        Config.setDirectory('VocolaUserDirectory', values['Set_UserDir_Vocola'], section='vocola')
+    # Threaded with pysimplegui perform_long_operation to prevent GUI from freezing while configuring/pip install Vocola
+        window.perform_long_operation(lambda : Config.enable_vocola(values['Set_UserDir_Vocola']), 'Thread_Done_Vocola')
     if event.startswith('Clear'):
         Config.clearDirectory('VocolaUserDirectory', section='vocola')
         window['Set_UserDir_Vocola'].update("")
@@ -118,16 +118,11 @@ def VocolaUnimacroActions(values, event):
 
 # Unimacro
 def UnimacroUserDir(values, event):
-    # TODO: Handle Unimacro package not installed
     if event.startswith('Set'):
-        Config.setDirectory('UnimacroUserDirectory',
-                            values['Set_UserDir_Unimacro'], section='unimacro')
-        Config.setDirectory('UnimacroGrammarsDirectory', Config.status.getUnimacroGrammarsDirectory())
-        Config.setDirectory('unimacro', 'unimacro')
+    # Threaded with pysimplegui perform_long_operation to prevent GUI from freezing while configuring/pip install Unimacro 
+        window.perform_long_operation(lambda : Config.enable_unimacro(values['Set_UserDir_Unimacro']), 'Thread_Done_Unimacro')
     if event.startswith('Clear'):
-        Config.clearDirectory('UnimacroUserDirectory', section='unimacro')
-        Config.clearDirectory('UnimacroGrammarsDirectory')
-        Config.clearDirectory('unimacro')
+        Config.disable_unimacro()
         window['Set_UserDir_Unimacro'].update("")
 
 # Autohotkey
