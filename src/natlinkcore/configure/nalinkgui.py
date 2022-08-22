@@ -16,7 +16,7 @@ Status = natlinkstatus.NatlinkStatus()
 # Hidden Columns and Project State
 # TODO: if project is enabled, update the project state to enabled.
     # use enabled_packages for vocola, unimacro and dragonfly getDragonflyUserDirectory(), autohotkey Status.getAhkUserDir()?
-dragonfly, vocola, unimacro, autohotkey = False, False, False, False
+natlink, dragonfly, vocola, unimacro, autohotkey = False, False, False, False, False
 
 
 def collapse(layout, key, visible):
@@ -31,9 +31,13 @@ def collapse(layout, key, visible):
     return sg.pin(sg.Column(layout, key=key, visible=visible))
 
 #### Hidden UI Columns ####
+# TODO: Status.getUserDirectory() can not handle None for path
 # FIXME: Any text sg.Input/sg.I with enable_events=True will fire the event with every keystroke. 
     # This is a problem when editing the a path in the input field.
 # TODO: Status.getDragonflyUserDirectory() not implemented yet
+natlink_section = [[sg.Text('Natlink', text_color='black')],
+                    [sg.I(key='Set_UserDir_Natlink',  tooltip=r'The directory where User Natlink grammar files are located (e.g., "~\UserDirectory")', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Natlink', enable_events=True)],]
+
 dragonfly_section = [[sg.Text('Dragonfly', text_color='black')],
                      [sg.T('Dragonfly User Directory:', tooltip='The directory to Dragonfly user scripts (UserDirectory can also be used)'), sg.Input(key='Set_UserDir_Dragonfly', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly', enable_events=True)]]
 
@@ -51,14 +55,13 @@ autohotkey_section = [[sg.T('Autohotkey', text_color='black')],
 
 #### Main UI Layout ####
 layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.major}, Build: {osVersion.build}'), sg.T(f'Python: {pyVersion}'), sg.T(f'Dragon Version: {Status.getDNSVersion()}')],
-          #### Nalink ####
-          # TODO: Status.getUserDirectory() can not handle None for path
+          #### Nalink Logging####
           [sg.T('Nalink:', font='bold'), sg.Checkbox('Enable Debug', key='Set_Debug_Natlink', enable_events=True)],
-          [sg.I(key='Set_UserDir_Natlink',  tooltip=r'The directory where User Natlink grammar files are located (e.g., "~\UserDirectory")', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Natlink', enable_events=True)],
           #### Projects Checkbox ####
           [sg.T('Configure Projects:', font='bold')],
-          [sg.Checkbox('Dragonfly', enable_events=True, key='dragonfly-checkbox'), sg.Checkbox('Vocola', enable_events=True, key='vocola2-checkbox'), sg.Checkbox('Unimacro', enable_events=True, key='unimacro-checkbox'), sg.Checkbox('AutoHotkey', key='autohotkey-checkbox', enable_events=True)],
+          [sg.Checkbox('Natlink', enable_events=True, key='natlink-checkbox'), sg.Checkbox('Dragonfly', enable_events=True, key='dragonfly-checkbox'), sg.Checkbox('Vocola', enable_events=True, key='vocola2-checkbox'), sg.Checkbox('Unimacro', enable_events=True, key='unimacro-checkbox'), sg.Checkbox('AutoHotkey', key='autohotkey-checkbox', enable_events=True)],
           #### Projects Hidden  See Hidden UI Columns above ####
+          [collapse(natlink_section, 'natlink', natlink)],
           [collapse(dragonfly_section, 'dragonfly', dragonfly)],
           [collapse(vocola2_section, 'vocola2', vocola)],
           [collapse(unimacro_section, 'unimacro', unimacro)],
@@ -158,7 +161,12 @@ try:
             break
         # Hidden Columns logic
         # TODO: if project is enabled, then show the column
-        elif event.startswith('dragonfly'):
+        elif event.startswith('natlink'):
+            natlink = not natlink
+            window['natlink-checkbox'].update(natlink)
+            window['natlink'].update(visible=natlink)
+
+        if event.startswith('dragonfly'):
             dragonfly = not dragonfly
             window['dragonfly-checkbox'].update(dragonfly)
             window['dragonfly'].update(visible=dragonfly)
