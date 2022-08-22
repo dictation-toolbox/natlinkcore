@@ -2,6 +2,7 @@
 
 import pathlib as p
 import sys
+import os
 import sysconfig
 from pprint import pprint
 
@@ -17,9 +18,10 @@ def sample_config(sample_name) -> 'NatlinkConfig':
     """
     load a config file from the config files subfolder
     """
-    sample_ini=p.WindowsPath(os.path.dirname(__file__)) / "config_files" / sample_name
-    config = NatlinkConfig.from_file(sample_ini)
-    return config
+    sample_ini= (p.Path(__file__).parent) / "config_files" / sample_name
+    test_config = NatlinkConfig.from_file(sample_ini)
+    return test_config
+
 #easier than using the decorator syntax
 def make_sample_config_fixture(settings_filename):
     return pytest.fixture(lambda : sample_config(settings_filename))
@@ -43,7 +45,7 @@ package_load_test1 = make_sample_config_fixture('package_load_test1.ini')
 @pytest.fixture()
 def mock_syspath(monkeypatch):
     """Add a tempory path to mock modules in sys.pythonpath"""
-    mock_folder=p.WindowsPath(os.path.dirname(__file__)) / "mock_packages"
+    mock_folder = (p.Path(__file__)).parent / "mock_packages"
     print(f"Mock Folder {mock_folder}")
     monkeypatch.syspath_prepend(str(mock_folder))
 
