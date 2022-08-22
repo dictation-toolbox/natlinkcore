@@ -8,12 +8,17 @@
 
 This script tests the commands with alternatives in interactive mode
 
-With recognitionMimic this grammar (from unittestNatlink.py) fails, October 2021.
+August 2022, with new python3 release coming, this test works.
 
-when calling "mimic runzero" or "mimic north", the following lines should be printed in the Messages from Natlink window:
+1. Load this file in one of your "directories"
+2. Toggle your microphone
+3. Say: "mimic runzero".
+
+Expected output:
 
 Heard macro "mimic run_zero", "['mimic', 'runzero']"
 Heard macro "mimic run_one", "['mimic', 'north']"
+Heard macro "mimic run_two", "['mimic', 'table']"
 
 """
 import natlink
