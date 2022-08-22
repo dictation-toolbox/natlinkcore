@@ -12,6 +12,7 @@ import pytest
 
 from natlinkcore.config import *
 from natlinkcore import loader
+
 def sample_config(sample_name) -> 'NatlinkConfig':
     """
     load a config file from the config files subfolder
@@ -48,7 +49,7 @@ def mock_syspath(monkeypatch):
 
 @pytest.fixture()
 def mock_userdir(monkeypatch):
-    mock_folder=p.WindowsPath(os.path.dirname(__file__)) / "mock_userdir"
+    mock_folder=p.WindowsPath(os.path.dirname(__file__)) / "mock_userdir" / ".natlink"
     print(f"Mock Userdir Folder {mock_folder}")
     monkeypatch.setenv("natlink_userdir",str(mock_folder))
 

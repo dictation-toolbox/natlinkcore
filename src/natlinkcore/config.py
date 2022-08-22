@@ -183,5 +183,5 @@ def expand_natlink_userdir():
     nud = os.getenv('natlink_userdir') or Path.home()/'.natlink'
     nud = normpath(expand_path(nud))
     if not nud.endswith('.natlink'):
-        raise ValueError('expand_natlink_userdir: directory "{nud}" should end with ".natlink"')
+        raise ValueError(f'expand_natlink_userdir: directory "{nud}" should end with ".natlink"')
     return nud
