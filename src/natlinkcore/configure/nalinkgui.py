@@ -31,15 +31,13 @@ def collapse(layout, key, visible):
     return sg.pin(sg.Column(layout, key=key, visible=visible))
 
 #### Hidden UI Columns ####
-# TODO: Status.getUserDirectory() can not handle None for path
 # FIXME: Any text sg.Input/sg.I with enable_events=True will fire the event with every keystroke. 
     # This is a problem when editing the a path in the input field.
-# TODO: Status.getDragonflyUserDirectory() not implemented yet
 natlink_section = [[sg.Text('Natlink', text_color='black')],
-                    [sg.I(key='Set_UserDir_Natlink',  tooltip=r'The directory where User Natlink grammar files are located (e.g., "~\UserDirectory")', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Natlink', enable_events=True)],]
+                    [sg.I(Status.getUserDirectory(), key='Set_UserDir_Natlink',  tooltip=r'The directory where User Natlink grammar files are located (e.g., "~\UserDirectory")', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Natlink', enable_events=True)]]
 
 dragonfly_section = [[sg.Text('Dragonfly', text_color='black')],
-                     [sg.T('Dragonfly User Directory:', tooltip='The directory to Dragonfly user scripts (UserDirectory can also be used)'), sg.Input(key='Set_UserDir_Dragonfly', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly', enable_events=True)]]
+                     [sg.T('Dragonfly User Directory:', tooltip='The directory to Dragonfly user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly', enable_events=True)]]
 
 vocola2_section = [[sg.T('Vocola2', text_color='black')],
                    [sg.T('Vocola2 User Directory:', enable_events=True, tooltip='enable/disable Vocola by setting/clearing VocolaUserDirectory'), sg.I(Status.getVocolaUserDirectory(), key='Set_UserDir_Vocola', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Vocola', enable_events=True)],
