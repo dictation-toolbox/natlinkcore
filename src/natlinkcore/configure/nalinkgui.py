@@ -101,7 +101,7 @@ def VocolaUserDir(valuesm, event):
     # Threaded with pysimplegui perform_long_operation to prevent GUI from freezing while configuring/pip install Vocola
         window.perform_long_operation(lambda : Config.enable_vocola(values['Set_UserDir_Vocola']), 'Thread_Done_Vocola')
     if event.startswith('Clear'):
-        Config.clearDirectory('VocolaUserDirectory', section='vocola')
+        Config.disable_vocola()
         window['Set_UserDir_Vocola'].update("")
 
 def VocolaTakesLanguages(values, event):
