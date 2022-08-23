@@ -15,8 +15,8 @@ Status = natlinkstatus.NatlinkStatus()
 
 # Hidden Columns and Project State
 # TODO: if project is enabled, update the project state to enabled.
-    # use enabled_packages for vocola, unimacro and dragonfly getDragonflyUserDirectory(), autohotkey Status.getAhkUserDir()?
-dragonfly, vocola, unimacro, autohotkey = False, False, False, False
+    # use enabled_packages for vocola2, unimacro and dragonfly2 getdragonflyUserDirectory(), autohotkey Status.getAhkUserDir()?
+dragonfly2, vocola2, unimacro, autohotkey = False, False, False, False
 
 def collapse(layout, key, visible):
     """
@@ -32,13 +32,13 @@ def collapse(layout, key, visible):
 #### Hidden UI Columns ####
 # FIXME: Any text sg.Input/sg.I with enable_events=True will fire the event with every keystroke. 
     # This is a problem when editing the a path in the input field.
-dragonfly_section = [[sg.Text('Dragonfly', text_color='black')],
-                     [sg.T('Dragonfly User Directory:', tooltip='The directory to Dragonfly user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly', enable_events=True)]]
+dragonfly2_section = [[sg.Text('Dragonfly2', text_color='black')],
+                     [sg.T('Dragonfly2 User Directory:', tooltip='The directory to dragonfly2 user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly2', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly2', enable_events=True)]]
 
 vocola2_section = [[sg.T('Vocola2', text_color='black')],
-                   [sg.T('Vocola2 User Directory:', enable_events=True, tooltip='enable/disable Vocola by setting/clearing VocolaUserDirectory'), sg.I(Status.getVocolaUserDirectory(), key='Set_UserDir_Vocola', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Vocola', enable_events=True)],
-                   [sg.Checkbox('Enable: Distinguish between languages for Vocola user files', Status.getVocolaTakesLanguages(), enable_events=True, key='Vocola_Lang')],
-                   [sg.Checkbox('Enable: Unimacro actions in Vocola', Status.getVocolaTakesUnimacroActions(), enable_events=True, key='Vocola_Unimacro_Actions')]]
+                   [sg.T('Vocola2 User Directory:', enable_events=True, tooltip='Enable/disable Vocola2 by setting/clearing Vocola2UserDirectory'), sg.I(Status.getVocolaUserDirectory(), key='Set_UserDir_vocola2', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_vocola2', enable_events=True)],
+                   [sg.Checkbox('Enable: Distinguish between languages for Vocola2 user files', Status.getVocolaTakesLanguages(), enable_events=True, key='Toggle_Vocola2_Lang')],
+                   [sg.Checkbox('Enable: Unimacro actions in Vocola2', Status.getVocolaTakesUnimacroActions(), enable_events=True, key='Toggle_Vocola2_Unimacro_Actions')]]
 
 unimacro_section = [[sg.T('Unimacro', text_color='black')],
                     [sg.T('Unimacro User Directory:', tooltip=r'Where the Unimacro user INI files are located, and several other directories (~ or %HOME% allowed)'), sg.I(Status.getUnimacroUserDirectory(), key='Set_UserDir_Unimacro', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Unimacro', enable_events=True)]]
@@ -52,10 +52,10 @@ layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.majo
           #### Projects Checkbox ####
           [sg.T('Natlink Loglevel:'),  sg.Combo(default_value=Status.getLogging().title(), values=("Critical",  "Fatal",  "Error", "Warning", "Info" , "Debug"), key='Set_Logging_Natlink', enable_events=True, auto_size_text=True, readonly=True)],
           [sg.T('Configure Projects:', font='bold')],
-          [sg.Checkbox('Dragonfly', enable_events=True, key='dragonfly-checkbox'), sg.Checkbox('Vocola', enable_events=True, key='vocola2-checkbox'), sg.Checkbox('Unimacro', enable_events=True, key='unimacro-checkbox'), sg.Checkbox('AutoHotkey', key='autohotkey-checkbox', enable_events=True)],
+          [sg.Checkbox('Dragonfly2', enable_events=True, key='dragonfly2-checkbox'), sg.Checkbox('Vocola2', enable_events=True, key='vocola2-checkbox'), sg.Checkbox('Unimacro', enable_events=True, key='unimacro-checkbox'), sg.Checkbox('AutoHotkey', key='autohotkey-checkbox', enable_events=True)],
           #### Projects Hidden  See Hidden UI Columns above ####
-          [collapse(dragonfly_section, 'dragonfly', dragonfly)],
-          [collapse(vocola2_section, 'vocola2', vocola)],
+          [collapse(dragonfly2_section, 'dragonfly2', dragonfly2)],
+          [collapse(vocola2_section, 'vocola2', vocola2)],
           [collapse(unimacro_section, 'unimacro', unimacro)],
           [collapse(autohotkey_section, 'autohotkey', autohotkey)],
           #### Buttons at bottom ####
@@ -68,16 +68,16 @@ window = sg.Window('Natlink GUI', layout)
 def SetNatlinkLoggingOutput(values, event):
     Config.setLogging(values['Set_Logging_Natlink'])
 
-# Dragonfly
-def DragonflyUserDir(values, event):
+# Dragonfly2
+def dragonfly2UserDir(values, event):
     if event.startswith('Set'):
         Config.setDirectory('DragonflyUserDirectory', values['Set_UserDir_Dragonfly'])
     if event.startswith('Clear'):
         Config.clearDirectory('DragonflyUserDirectory')
         window['Set_UserDir_Dragonfly'].update("")
 
-# Vocola
-def VocolaUserDir(valuesm, event):
+# Vocola2
+def Vocola2UserDir(valuesm, event):
     if event.startswith('Set'):
     # Threaded with pysimplegui perform_long_operation to prevent GUI from freezing while configuring/pip install Vocola
         window.perform_long_operation(lambda : Config.enable_vocola(values['Set_UserDir_Vocola']), 'Thread_Done_Vocola')
@@ -85,14 +85,14 @@ def VocolaUserDir(valuesm, event):
         Config.disable_vocola()
         window['Set_UserDir_Vocola'].update("")
 
-def VocolaTakesLanguages(values, event):
-    if values['Vocola_Lang']:
+def Vocola2TakesLanguages(values, event):
+    if values['Toggle_Vocola2_Lang']:
         Config.enableVocolaTakesLanguages()
     else:
         Config.disableVocolaTakesLanguages()
 
 
-def VocolaUnimacroActions(values, event):
+def Vocola2UnimacroActions(values, event):
     if values['Vocola_Unimacro_Actions']:
         Config.enableVocolaTakesUnimacroActions()
     else:
@@ -125,9 +125,9 @@ def AhkUserDir(values, event):
 
 
 # Lookup dictionary that maps keys as events to a function to call in Event Loop.
-nalink_dispatch = {'Set_Logging_Natlink': SetNatlinkLoggingOutput}
-dragonfly_dispatch = {'Set_UserDir_Dragonfly': DragonflyUserDir, 'Clear_UserDir_Dragonfly': DragonflyUserDir}
-vocola_dispatch = {'Set_UserDir_Vocola': VocolaUserDir, 'Clear_UserDir_Vocola': VocolaUserDir,'Vocola_Lang': VocolaTakesLanguages,'Vocola_Unimacro_Actions': VocolaUnimacroActions}  # , 'Set_GrammarsDir_Vocola': VocolaGrammarsDir
+natlink_dispatch = {'Set_Logging_Natlink': SetNatlinkLoggingOutput}
+dragonfly2_dispatch = {'Set_UserDir_Dragonfly2': dragonfly2UserDir, 'Clear_UserDir_Dragonfly2': dragonfly2UserDir}
+vocola2_dispatch = {'Set_UserDir_vocola2': Vocola2UserDir, 'Clear_UserDir_vocola2': Vocola2UserDir,'Toggle_Vocola2_Lang': Vocola2TakesLanguages,'Toggle_Vocola2_Unimacro_Actions': Vocola2UnimacroActions}
 unimacro_dispatch = {'Set_UserDir_Unimacro': UnimacroUserDir, 'Clear_UserDir_Unimacro': UnimacroUserDir}
 autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Set_ScriptsDir_Ahk': AhkUserDir,'Clear_ScriptsDir_Ahk': AhkUserDir}
 
@@ -140,15 +140,15 @@ try:
             break
         # Hidden Columns logic
         # TODO: if project is enabled, then show the column
-        elif event.startswith('dragonfly'):
-            dragonfly = not dragonfly
-            window['dragonfly-checkbox'].update(dragonfly)
-            window['dragonfly'].update(visible=dragonfly)
+        elif event.startswith('dragonfly2'):
+            dragonfly2 = not dragonfly2
+            window['dragonfly2-checkbox'].update(dragonfly2)
+            window['dragonfly2'].update(visible=dragonfly2)
 
         if event.startswith('vocola2'):
-            vocola = not vocola
-            window['vocola2-checkbox'].update(vocola)
-            window['vocola2'].update(visible=vocola)
+            vocola2 = not vocola2
+            window['vocola2-checkbox'].update(vocola2)
+            window['vocola2'].update(visible=vocola2)
 
         if event.startswith('unimacro'):
             unimacro = not unimacro
@@ -161,14 +161,14 @@ try:
             window['autohotkey'].update(visible=autohotkey)
 
         # Dispatch events to call appropriate config function.
-        if event in nalink_dispatch:
-            func_to_call = nalink_dispatch[event]
+        if event in natlink_dispatch:
+            func_to_call = natlink_dispatch[event]
             func_to_call(values, event)
-        if event in dragonfly_dispatch:
-            func_to_call = dragonfly_dispatch[event] # get function from dispatch dictionary (dragonfly_dispatch)
+        if event in dragonfly2_dispatch:
+            func_to_call = dragonfly2_dispatch[event] # get function from dispatch dictionary (dragonfly2_dispatch)
             func_to_call(values, event) # event is passed to function for event specific handling. Set\Clear
-        if event in vocola_dispatch:
-            func_to_call = vocola_dispatch[event]
+        if event in vocola2_dispatch:
+            func_to_call = vocola2_dispatch[event]
             func_to_call(values, event)
         if event in unimacro_dispatch:
             func_to_call = unimacro_dispatch[event]
