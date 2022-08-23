@@ -13,10 +13,13 @@ osVersion = sys.getwindowsversion()
 Config = NatlinkConfig()
 Status = natlinkstatus.NatlinkStatus()
 
+SYMBOL_UP =    '▲'
+SYMBOL_DOWN =  '▼'
+
 # Hidden Columns and Project State
 # TODO: if project is enabled, update the project state to enabled.
     # use enabled_packages for vocola2, unimacro and dragonfly2 getdragonflyUserDirectory(), autohotkey Status.getAhkUserDir()?
-dragonfly2, vocola2, unimacro, autohotkey = False, False, False, False
+dragonfly2, vocola2, unimacro, extras = False, False, False, False
 
 def collapse(layout, key, visible):
     """
@@ -32,32 +35,31 @@ def collapse(layout, key, visible):
 #### Hidden UI Columns ####
 # FIXME: Any text sg.Input/sg.I with enable_events=True will fire the event with every keystroke. 
     # This is a problem when editing the a path in the input field.
-dragonfly2_section = [[sg.Text('Dragonfly2', text_color='black')],
-                     [sg.T('Dragonfly2 User Directory:', tooltip='The directory to dragonfly2 user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly2', enable_events=True)]]
+dragonfly2_section = [[sg.Text('Dragonfly', text_color='black')],
+                     [sg.T('Dragonfly User Directory:', tooltip='The directory to dragonfly2 user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly2', enable_events=True)]]
 
-vocola2_section = [[sg.T('Vocola2', text_color='black')],
-                   [sg.T('Vocola2 User Directory:', enable_events=True, tooltip='Enable/disable Vocola2 by setting/clearing Vocola2UserDirectory'), sg.I(Status.getVocolaUserDirectory(), key='Set_UserDir_Vocola2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Vocola2', enable_events=True)],
-                   [sg.Checkbox('Enable: Distinguish between languages for Vocola2 user files', Status.getVocolaTakesLanguages(), enable_events=True, key='Toggle_Vocola2_Lang')],
-                   [sg.Checkbox('Enable: Unimacro actions in Vocola2', Status.getVocolaTakesUnimacroActions(), enable_events=True, key='Toggle_Vocola2_Unimacro_Actions')]]
+vocola2_section = [[sg.T('Vocola', text_color='black')],
+                   [sg.T('Vocola User Directory:', enable_events=True, tooltip='Enable/disable Vocola by setting/clearing Vocola User Directory'), sg.I(Status.getVocolaUserDirectory(), key='Set_UserDir_Vocola2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Vocola2', enable_events=True)],
+                   [sg.Checkbox('Enable: Distinguish between languages for Vocola user files', Status.getVocolaTakesLanguages(), enable_events=True, key='Toggle_Vocola2_Lang')],
+                   [sg.Checkbox('Enable: Unimacro actions in Vocola', Status.getVocolaTakesUnimacroActions(), enable_events=True, key='Toggle_Vocola2_Unimacro_Actions')]]
 
 unimacro_section = [[sg.T('Unimacro', text_color='black')],
                     [sg.T('Unimacro User Directory:', tooltip=r'Where the Unimacro user INI files are located, and several other directories (~ or %HOME% allowed)'), sg.I(Status.getUnimacroUserDirectory(), key='Set_UserDir_Unimacro', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Unimacro', enable_events=True)]]
 
-autohotkey_section = [[sg.T('Autohotkey', text_color='black')],
-                      [sg.T('Autohotkey Exe Dir:'), sg.I(Status.getAhkExeDir(), key='Set_Exe_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_Exe_Ahk', enable_events=True)],
-                      [sg.T('Autohotkey Scripts Dir:'), sg.I(Status.getAhkUserDir(), key='Set_ScriptsDir_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_ScriptsDir_Ahk', enable_events=True)]]
+extras_section = [[sg.T('Natlink Loglevel:'),  sg.Combo(default_value=Status.getLogging().title(), values=("Critical",  "Fatal",  "Error", "Warning", "Info" , "Debug"), key='Set_Logging_Natlink', enable_events=True, auto_size_text=True, readonly=True)],
+                  [sg.T('Autohotkey Exe Dir:'), sg.I(Status.getAhkExeDir(), key='Set_Exe_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_Exe_Ahk', enable_events=True)],
+                  [sg.T('Autohotkey Scripts Dir:'), sg.I(Status.getAhkUserDir(), key='Set_ScriptsDir_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_ScriptsDir_Ahk', enable_events=True)]]
 
 #### Main UI Layout ####
 layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.major}, Build: {osVersion.build}'), sg.T(f'Python: {pyVersion}'), sg.T(f'Dragon Version: {Status.getDNSVersion()}')],
           #### Projects Checkbox ####
-          [sg.T('Natlink Loglevel:'),  sg.Combo(default_value=Status.getLogging().title(), values=("Critical",  "Fatal",  "Error", "Warning", "Info" , "Debug"), key='Set_Logging_Natlink', enable_events=True, auto_size_text=True, readonly=True)],
-          [sg.T('Configure Projects:', font='bold')],
-          [sg.Checkbox('Dragonfly2', enable_events=True, key='dragonfly2-checkbox'), sg.Checkbox('Vocola2', enable_events=True, key='vocola2-checkbox'), sg.Checkbox('Unimacro', enable_events=True, key='unimacro-checkbox'), sg.Checkbox('AutoHotkey', key='autohotkey-checkbox', enable_events=True)],
+          [sg.T('Configure Projects:', font='bold'), sg.Checkbox('Dragonfly', enable_events=True, key='dragonfly2-checkbox'), sg.Checkbox('Vocola', enable_events=True, key='vocola2-checkbox'), sg.Checkbox('Unimacro', enable_events=True, key='unimacro-checkbox')],
           #### Projects Hidden  See Hidden UI Columns above ####
           [collapse(dragonfly2_section, 'dragonfly2', dragonfly2)],
           [collapse(vocola2_section, 'vocola2', vocola2)],
           [collapse(unimacro_section, 'unimacro', unimacro)],
-          [collapse(autohotkey_section, 'autohotkey', autohotkey)],
+          [collapse(extras_section, 'extras', extras)],
+          [sg.T(SYMBOL_DOWN, enable_events=True, k='extras-symbol-open', text_color='black'), sg.T('Extras', enable_events=True, text_color='black', k='extras-open')],
           #### Buttons at bottom ####
           [sg.Button('Exit')]]
 
@@ -155,10 +157,10 @@ try:
             window['unimacro-checkbox'].update(unimacro)
             window['unimacro'].update(visible=unimacro)
 
-        if event.startswith('autohotkey'):
-            autohotkey = not autohotkey
-            window['autohotkey-checkbox'].update(autohotkey)
-            window['autohotkey'].update(visible=autohotkey)
+        if event.startswith('extras'):
+            extras = not extras
+            window['extras-symbol-open'].update(SYMBOL_DOWN if extras else SYMBOL_UP)
+            window['extras'].update(visible=extras)
 
         # Dispatch events to call appropriate config function.
         if event in natlink_dispatch:
