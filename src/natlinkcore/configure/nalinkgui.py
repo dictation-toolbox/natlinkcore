@@ -34,6 +34,7 @@ def collapse(layout, key, visible):
 # FIXME: Any text sg.Input/sg.I with enable_events=True will fire the event with every keystroke. 
     # This is a problem when editing the a path in the input field.
 natlink_section = [[sg.Text('Natlink', text_color='black')],
+                    [sg.T('Nalink Loglevel:'),  sg.Combo(default_value=Status.getLogging().title(), values=("Critical",  "Fatal",  "Error", "Warning", "Info" , "Debug"), key='Set_Logging_Natlink', enable_events=True, auto_size_text=True, readonly=True)],
                     [sg.I(Status.getUserDirectory(), key='Set_UserDir_Natlink',  tooltip=r'The directory where User Natlink grammar files are located (e.g., "~\UserDirectory")', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Natlink', enable_events=True)]]
 
 dragonfly_section = [[sg.Text('Dragonfly', text_color='black')],
@@ -53,8 +54,6 @@ autohotkey_section = [[sg.T('Autohotkey', text_color='black')],
 
 #### Main UI Layout ####
 layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.major}, Build: {osVersion.build}'), sg.T(f'Python: {pyVersion}'), sg.T(f'Dragon Version: {Status.getDNSVersion()}')],
-          #### Nalink Logging####
-          [sg.T('Nalink:', font='bold'), sg.Checkbox('Enable Debug', key='Set_Debug_Natlink', enable_events=True)],
           #### Projects Checkbox ####
           [sg.T('Configure Projects:', font='bold')],
           [sg.Checkbox('Natlink', enable_events=True, key='natlink-checkbox'), sg.Checkbox('Dragonfly', enable_events=True, key='dragonfly-checkbox'), sg.Checkbox('Vocola', enable_events=True, key='vocola2-checkbox'), sg.Checkbox('Unimacro', enable_events=True, key='unimacro-checkbox'), sg.Checkbox('AutoHotkey', key='autohotkey-checkbox', enable_events=True)],
@@ -72,12 +71,7 @@ window = sg.Window('Natlink GUI', layout)
 ##### Config Functions #####
 # Natlink
 def SetNatlinkLoggingOutput(values, event):
-    #TODO: Handle other logging levels
-    if values['Set_Debug_Natlink']:
-        Config.enableDebugOutput()
-    else:
-        Config.disableDebugOutput()
-
+    Config.setLogging(values['Set_Logging_Natlink'])
 
 def NatlinkUserDir(values, event):
     if event.startswith('Set'):
@@ -144,7 +138,7 @@ def AhkUserDir(values, event):
 
 
 # Lookup dictionary that maps keys as events to a function to call in Event Loop.
-nalink_dispatch = {'Set_Debug_Natlink': SetNatlinkLoggingOutput, 'Set_UserDir_Natlink': NatlinkUserDir, 'Clear_UserDir_Natlink': NatlinkUserDir}
+nalink_dispatch = {'Set_Logging_Natlink': SetNatlinkLoggingOutput, 'Set_UserDir_Natlink': NatlinkUserDir, 'Clear_UserDir_Natlink': NatlinkUserDir}
 dragonfly_dispatch = {'Set_UserDir_Dragonfly': DragonflyUserDir, 'Clear_UserDir_Dragonfly': DragonflyUserDir}
 vocola_dispatch = {'Set_UserDir_Vocola': VocolaUserDir, 'Clear_UserDir_Vocola': VocolaUserDir,'Vocola_Lang': VocolaTakesLanguages,'Vocola_Unimacro_Actions': VocolaUnimacroActions}  # , 'Set_GrammarsDir_Vocola': VocolaGrammarsDir
 unimacro_dispatch = {'Set_UserDir_Unimacro': UnimacroUserDir, 'Clear_UserDir_Unimacro': UnimacroUserDir}
