@@ -241,6 +241,7 @@ class NatlinkConfig:
             print(f'setLogging, setting is already "{old_value}"')
             return True
         if value in ["CRITICAL", "FATAL", "ERROR", "WARNING", "INFO", "DEBUG"]:
+            print(f'setLogging, setting logging to: "{value}"')
             self.config_set('settings', "log_level", value)
             if old_value is not None:
                 self.config_set('previous settings', "log_level", old_value)
