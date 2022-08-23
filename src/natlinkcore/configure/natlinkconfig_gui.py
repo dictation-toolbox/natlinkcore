@@ -33,19 +33,19 @@ def collapse(layout, key, visible):
 # FIXME: Any text sg.Input/sg.I with enable_events=True will fire the event with every keystroke. 
     # This is a problem when editing the a path in the input field.
 dragonfly2_section = [[sg.Text('Dragonfly2', text_color='black')],
-                     [sg.T('Dragonfly2 User Directory:', tooltip='The directory to dragonfly2 user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly2', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly2', enable_events=True)]]
+                     [sg.T('Dragonfly2 User Directory:', tooltip='The directory to dragonfly2 user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly2', enable_events=True)]]
 
 vocola2_section = [[sg.T('Vocola2', text_color='black')],
-                   [sg.T('Vocola2 User Directory:', enable_events=True, tooltip='Enable/disable Vocola2 by setting/clearing Vocola2UserDirectory'), sg.I(Status.getVocolaUserDirectory(), key='Set_UserDir_vocola2', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_vocola2', enable_events=True)],
+                   [sg.T('Vocola2 User Directory:', enable_events=True, tooltip='Enable/disable Vocola2 by setting/clearing Vocola2UserDirectory'), sg.I(Status.getVocolaUserDirectory(), key='Set_UserDir_Vocola2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Vocola2', enable_events=True)],
                    [sg.Checkbox('Enable: Distinguish between languages for Vocola2 user files', Status.getVocolaTakesLanguages(), enable_events=True, key='Toggle_Vocola2_Lang')],
                    [sg.Checkbox('Enable: Unimacro actions in Vocola2', Status.getVocolaTakesUnimacroActions(), enable_events=True, key='Toggle_Vocola2_Unimacro_Actions')]]
 
 unimacro_section = [[sg.T('Unimacro', text_color='black')],
-                    [sg.T('Unimacro User Directory:', tooltip=r'Where the Unimacro user INI files are located, and several other directories (~ or %HOME% allowed)'), sg.I(Status.getUnimacroUserDirectory(), key='Set_UserDir_Unimacro', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Unimacro', enable_events=True)]]
+                    [sg.T('Unimacro User Directory:', tooltip=r'Where the Unimacro user INI files are located, and several other directories (~ or %HOME% allowed)'), sg.I(Status.getUnimacroUserDirectory(), key='Set_UserDir_Unimacro', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Unimacro', enable_events=True)]]
 
 autohotkey_section = [[sg.T('Autohotkey', text_color='black')],
-                      [sg.T('Autohotkey EXE Dir:'), sg.I(Status.getAhkExeDir(), key='Set_Exe_Ahk', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_Exe_Ahk', enable_events=True)],
-                      [sg.T('Autohotkey Scripts Dir:'), sg.I(Status.getAhkUserDir(), key='Set_ScriptsDir_Ahk', enable_events=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_ScriptsDir_Ahk', enable_events=True)]]
+                      [sg.T('Autohotkey Exe Dir:'), sg.I(Status.getAhkExeDir(), key='Set_Exe_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_Exe_Ahk', enable_events=True)],
+                      [sg.T('Autohotkey Scripts Dir:'), sg.I(Status.getAhkUserDir(), key='Set_ScriptsDir_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_ScriptsDir_Ahk', enable_events=True)]]
 
 #### Main UI Layout ####
 layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.major}, Build: {osVersion.build}'), sg.T(f'Python: {pyVersion}'), sg.T(f'Dragon Version: {Status.getDNSVersion()}')],
@@ -71,19 +71,19 @@ def SetNatlinkLoggingOutput(values, event):
 # Dragonfly2
 def dragonfly2UserDir(values, event):
     if event.startswith('Set'):
-        Config.setDirectory('DragonflyUserDirectory', values['Set_UserDir_Dragonfly'])
+        Config.setDirectory('DragonflyUserDirectory', values['Set_UserDir_Dragonfly2'])
     if event.startswith('Clear'):
         Config.clearDirectory('DragonflyUserDirectory')
-        window['Set_UserDir_Dragonfly'].update("")
+        window['Set_UserDir_Dragonfly2'].update("")
 
 # Vocola2
 def Vocola2UserDir(valuesm, event):
     if event.startswith('Set'):
     # Threaded with pysimplegui perform_long_operation to prevent GUI from freezing while configuring/pip install Vocola
-        window.perform_long_operation(lambda : Config.enable_vocola(values['Set_UserDir_Vocola']), 'Thread_Done_Vocola')
+        window.perform_long_operation(lambda : Config.enable_vocola(values['Set_UserDir_Vocola2']), 'Thread_Done_Vocola2')
     if event.startswith('Clear'):
         Config.disable_vocola()
-        window['Set_UserDir_Vocola'].update("")
+        window['Set_UserDir_Vocola2'].update("")
 
 def Vocola2TakesLanguages(values, event):
     if values['Toggle_Vocola2_Lang']:
@@ -93,7 +93,7 @@ def Vocola2TakesLanguages(values, event):
 
 
 def Vocola2UnimacroActions(values, event):
-    if values['Vocola_Unimacro_Actions']:
+    if values['Toggle_Vocola2_Unimacro_Actions']:
         Config.enableVocolaTakesUnimacroActions()
     else:
         Config.disableVocolaTakesUnimacroActions()
@@ -127,7 +127,7 @@ def AhkUserDir(values, event):
 # Lookup dictionary that maps keys as events to a function to call in Event Loop.
 natlink_dispatch = {'Set_Logging_Natlink': SetNatlinkLoggingOutput}
 dragonfly2_dispatch = {'Set_UserDir_Dragonfly2': dragonfly2UserDir, 'Clear_UserDir_Dragonfly2': dragonfly2UserDir}
-vocola2_dispatch = {'Set_UserDir_vocola2': Vocola2UserDir, 'Clear_UserDir_vocola2': Vocola2UserDir,'Toggle_Vocola2_Lang': Vocola2TakesLanguages,'Toggle_Vocola2_Unimacro_Actions': Vocola2UnimacroActions}
+vocola2_dispatch = {'Set_UserDir_Vocola2': Vocola2UserDir, 'Clear_UserDir_Vocola2': Vocola2UserDir,'Toggle_Vocola2_Lang': Vocola2TakesLanguages,'Toggle_Vocola2_Unimacro_Actions': Vocola2UnimacroActions}
 unimacro_dispatch = {'Set_UserDir_Unimacro': UnimacroUserDir, 'Clear_UserDir_Unimacro': UnimacroUserDir}
 autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Set_ScriptsDir_Ahk': AhkUserDir,'Clear_ScriptsDir_Ahk': AhkUserDir}
 
