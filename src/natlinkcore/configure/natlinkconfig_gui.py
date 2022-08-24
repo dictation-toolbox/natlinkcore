@@ -17,8 +17,6 @@ SYMBOL_UP =    '▲'
 SYMBOL_DOWN =  '▼'
 
 # Hidden Columns and Project State
-# TODO: if project is enabled, update the project state to enabled.
-    # use enabled_packages for vocola2, unimacro and dragonfly2 getdragonflyUserDirectory(), autohotkey Status.getAhkUserDir()?
 dragonfly2, vocola2, unimacro, extras = False, False, False, False
 
 def collapse(layout, key, visible):
@@ -33,8 +31,6 @@ def collapse(layout, key, visible):
     return sg.pin(sg.Column(layout, key=key, visible=visible))
 
 #### Hidden UI Columns ####
-# FIXME: Any text sg.Input/sg.I with enable_events=True will fire the event with every keystroke. 
-    # This is a problem when editing the a path in the input field.
 dragonfly2_section = [[sg.Text('Dragonfly', text_color='black')],
                      [sg.T('Dragonfly User Directory:', tooltip='The directory to dragonfly2 user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly2', enable_events=True)]]
 
@@ -54,7 +50,7 @@ extras_section = [[sg.T('Natlink Loglevel:'),  sg.Combo(default_value=Status.get
 layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.major}, Build: {osVersion.build}'), sg.T(f'Python: {pyVersion}'), sg.T(f'Dragon Version: {Status.getDNSVersion()}')],
           #### Projects Checkbox ####
           [sg.T('Configure Projects:', font='bold'), sg.Checkbox('Dragonfly', enable_events=True, key='dragonfly2-checkbox'), sg.Checkbox('Vocola', enable_events=True, key='vocola2-checkbox'), sg.Checkbox('Unimacro', enable_events=True, key='unimacro-checkbox')],
-          #### Projects Hidden  See Hidden UI Columns above ####
+          #### Projects Hidden UI Columns - See above ####
           [collapse(dragonfly2_section, 'dragonfly2', dragonfly2)],
           [collapse(vocola2_section, 'vocola2', vocola2)],
           [collapse(unimacro_section, 'unimacro', unimacro)],
@@ -71,7 +67,7 @@ def SetNatlinkLoggingOutput(values, event):
     Config.setLogging(values['Set_Logging_Natlink'])
 
 # Dragonfly2
-def dragonfly2UserDir(values, event):
+def Dragonfly2UserDir(values, event):
     if event.startswith('Set'):
         Config.setDirectory('DragonflyUserDirectory', values['Set_UserDir_Dragonfly2'])
     if event.startswith('Clear'):
@@ -128,7 +124,7 @@ def AhkUserDir(values, event):
 
 # Lookup dictionary that maps keys as events to a function to call in Event Loop.
 natlink_dispatch = {'Set_Logging_Natlink': SetNatlinkLoggingOutput}
-dragonfly2_dispatch = {'Set_UserDir_Dragonfly2': dragonfly2UserDir, 'Clear_UserDir_Dragonfly2': dragonfly2UserDir}
+dragonfly2_dispatch = {'Set_UserDir_Dragonfly2': Dragonfly2UserDir, 'Clear_UserDir_Dragonfly2': Dragonfly2UserDir}
 vocola2_dispatch = {'Set_UserDir_Vocola2': Vocola2UserDir, 'Clear_UserDir_Vocola2': Vocola2UserDir,'Toggle_Vocola2_Lang': Vocola2TakesLanguages,'Toggle_Vocola2_Unimacro_Actions': Vocola2UnimacroActions}
 unimacro_dispatch = {'Set_UserDir_Unimacro': UnimacroUserDir, 'Clear_UserDir_Unimacro': UnimacroUserDir}
 autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Set_ScriptsDir_Ahk': AhkUserDir,'Clear_ScriptsDir_Ahk': AhkUserDir}
@@ -137,11 +133,10 @@ autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Se
 try:
     while True:
         event, values = window.read()
-       # print(event, values)
         if event == sg.WIN_CLOSED or event == 'Exit':
             break
         # Hidden Columns logic
-        # TODO: if project is enabled, then show the column
+        # TODO: if project is enabled, update the project state to enabled.
         elif event.startswith('dragonfly2'):
             dragonfly2 = not dragonfly2
             window['dragonfly2-checkbox'].update(dragonfly2)
@@ -181,7 +176,6 @@ try:
         Config.status.refresh()
 
 except Exception as e:
-    sg.Print('Exception in GUI event loop:',
-             sg.__file__, e, keep_on_top=True, wait=True)
+    sg.Print('Exception in GUI event loop:', sg.__file__, e, keep_on_top=True, wait=True)
 
 window.close()
