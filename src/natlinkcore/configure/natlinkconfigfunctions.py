@@ -45,8 +45,12 @@ class NatlinkConfig:
         self.config_path = self.get_check_config_locations()
         self.config_dir = str(Path(self.config_path).parent)
         self.status = natlinkstatus.NatlinkStatus()
-        self.getConfig()  # gets self.config and self.config_encoding
+        self.Config = self.getConfig()  # get the config instance of config.NatlinkConfig
         self.check_config()
+        # for convenience in other places:
+        self.home_path = str(Path.home())
+        self.documents_path = str(Path.home()/'Documents')
+        self.natlinkconfig_path = config.expand_natlink_userdir()
 
     def get_check_config_locations(self):
         """check the location/locations as given by the loader
@@ -70,23 +74,24 @@ class NatlinkConfig:
         """
         rwfile = readwritefile.ReadWriteFile()
         config_text = rwfile.readAnything(self.config_path)
-        self.config = configparser.ConfigParser()
-        self.config.read_string(config_text)
+        _config = configparser.ConfigParser()
+        _config.read_string(config_text)
         self.config_encoding = rwfile.encoding
+        return _config
 
     def config_get(self, section, option):
         """set a setting into the natlink ini file
 
         """
         try:
-            return self.config.get(section, option)
+            return self.Config.get(section, option)
         except (configparser.NoSectionError, configparser.NoOptionError):
             return None
  
     def config_set(self, section, option, value):
         """set a setting into an inifile (possibly other than natlink.ini)
     
-        Set the setting in self.config.
+        Set the setting in self.Config.
         
         Then write with the setting included to config_path with config_encoding.
         When this encoding is ascii, but there are (new) non-ascii characters,
@@ -96,11 +101,11 @@ class NatlinkConfig:
         if not value:
             return self.config_remove(section, option)
         
-        if not self.config.has_section(section):
-            self.config.add_section(section)
+        if not self.Config.has_section(section):
+            self.Config.add_section(section)
             
         value = str(value)
-        self.config.set(section, option, str(value))
+        self.Config.set(section, option, str(value))
         self.config_write()
         self.status.__init__()
         return True
@@ -110,25 +115,25 @@ class NatlinkConfig:
         """
         try:
             with open(self.config_path, 'w', encoding=self.config_encoding) as fp:
-                self.config.write(fp)   
+                self.Config.write(fp)   
         except UnicodeEncodeError as exc:
             if self.config_encoding != 'ascii':
                 print(f'UnicodeEncodeError, cannot encode with encoding "{self.config_encoding}" the config data to file "{self.config_path}"')
                 raise UnicodeEncodeError from exc
             with open(self.config_path, 'w', encoding='utf-8') as fp:
-                self.config.write(fp)   
+                self.Config.write(fp)   
 
     def config_remove(self, section, option):
         """removes from config file
         
         same effect as setting an empty value
         """
-        if not self.config.has_section(section):
+        if not self.Config.has_section(section):
             return
-        self.config.remove_option(section, option)
-        if not self.config.options(section):
+        self.Config.remove_option(section, option)
+        if not self.Config.options(section):
             if section not in ['directories', 'settings', 'userenglish-directories', 'userspanish-directories']:
-                self.config.remove_section(section)
+                self.Config.remove_section(section)
         self.config_write()
         self.status.__init__()
     # def setUserDirectory(self, arg):
@@ -143,7 +148,7 @@ class NatlinkConfig:
         section = section or 'directories'
         if not dir_path:
             print('==== Please specify the wanted directory in Dialog window ====\n')
-            prev_path = self.config_get('previous settings', option) or self.config_dir
+            prev_path = self.config_get('previous settings', option) or self.documents_path
             dir_path = tkinter_dialogs.GetDirFromDialog(title=f'Please choose a "{option}"', initialdir=prev_path)
             if not dir_path:
                 print('No valid directory specified')
@@ -161,7 +166,7 @@ class NatlinkConfig:
             return
         
         nice_dir_path = self.prefix_home(dir_path)
-        
+        nice_dir_path = nice_dir_path.replace('/', '\\')        
         self.config_set(section, option, nice_dir_path)
         self.config_remove('previous settings', option)
         if section == 'directories':
@@ -244,8 +249,20 @@ class NatlinkConfig:
             print(f'setLogging, setting logging to: "{value}"')
             self.config_set('settings', "log_level", value)
             if old_value is not None:
-                self.config_set('previous settings', "log_level", old_value)
-            return True
+                self.config_set('previous settings', key, old_value)
+        self.config_set(settings, key, 'DEBUG')
+        return True
+
+    def disableDebugOutput(self):
+        """disables the Natlink debug output
+        """
+        key = 'log_level'
+        section = 'settings'
+        old_value = self.config_get('previous settings', key)
+        if old_value:
+            self.Config.remove_option('previous settings', key)
+            if old_value == 'DEBUG':
+                old_value = 'INFO'
         else:
             print(f"setLogging: Logging Level {value} is not valid")
 
@@ -650,3 +667,11 @@ def createIfNotThere(path_name, level_up=None):
         
     return start_path
 
+if __name__ == "__main__":
+    _nc = NatlinkConfig()
+    _config = _nc.Config
+    _doc_path = _nc.documents_path
+    _home_path = _nc.home_path
+    _natlinkconfig_path = _nc.natlinkconfig_path
+    print(f'natlinkconfig_path: {_natlinkconfig_path}')
+    pass

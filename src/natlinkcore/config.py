@@ -32,7 +32,10 @@ class NatlinkConfig:
         self.load_on_startup = load_on_startup
         self.load_on_user_changed = load_on_user_changed
         self.config_path = ''  # to be defined in from_config_parser
-
+        # for convenience in other places:
+        self.home_path = str(Path.home())
+        self.documents_path = str(Path.home()/'Documents')
+        
     def __repr__(self) -> str:
         return  f'NatlinkConfig(directories_by_user={self.directories_by_user}, ...)'
 
@@ -183,5 +186,5 @@ def expand_natlink_userdir():
     nud = os.getenv('natlink_userdir') or str(Path.home()/'.natlink')
     nud = normpath(expand_path(nud))
     if not nud.endswith('.natlink'):
-        raise ValueError(f'expand_natlink_userdir: directory "{nud}" should end with ".natlink"')
+        raise ValueError(f'expand_natlink_userdir: directory "{nud}" should end with ".natlink"\n\tprobably you did not set the windows environment variable "NATLINK_USERDIR" incorrect, let it end with ".natlink".\n\tNote: if this ".natlink" directory does not exist yet, it will be created there.')
     return nud
