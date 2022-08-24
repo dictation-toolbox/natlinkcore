@@ -30,7 +30,8 @@ To start a powershell from the command prompt, type `powershell`.
 
 To build the package:
 
-`build_natlinkcore` from powershell, which will run the the tests in natlinkcore/test, then build the the package.
+
+`flit build`   from powershell or command prompt, which will run the the tests in natlinkcore/test, then build the the package.
 
 
 To publish the package to [The Python Package Index (PyPI)](https://pypi.org/)
@@ -38,9 +39,11 @@ To publish the package to [The Python Package Index (PyPI)](https://pypi.org/)
 `publish_natlinkcore` from powershell.
 
 
-You can use flit to install the package locally into site-packages using symbolic links, so you can test changes without reinstalling:
+You can use pip to install the package locally, so you can test changes without reinstalling:
 
-`flit install --symlink`
+`pip install -e .`
+
+Note the flit install --symlink or --pth-file options are problematic so just use pip.
 
 
 ## Publishing checklist
