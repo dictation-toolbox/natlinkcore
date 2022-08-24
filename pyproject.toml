@@ -48,6 +48,7 @@ testpaths= [
 
 [project.scripts]
 natlinkconfig_cli = "natlinkcore.configure.natlinkconfig_cli:main_cli"
+[project.gui-scripts]
 natlinkconfig_gui = "natlinkcore.configure.natlinkconfig_gui:main_gui"
 
 [project.urls]
