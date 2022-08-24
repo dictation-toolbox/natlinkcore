@@ -15,7 +15,7 @@
 import os
 import sys
 
-src_directory = os.path.join(os.path.abspath('..'), 'src', 'natlinkcore')
+src_directory = os.path.join(os.path.abspath('..'), 'src')
 sys.path.insert(0, src_directory)
 # print(f'src_directory: {src_directory}')
 import natlinkcore
@@ -34,8 +34,7 @@ print(f'natlinkcore, version: "{version}", release: "{release}"')
 
 
 # ----------------------------------------------------------------------------
-# Mock libraries that are only available on some platforms or with optional
-# dependencies installed.
+# Mock the modules that may not be available at build time.
 
 from mock import MagicMock
 
@@ -48,6 +47,7 @@ class Mock(MagicMock):
 mock_modules = {
     'ctypes',
     'dtactions',  # DF: uncertain about this one.
+    'natlink',  # Note: Documentation for *natlink* is separate.
     'pywintypes',
     'win32api',
     'win32clipboard',
