@@ -238,20 +238,22 @@ class NatlinkConfig:
 
     def setLogging(self, logginglevel):
         """Sets the natlink logging output
-        logginglevel (str) -- CRITICAL, FATAL, ERROR, WARNING, INFO, DEBUG
+        logginglevel (str) -- Critical, Fatal, Error, Warning, Info, Debug
         """
-        value = logginglevel.upper()
+        # Config.py handles log level str upper formatting from ini
+        value = logginglevel.title()
         old_value = self.config_get('settings', "log_level")
         if old_value == value:
             print(f'setLogging, setting is already "{old_value}"')
             return True
-        if value in ["CRITICAL", "FATAL", "ERROR", "WARNING", "INFO", "DEBUG"]:
+        if value in ["Critical", "Fatal", "Error", "Warning", "Info", "Debug"]:
             print(f'setLogging, setting logging to: "{value}"')
             self.config_set('settings', "log_level", value)
             if old_value is not None:
-                self.config_set('previous settings', key, old_value)
-        self.config_set(settings, key, 'DEBUG')
-        return True
+                self.config_set('previous settings', "log_level", old_value)
+            return True
+        else:
+            print(f"setLogging: Logging Level {value} is not valid")
 
     def disableDebugOutput(self):
         """disables the Natlink debug output
