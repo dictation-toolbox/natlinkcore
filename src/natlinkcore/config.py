@@ -32,7 +32,10 @@ class NatlinkConfig:
         self.load_on_startup = load_on_startup
         self.load_on_user_changed = load_on_user_changed
         self.config_path = ''  # to be defined in from_config_parser
-
+        # for convenience in other places:
+        self.home_path = str(Path.home())
+        self.documents_path = str(Path.home()/'Documents')
+        
     def __repr__(self) -> str:
         return  f'NatlinkConfig(directories_by_user={self.directories_by_user}, ...)'
 

@@ -143,7 +143,7 @@ class NatlinkConfig:
         section = section or 'directories'
         if not dir_path:
             print('==== Please specify the wanted directory in Dialog window ====\n')
-            prev_path = self.config_get('previous settings', option) or self.config_dir
+            prev_path = self.config_get('previous settings', option) or self.config.documents_path
             dir_path = tkinter_dialogs.GetDirFromDialog(title=f'Please choose a "{option}"', initialdir=prev_path)
             if not dir_path:
                 print('No valid directory specified')
