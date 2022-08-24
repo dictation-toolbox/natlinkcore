@@ -236,17 +236,18 @@ class NatlinkConfig:
         print(f'cleared "{option}"')
   
 
-    def enableDebugOutput(self):
-        """setting registry key so debug output of loading of natlinkmain is given
-
+    def setLogging(self, logginglevel):
+        """Sets the natlink logging output
+        logginglevel (str) -- CRITICAL, FATAL, ERROR, WARNING, INFO, DEBUG
         """
-        key = "log_level"
-        settings = 'settings'
-        old_value = self.config_get(settings, key)
-        if old_value:
-            if old_value == 'DEBUG':
-                print(f'enableDebugOutput, setting is already "{old_value}"')
-                return True
+        value = logginglevel.upper()
+        old_value = self.config_get('settings', "log_level")
+        if old_value == value:
+            print(f'setLogging, setting is already "{old_value}"')
+            return True
+        if value in ["CRITICAL", "FATAL", "ERROR", "WARNING", "INFO", "DEBUG"]:
+            print(f'setLogging, setting logging to: "{value}"')
+            self.config_set('settings', "log_level", value)
             if old_value is not None:
                 self.config_set('previous settings', key, old_value)
         self.config_set(settings, key, 'DEBUG')
@@ -263,9 +264,7 @@ class NatlinkConfig:
             if old_value == 'DEBUG':
                 old_value = 'INFO'
         else:
-            old_value = 'INFO'
-        self.config_set(section, key, old_value)
-        return True
+            print(f"setLogging: Logging Level {value} is not valid")
 
     def enable_unimacro(self, arg):
         unimacro_user_dir = self.status.getUnimacroUserDirectory()
