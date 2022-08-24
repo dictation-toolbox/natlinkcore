@@ -183,8 +183,9 @@ def expand_natlink_userdir():
     if NATLINK_USERDIR is NOT set: return Path.home()/'.natlink'
     """
     normpath = os.path.normpath
-    nud = os.getenv('natlink_userdir') or Path.home()/'.natlink'
+    normpath = os.path.normpath
+    nud = os.getenv('natlink_userdir') or str(Path.home()/'.natlink')
     nud = normpath(expand_path(nud))
     if not nud.endswith('.natlink'):
-        raise ValueError(f'expand_natlink_userdir: directory "{nud}" should end with ".natlink"')
+        raise ValueError(f'expand_natlink_userdir: directory "{nud}" should end with ".natlink"\n\tprobably you did not set the windows environment variable "NATLINK_USERDIR" incorrect, let it end with ".natlink".\n\tNote: if this ".natlink" directory does not exist yet, it will be created there.')
     return nud
