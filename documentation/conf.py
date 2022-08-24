@@ -15,9 +15,9 @@
 import os
 import sys
 
-src_directory = os.path.join(os.path.abspath('..'), 'src')
+src_directory = os.path.join(os.path.abspath('..'), 'src', 'natlinkcore')
 sys.path.insert(0, src_directory)
-# print(f'src_directory: {src_directory}')
+print(f'src_directory: {src_directory}')
 import natlinkcore
 
 # -- Project information -----------------------------------------------------
