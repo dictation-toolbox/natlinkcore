@@ -48,7 +48,7 @@ testpaths= [
 
 [project.scripts]
 natlinkconfig_cli = "natlinkcore.configure.natlinkconfig_cli:main_cli"
-natlinkconfig = "natlinkcore.configure.natlinkgui:main_gui"
+natlinkconfig_gui = "natlinkcore.configure.natlinkconfig_gui:main_gui"
 
 [project.urls]
 Home = "https://github.com/dictation-toolbox/natlinkcore/"
