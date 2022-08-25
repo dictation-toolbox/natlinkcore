@@ -32,19 +32,19 @@ def collapse(layout, key, visible):
 
 #### Hidden UI Columns ####
 dragonfly2_section = [[sg.Text('Dragonfly', text_color='black')],
-                     [sg.T('Dragonfly User Directory:', tooltip='The directory to dragonfly2 user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly2', enable_events=True)]]
+                     [sg.T('Dragonfly user directory:', tooltip='The directory to dragonfly2 user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly2', enable_events=True)]]
 
 vocola2_section = [[sg.T('Vocola', text_color='black')],
-                   [sg.T('Vocola User Directory:', enable_events=True, tooltip='Enable/disable Vocola by setting/clearing Vocola User Directory'), sg.I(Status.getVocolaUserDirectory(), key='Set_UserDir_Vocola2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Vocola2', enable_events=True)],
-                   [sg.Checkbox('Enable: Distinguish between languages for Vocola user files', Status.getVocolaTakesLanguages(), enable_events=True, key='Toggle_Vocola2_Lang')],
+                   [sg.T('Vocola user directory:', enable_events=True, tooltip='Enable/disable Vocola by setting/clearing Vocola User Directory'), sg.I(Status.getVocolaUserDirectory(), key='Set_UserDir_Vocola2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Vocola2', enable_events=True)],
+                   [sg.Checkbox('Enable: distinguish between languages for Vocola command files', Status.getVocolaTakesLanguages(), enable_events=True, key='Toggle_Vocola2_Lang')],
                    [sg.Checkbox('Enable: Unimacro actions in Vocola', Status.getVocolaTakesUnimacroActions(), enable_events=True, key='Toggle_Vocola2_Unimacro_Actions')]]
 
 unimacro_section = [[sg.T('Unimacro', text_color='black')],
-                    [sg.T('Unimacro User Directory:', tooltip=r'Where the Unimacro user INI files are located, and several other directories (~ or %HOME% allowed)'), sg.I(Status.getUnimacroUserDirectory(), key='Set_UserDir_Unimacro', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Unimacro', enable_events=True)]]
+                    [sg.T('Unimacro user directory:', tooltip=r'Where the Unimacro user INI files are located, and several other directories (~ or %HOME% allowed)'), sg.I(Status.getUnimacroUserDirectory(), key='Set_UserDir_Unimacro', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Unimacro', enable_events=True)]]
 
-extras_section = [[sg.T('Natlink Loglevel:'),  sg.Combo(default_value=Status.getLogging().title(), values=("Critical",  "Fatal",  "Error", "Warning", "Info" , "Debug"), key='Set_Logging_Natlink', enable_events=True, auto_size_text=True, readonly=True)],
-                  [sg.T('Autohotkey Exe Dir:'), sg.I(Status.getAhkExeDir(), key='Set_Exe_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_Exe_Ahk', enable_events=True)],
-                  [sg.T('Autohotkey Scripts Dir:'), sg.I(Status.getAhkUserDir(), key='Set_ScriptsDir_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_ScriptsDir_Ahk', enable_events=True)]]
+extras_section = [[sg.T('Natlink Loglevel:'),  sg.Combo(default_value=Status.getLogging(), values=("Critical",  "Fatal",  "Error", "Warning", "Info" , "Debug"), key='Set_Logging_Natlink', enable_events=True, auto_size_text=True, readonly=True)],
+                  [sg.T('Autohotkey exe dir:'), sg.I(Status.getAhkExeDir(), key='Set_Exe_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_Exe_Ahk', enable_events=True)],
+                  [sg.T('Autohotkey scripts dir:'), sg.I(Status.getAhkUserDir(), key='Set_ScriptsDir_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_ScriptsDir_Ahk', enable_events=True)]]
 
 #### Main UI Layout ####
 layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.major}, Build: {osVersion.build}'), sg.T(f'Python: {pyVersion}'), sg.T(f'Dragon Version: {Status.getDNSVersion()}')],
@@ -59,7 +59,7 @@ layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.majo
           #### Buttons at bottom ####
           [sg.Button('Exit')]]
 
-window = sg.Window('Natlink GUI', layout)
+window = sg.Window('Natlink configuration GUI', layout)
 
 ##### Config Functions #####
 # Natlink
