@@ -472,11 +472,22 @@ class NatlinkMain(metaclass=Singleton):
     def start(self) -> None:
         self.logger.info(f'Starting natlink loader from config file:\n\t"{self.config.config_path}"')
         natlink.active_loader = self
+
+        # checking for default config location (probably when no natlinkconfig_gui has been run)
+        if self.config.config_path.startswith(str(thisDir)):
+            self.logger.warning('\nOops, you are starting Natlink with the config file "natlink.ini" from the "fallback location".')
+            self.logger.warning('\nThis can be fixed most easily by running the  program *** natlinkconfig_gui *** from the Windows command line.\n')
+            self.logger.warning('The Natlink startup process is stopped now.\nPlease fix your configuration,and then restart Dragon.\n\n')
+            return
+    
+        # checking for absence of directories, can also occur when natlinkconfig_gui has been run, but nothing done
         if not self.config.directories:
-            self.logger.warning('Starting Natlink, but no directories to load are specified.\n\tPlease add one or more directories in your config file')
-            self.logger.warning('This is most easily done by running ***"natlinkconfig"*** from the Windows command line.')
-            if self.config.config_path.startswith(str(thisDir)):
-                self.logger.warning('Also make sure your "natlink.ini" is properly located, not in above location')
+            self.logger.warning('\nStarting Natlink, but no directories to load are specified.\n\nPlease add one or more directories in your config file:\n')
+            self.logger.warning('This is most easily done by running the program *** natlinkconfig_gui *** from the Windows command line.')
+            self.logger.warning('\nBut, you can also edit this "natlink.ini" file with Notepad, or your favourite text editor...')
+            self.logger.warning('\nThe Natlink startup process is stopped now.\nPlease fix your configuration, and then restart Dragon.\n\n')
+            return
+        
         # self.logger.debug(f'directories: {self.config.directories}')
         self._add_dirs_to_path(self.config.directories)  
         if self.config.load_on_startup:
