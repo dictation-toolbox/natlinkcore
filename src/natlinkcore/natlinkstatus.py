@@ -238,6 +238,15 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         self.DNSIniDir = loader.get_config_info_from_registry("dragonIniDir")
         return self.DNSIniDir
 
+    def getLogging(self):
+        """Retuns the natlink logging output
+        """
+        key = 'log_level'
+        settings = 'settings'
+        value = self.natlinkmain.getconfigsetting(settings, key)
+        if value:
+            return value
+        return   
     
     def getDNSVersion(self):
         """find the correct DNS version number (as an integer)

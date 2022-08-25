@@ -303,11 +303,11 @@ In this VocolaUserDirectory your Vocola Command File are/will be located.
     def do_x(self, arg):
         self.message = 'Print debug output to "Messages from Natlink" window'
         print(f'do action: {self.message}')
-        self.Config.enableDebugOutput()
+        self.Config.setLogging("DEBUG")
     def do_X(self, arg):
         self.message = 'Disable printing debug output to "Messages from Natlink" window'
         print(f'do action: {self.message}')
-        self.Config.disableDebugOutput()
+        self.Config.setLogging("CRITICAL")
 
     def help_x(self):
         print('-'*60)

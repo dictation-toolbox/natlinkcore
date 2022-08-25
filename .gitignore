@@ -86,8 +86,6 @@ MacroSystem/*_vcl.py
 
 # Visual Studio
 .vs
-/PyTest/readwritefiletest/*.txt
-/PyTest/readwritefiletest/*out.ini
 
 # documentation
 /documentation/_build
@@ -98,8 +96,6 @@ src/dist/
 dist
 
 #tests
-/tests/readwritefiletest/*.txt
-/tests/readwritefiletest/*.ini
 
 
 #some tools migh generate these spurios stuff

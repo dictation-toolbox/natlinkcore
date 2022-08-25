@@ -27,8 +27,8 @@
 -v    enable_vocola(arg)
 -V    disable_vocola()
 
--x    enableDebugOutput
--X    disableDebugOutput
+-x    setLogging("DEBUG")
+-X    setLogging("CRITICAL")
 
 
 

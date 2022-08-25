@@ -24,13 +24,18 @@ The build happens through a powershell script.  You don't have to know much powe
 The powershell script runs the tests using [pytest](https://docs.pytest.org/).  
 
 The package is built with [Flit](https://flit.pypa.io/).  The package will be produced in
-dist/nalinkcore-x.y.tar.gz.  To install it `pip install dist/natlinkcore-x.y.tar.gz` replacing x.y with the version numbers.
+dist/natlinkcore-x.y.z-py3-none-any.whl.  To install it `pip install dist/natlinkcore-x.y.z-py3-none-any.whl` replacing x.y with the version numbers.
+
+Normally if you are developing natlinkcore, you will with instead to install with `pip install -e .`, which will
+let you make and test changes without reinstalling natlinkcore with pip.  **Note the flit install --symlink or --pth-file options are problematic so just use pip.**
+
 
 To start a powershell from the command prompt, type `powershell`.
 
 To build the package:
 
-`build_natlinkcore` from powershell, which will run the the tests in natlinkcore/test, then build the the package.
+
+`flit build`   from powershell or command prompt, which will run the the tests in natlinkcore/test, then build the the package.
 
 
 To publish the package to [The Python Package Index (PyPI)](https://pypi.org/)
@@ -38,9 +43,7 @@ To publish the package to [The Python Package Index (PyPI)](https://pypi.org/)
 `publish_natlinkcore` from powershell.
 
 
-You can use flit to install the package locally into site-packages using symbolic links, so you can test changes without reinstalling:
-
-`flit install --symlink`
+ 
 
 
 ## Publishing checklist
