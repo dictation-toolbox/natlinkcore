@@ -154,7 +154,7 @@ class NatlinkConfig:
                 print('No valid directory specified')
                 return
 
-        dir_path = dir_path.strip()
+        dir_path = dir_path.strip().replace('/', '\\')
         directory = createIfNotThere(dir_path, level_up=1)
         if not (directory and Path(directory).is_dir()):
             if directory is False:
