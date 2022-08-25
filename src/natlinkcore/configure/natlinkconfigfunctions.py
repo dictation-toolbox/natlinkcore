@@ -154,7 +154,7 @@ class NatlinkConfig:
                 print('No valid directory specified')
                 return
 
-        dir_path = dir_path.strip()
+        dir_path = dir_path.strip().replace('/', '\\')
         directory = createIfNotThere(dir_path, level_up=1)
         if not (directory and Path(directory).is_dir()):
             if directory is False:
@@ -250,8 +250,20 @@ class NatlinkConfig:
             print(f'setLogging, setting logging to: "{value}"')
             self.config_set('settings', "log_level", value)
             if old_value is not None:
-                self.config_set('previous settings', "log_level", old_value)
-            return True
+                self.config_set('previous settings', key, old_value)
+        self.config_set(settings, key, 'DEBUG')
+        return True
+
+    def disableDebugOutput(self):
+        """disables the Natlink debug output
+        """
+        key = 'log_level'
+        section = 'settings'
+        old_value = self.config_get('previous settings', key)
+        if old_value:
+            self.Config.remove_option('previous settings', key)
+            if old_value == 'DEBUG':
+                old_value = 'INFO'
         else:
             print(f"setLogging: Logging Level {value} is not valid")
 
