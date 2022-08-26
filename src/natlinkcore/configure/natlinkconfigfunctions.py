@@ -245,17 +245,18 @@ class NatlinkConfig:
 
     def setLogging(self, logginglevel):
         """Sets the natlink logging output
-        logginglevel (str) -- Critical, Fatal, Error, Warning, Info, Debug
+        logginglevel (str) -- CRITICAL, FATAL, ERROR, WARNING, INFO, DEBUG
         
         This one is used in the natlinkconfig_gui
         """
         key = 'log_level'
         section = 'settings'        
+        value = logginglevel.upper()
         old_value = self.config_get('settings', "log_level")
         if old_value == value:
             print(f'setLogging, setting is already "{old_value}"')
             return True
-        if value in ["Critical", "Fatal", "Error", "Warning", "Info", "Debug"]:
+        if value in ["CRITICAL", "FATAL", "ERROR", "WARNING", "INFO", "DEBUG"]:
             print(f'setLogging, setting logging to: "{value}"')
             self.config_set(section, key, value)
             if old_value is not None:
@@ -263,17 +264,7 @@ class NatlinkConfig:
             return True
         print(f'Invalid value for setLogging: "{value}"')
         return False
-        """disables the Natlink debug output
-        """
-        key = 'log_level'
-        section = 'settings'
-        old_value = self.config_get('previous settings', key)
-        if old_value:
-            self.Config.remove_option('previous settings', key)
-            if old_value == 'DEBUG':
-                old_value = 'INFO'
-        else:
-            print(f"setLogging: Logging Level {value} is not valid")
+
 
     def enable_unimacro(self, arg):
         unimacro_user_dir = self.status.getUnimacroUserDirectory()
@@ -682,4 +673,3 @@ if __name__ == "__main__":
     _home_path = _nc.home_path
     _natlinkconfig_path = _nc.natlinkconfig_path
     print(f'natlinkconfig_path: {_natlinkconfig_path}')
-    pass
