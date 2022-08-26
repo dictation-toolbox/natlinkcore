@@ -252,7 +252,7 @@ class NatlinkConfig:
         key = 'log_level'
         section = 'settings'        
         value = logginglevel.upper()
-        old_value = self.config_get('settings', "log_level")
+        old_value = self.config_get(section, key)
         if old_value == value:
             print(f'setLogging, setting is already "{old_value}"')
             return True
@@ -260,7 +260,7 @@ class NatlinkConfig:
             print(f'setLogging, setting logging to: "{value}"')
             self.config_set(section, key, value)
             if old_value is not None:
-                self.config_set('previous settings', "log_level", old_value)
+                self.config_set('previous settings', key, old_value)
             return True
         print(f'Invalid value for setLogging: "{value}"')
         return False
