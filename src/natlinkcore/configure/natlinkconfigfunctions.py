@@ -265,7 +265,6 @@ class NatlinkConfig:
         print(f'Invalid value for setLogging: "{value}"')
         return False
 
-
     def enable_unimacro(self, arg):
         unimacro_user_dir = self.status.getUnimacroUserDirectory()
         if unimacro_user_dir and isdir(unimacro_user_dir):
