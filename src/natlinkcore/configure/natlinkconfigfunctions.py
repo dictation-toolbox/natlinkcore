@@ -57,6 +57,13 @@ class NatlinkConfig:
         """
         config_path, fallback_path = loader.config_locations()
         
+        if isfile(config_path):
+            with open(config_path, 'r', encoding='utf-8') as fp:
+                text = fp.read().strip()
+            if not text:
+                print(f'empty natlink.ini file: "{config_path}",\n\tremove, and go back to default')
+                os.remove(config_path)
+        
         if not isfile(config_path):
             config_dir = Path(config_path).parent
             if not config_dir.is_dir():
@@ -238,47 +245,25 @@ class NatlinkConfig:
 
     def setLogging(self, logginglevel):
         """Sets the natlink logging output
-        logginglevel (str) -- Critical, Fatal, Error, Warning, Info, Debug
+        logginglevel (str) -- CRITICAL, FATAL, ERROR, WARNING, INFO, DEBUG
+        
+        This one is used in the natlinkconfig_gui
         """
-        # Config.py handles log level str upper formatting from ini
-        value = logginglevel.title()
+        key = 'log_level'
+        section = 'settings'        
+        value = logginglevel.upper()
         old_value = self.config_get('settings', "log_level")
         if old_value == value:
             print(f'setLogging, setting is already "{old_value}"')
             return True
-        if value in ["Critical", "Fatal", "Error", "Warning", "Info", "Debug"]:
+        if value in ["CRITICAL", "FATAL", "ERROR", "WARNING", "INFO", "DEBUG"]:
             print(f'setLogging, setting logging to: "{value}"')
-            self.config_set('settings', "log_level", value)
+            self.config_set(section, key, value)
             if old_value is not None:
-                self.config_set('previous settings', key, old_value)
-        self.config_set(settings, key, 'DEBUG')
-        return True
-
-    def disableDebugOutput(self):
-        """disables the Natlink debug output
-        """
-        key = 'log_level'
-        section = 'settings'
-        old_value = self.config_get('previous settings', key)
-        if old_value:
-            self.Config.remove_option('previous settings', key)
-            if old_value == 'DEBUG':
-                old_value = 'INFO'
-        else:
-            print(f"setLogging: Logging Level {value} is not valid")
-
-    def disableDebugOutput(self):
-        """disables the Natlink debug output
-        """
-        key = 'log_level'
-        section = 'settings'
-        old_value = self.config_get('previous settings', key)
-        if old_value:
-            self.Config.remove_option('previous settings', key)
-            if old_value == 'DEBUG':
-                old_value = 'INFO'
-        else:
-            print(f"setLogging: Logging Level {value} is not valid")
+                self.config_set('previous settings', "log_level", old_value)
+            return True
+        print(f'Invalid value for setLogging: "{value}"')
+        return False
 
     def enable_unimacro(self, arg):
         unimacro_user_dir = self.status.getUnimacroUserDirectory()
@@ -538,7 +523,6 @@ class NatlinkConfig:
                     nFiles += 1
             elif len(f) == 3 and os.path.isdir(F):
                 self.removeUnimacroVchLineInVocolaFiles(F)
-        self.disableVocolaTakesUnimacroActions()
         mess = f'removed include lines from {nFiles} files in {toFolder}'
         print(mess)
 
@@ -688,4 +672,3 @@ if __name__ == "__main__":
     _home_path = _nc.home_path
     _natlinkconfig_path = _nc.natlinkconfig_path
     print(f'natlinkconfig_path: {_natlinkconfig_path}')
-    pass
