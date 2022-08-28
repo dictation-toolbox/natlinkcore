@@ -10,6 +10,7 @@ Please read the [Natlink documentation](https://natlink.readthedocs.io/en/latest
    :caption: Contents:
 
    modules
+   developers
    project
 
 
