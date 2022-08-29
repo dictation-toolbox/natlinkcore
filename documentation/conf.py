@@ -43,12 +43,18 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return MagicMock()
 
+mock_modules = {
+    'ctypes',
+    'dtactions',  # DF: uncertain about this one.
+    'natlink',  # Note: Documentation for *natlink* is separate.
+    'vocola2',
+    'unimacro',
+    'dragonfly',
+    'dragonfly2'
+    }
+
 if sys.platform != 'win32':
-    mock_modules = {
-        'ctypes',
-        'dtactions',  # DF: uncertain about this one.
-        'natlink',  # Note: Documentation for *natlink* is separate.
-        'pywintypes',
+    win_mock_modules = {
         'win32api',
         'win32clipboard',
         'win32com',
@@ -59,12 +65,12 @@ if sys.platform != 'win32':
         'win32gui',
         'win32process',
         'winreg',
-        'winxpgui',
+        'winxpgui'
     }
-    
-    for module_name in mock_modules:
-        sys.modules[module_name] = Mock()
-
+    mock_modules |= win_mock_modules   # union
+        
+for module_name in mock_modules:
+    sys.modules[module_name] = Mock()
 
 # -- General configuration ---------------------------------------------------
 
