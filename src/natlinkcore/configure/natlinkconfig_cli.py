@@ -173,10 +173,10 @@ After you change settings, restart Dragon.
     # User Directory, Dragonfly directory -------------------------------------------------
     # for easier remembering, change n to d (DragonFly)
     def do_d(self, arg):
-        self.Config.setDirectory('DragonflyUserDirectory', arg)
+        self.Config.enable_dragonfly(arg)
     
     def do_D(self, arg):
-        self.Config.clearDirectory('DragonflyUserDirectory')
+        self.Config.disable_dragonfly(arg)
 
     def do_n(self, arg):
         self.Config.setDirectory('UserDirectory', arg)
@@ -303,11 +303,11 @@ In this VocolaUserDirectory your Vocola Command File are/will be located.
     def do_x(self, arg):
         self.message = 'Print debug output to "Messages from Natlink" window'
         print(f'do action: {self.message}')
-        self.Config.setLogging("DEBUG")
+        self.Config.enableDebugOutput()
     def do_X(self, arg):
         self.message = 'Disable printing debug output to "Messages from Natlink" window'
         print(f'do action: {self.message}')
-        self.Config.setLogging("INFO")
+        self.Config.disableDebugOutput()
 
     def help_x(self):
         print('-'*60)

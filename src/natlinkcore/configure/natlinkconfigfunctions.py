@@ -355,6 +355,43 @@ class NatlinkConfig:
         self.config_remove('directories', 'vocola')
         self.config_remove('directories', 'vocoladirectory')   #could still be there...
 
+    def enable_dragonfly(self, arg):
+        """enable dragonfly, by setting arg (prompting if False), and other settings
+        """
+        key = 'dragonflyuserdirectory'
+        dragonfly_user_dir = self.status.getDragonflyUserDirectory()
+        if dragonfly_user_dir and isdir(dragonfly_user_dir):
+            print(f'dragonflyUserDirectory is already defined: "{dragonfly_user_dir}"\n\tto change, first clear (option "D") and then set again')
+            print('\nWhen you want to upgrade dragonfly (dragonfly2), also first clear ("D"), then choose this option ("d") again.\n')
+            return
+
+        dfl_prev_dir = self.config_get('previous settings', key)
+        if dfl_prev_dir:
+
+            print('==== instal and/or update dragonfly2====\n')
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "dragonfly2"])
+            except subprocess.CalledProcessError:
+                print('====\ncould not pip install --upgrade dragonfly2\n====\n')
+                return
+        else:
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "dragonfly2"])
+            except subprocess.CalledProcessError:
+                print('====\ncould not pip install dragonfly2\n====\n')
+                return
+        self.status.refresh()   # refresh status
+
+        self.setDirectory(key, arg)
+        dfl_dir = self.status.getDragonflyUserDirectory()
+        dragonfly_user_dir = self.config_get('directories', key)
+
+    def disable_dragonfly(self, arg=None):
+        """disable dragonfly, arg not needed/used
+        """
+        key = 'dragonflyuserdirectory'
+        self.clearDirectory(key)
+
     def copyUnimacroIncludeFile(self):
         """copy Unimacro include file into Vocola user directory
 
