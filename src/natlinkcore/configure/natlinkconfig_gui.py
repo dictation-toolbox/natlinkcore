@@ -75,7 +75,7 @@ def Dragonfly2UserDir(values, event):
         window['Set_UserDir_Dragonfly2'].update("")
 
 # Vocola2
-def Vocola2UserDir(valuesm, event):
+def Vocola2UserDir(values, event):
     if event.startswith('Set'):
     # Threaded with pysimplegui perform_long_operation to prevent GUI from freezing while configuring/pip install Vocola
         window.perform_long_operation(lambda : Config.enable_vocola(values['Set_UserDir_Vocola2']), 'Thread_Done_Vocola2')
