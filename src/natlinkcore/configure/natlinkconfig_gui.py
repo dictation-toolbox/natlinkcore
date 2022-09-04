@@ -69,9 +69,10 @@ def SetNatlinkLoggingOutput(values, event):
 # Dragonfly2
 def Dragonfly2UserDir(values, event):
     if event.startswith('Set'):
-        Config.setDirectory('DragonflyUserDirectory', values['Set_UserDir_Dragonfly2'])
+        # Threaded with pysimplegui perform_long_operation to prevent GUI from freezing while configuring/pip install Dragonfly
+        window.perform_long_operation(lambda : Config.enable_dragonfly(values['Set_UserDir_Dragonfly2']), 'Thread_Done_Dragonfly')
     if event.startswith('Clear'):
-        Config.clearDirectory('DragonflyUserDirectory')
+        Config.disable_dragonfly()
         window['Set_UserDir_Dragonfly2'].update("")
 
 # Vocola2
