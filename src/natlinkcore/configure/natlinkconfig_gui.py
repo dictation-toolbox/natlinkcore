@@ -19,6 +19,9 @@ SYMBOL_DOWN =  '▼'
 # Hidden Columns and Project State
 dragonfly2, vocola2, unimacro, extras = False, False, False, False
 
+# Threaded perform_long_operation state
+Thread_Running = False
+
 def collapse(layout, key, visible):
     """
     Helper function that creates a Column that can be later made hidden, thus appearing "collapsed"
@@ -61,6 +64,10 @@ layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.majo
 
 window = sg.Window('Natlink configuration GUI', layout)
 
+def ThreadIsRunning():
+    global Thread_Running
+    Thread_Running = not Thread_Running      
+
 ##### Config Functions #####
 # Natlink
 def SetNatlinkLoggingOutput(values, event):
@@ -68,18 +75,17 @@ def SetNatlinkLoggingOutput(values, event):
 
 # Dragonfly2
 def Dragonfly2UserDir(values, event):
-    if event.startswith('Set'):
+    if event.startswith('Set') and not ThreadIsRunning():
         # Threaded with pysimplegui perform_long_operation to prevent GUI from freezing while configuring/pip install Dragonfly
-        window.perform_long_operation(lambda : Config.enable_dragonfly(values['Set_UserDir_Dragonfly2']), 'Thread_Done_Dragonfly')
+        window.perform_long_operation(lambda: Config.enable_dragonfly(values['Set_UserDir_Dragonfly2']), 'Thread_Done_Dragonfly')
     if event.startswith('Clear'):
         Config.disable_dragonfly()
         window['Set_UserDir_Dragonfly2'].update("")
 
 # Vocola2
 def Vocola2UserDir(values, event):
-    if event.startswith('Set'):
-    # Threaded with pysimplegui perform_long_operation to prevent GUI from freezing while configuring/pip install Vocola
-        window.perform_long_operation(lambda : Config.enable_vocola(values['Set_UserDir_Vocola2']), 'Thread_Done_Vocola2')
+    if event.startswith('Set') and not ThreadIsRunning():
+        window.perform_long_operation(lambda: Config.enable_vocola(values['Set_UserDir_Vocola2']), 'Thread_Done_Vocola2')
     if event.startswith('Clear'):
         Config.disable_vocola()
         window['Set_UserDir_Vocola2'].update("")
@@ -99,9 +105,8 @@ def Vocola2UnimacroActions(values, event):
 
 # Unimacro
 def UnimacroUserDir(values, event):
-    if event.startswith('Set'):
-    # Threaded with pysimplegui perform_long_operation to prevent GUI from freezing while configuring/pip install Unimacro 
-        window.perform_long_operation(lambda : Config.enable_unimacro(values['Set_UserDir_Unimacro']), 'Thread_Done_Unimacro')
+    if event.startswith('Set') and not ThreadIsRunning():
+        window.perform_long_operation(lambda: Config.enable_unimacro(values['Set_UserDir_Unimacro']), 'Thread_Done_Unimacro')
     if event.startswith('Clear'):
         Config.disable_unimacro()
         window['Set_UserDir_Unimacro'].update("")
@@ -135,7 +140,12 @@ try:
     while True:
         event, values = window.read()
         if event == sg.WIN_CLOSED or event == 'Exit':
-            break
+            if Thread_Running:
+                choice = sg.popup(f'Please Wait: Pip install is in progress', keep_on_top=True, custom_text=('Wait','Force Close'))
+                if choice == 'Force Close':
+                    break
+            else:
+                break
         # Hidden Columns logic
         # TODO: if project is enabled, update the project state to enabled.
         elif event.startswith('dragonfly2'):
@@ -143,40 +153,50 @@ try:
             window['dragonfly2-checkbox'].update(dragonfly2)
             window['dragonfly2'].update(visible=dragonfly2)
 
-        if event.startswith('vocola2'):
+        elif event.startswith('vocola2'):
             vocola2 = not vocola2
             window['vocola2-checkbox'].update(vocola2)
             window['vocola2'].update(visible=vocola2)
 
-        if event.startswith('unimacro'):
+        elif event.startswith('unimacro'):
             unimacro = not unimacro
             window['unimacro-checkbox'].update(unimacro)
             window['unimacro'].update(visible=unimacro)
 
-        if event.startswith('extras'):
+        elif event.startswith('extras'):
             extras = not extras
             window['extras-symbol-open'].update(SYMBOL_DOWN if extras else SYMBOL_UP)
             window['extras'].update(visible=extras)
+        
+        # Wait for threaded perform_long_operation to complete 
+        elif event.startswith('Thread_Done'):
+            Thread_Running = not Thread_Running
+
+        elif Thread_Running:
+            choice = sg.popup(f'Please Wait: Pip install is in progress', keep_on_top=True, custom_text=('Wait','Force Close'))
+            if choice == 'Force Close':
+                break
 
         # Dispatch events to call appropriate config function.
-        if event in natlink_dispatch:
+        elif event in natlink_dispatch:
             func_to_call = natlink_dispatch[event]
             func_to_call(values, event)
-        if event in dragonfly2_dispatch:
+        elif event in dragonfly2_dispatch:
             func_to_call = dragonfly2_dispatch[event] # get function from dispatch dictionary (dragonfly2_dispatch)
-            func_to_call(values, event) # event is passed to function for event specific handling. Set\Clear
-        if event in vocola2_dispatch:
+            func_to_call(values, event) # event is passed to function for event specelific handling. Set\Clear
+        elif event in vocola2_dispatch:
             func_to_call = vocola2_dispatch[event]
             func_to_call(values, event)
-        if event in unimacro_dispatch:
+        elif event in unimacro_dispatch:
             func_to_call = unimacro_dispatch[event]
             func_to_call(values, event)
-        if event in autohotkey_dispatch:
+        elif event in autohotkey_dispatch:
             func_to_call = autohotkey_dispatch[event]
             func_to_call(values, event)
-        Config.status.refresh()
 
 except Exception as e:
     sg.Print('Exception in GUI event loop:', sg.__file__, e, keep_on_top=True, wait=True)
+finally:
+    Config.status.refresh()
 
 window.close()
