@@ -62,7 +62,7 @@ layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.majo
           #### Buttons at bottom ####
           [sg.Button('Exit')]]
 
-window = sg.Window('Natlink configuration GUI', layout)
+window = sg.Window('Natlink configuration GUI', layout, enable_close_attempted_event=True)
 
 def ThreadIsRunning():
     global Thread_Running
@@ -139,13 +139,8 @@ autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Se
 try:
     while True:
         event, values = window.read()
-        if event == sg.WIN_CLOSED or event == 'Exit':
-            if Thread_Running:
-                choice = sg.popup(f'Please Wait: Pip install is in progress', keep_on_top=True, custom_text=('Wait','Force Close'))
-                if choice == 'Force Close':
-                    break
-            else:
-                break
+        if (event == '-WINDOW CLOSE ATTEMPTED-' or event == 'Exit') and not Thread_Running:
+            break
         # Hidden Columns logic
         # TODO: if project is enabled, update the project state to enabled.
         elif event.startswith('dragonfly2'):
