@@ -9,9 +9,10 @@ dynamic = ["version", "description"]
 requires-python = ">=3.9"
 readme = "readme.md"
 dependencies= [
+    "natlink>=5.3.4",
     "pysimplegui>=4.60.3", 
     "pydebugstring",
-    "dtactions>=1.5.0",
+    "dtactions>=1.5.4",
 ]
     classifiers=[
         "Development Status :: 4 - Beta",
