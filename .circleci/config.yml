@@ -95,7 +95,8 @@ jobs:
       - run:
           name: Publish
           command: |
-            flit --repository  testpypi publish
+            pip install twine
+            twine upload -u USERNAME -p PASSWORD--repository testpypi dist/*   
 
 
 
