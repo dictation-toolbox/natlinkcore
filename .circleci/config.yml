@@ -96,7 +96,7 @@ jobs:
           name: Publish
           command: |
             pip install twine
-            twine upload -u USERNAME -p PASSWORD--repository testpypi dist/*   
+            twine upload  --repository testpypi dist/*   
 
 
 
