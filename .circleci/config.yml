@@ -94,7 +94,8 @@ jobs:
  
       - run:
           name: Publish
-          flit --repository  testpypi publish
+          command: |
+            flit --repository  testpypi publish
 
 
 
