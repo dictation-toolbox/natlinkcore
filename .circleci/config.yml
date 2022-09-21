@@ -42,12 +42,12 @@ jobs:
         name: Prereqs
         command:  pip install .
 
-      - run2:
+      - run:
           name: Build Package
           command: |
             flit build
 
-      - run3:
+      - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
           command: echo "no tests"
