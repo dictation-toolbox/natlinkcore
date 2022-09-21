@@ -55,7 +55,10 @@ jobs:
           # This assumes pytest is installed via the install-package step above
           command: echo "no tests"
   test_publish:
-    echo "Test Publish"
+    - run:
+        name: Publish Package
+        command: |
+          echo "Test Publish"
 
 
 # Invoke jobs via workflows
