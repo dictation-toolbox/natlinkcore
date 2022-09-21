@@ -37,6 +37,10 @@ To build the package:
 
 `flit build`   from powershell or command prompt, which will run the the tests in natlinkcore/test, then build the the package.
 
+In progress automated publishing with circleci:
+
+Circleci publishes to testpypi currently.   The enviornment variables "TWINE_USERNAME" and "TWINE_PASSWORD" are set in the circleci project to publish to testpypi.
+
 
 To publish the package to [The Python Package Index (PyPI)](https://pypi.org/)
 
