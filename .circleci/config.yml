@@ -39,8 +39,8 @@ jobs:
           # pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
 
       - run:  
-        name: Prereqs
-        command:  pip install .
+          name: Prereqs
+          command:  pip install .
 
       - run:
           name: Build Package
