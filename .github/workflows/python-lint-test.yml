@@ -25,14 +25,13 @@ jobs:
         python -m pip install flake8 pytest
     - name: Linting with flake8
       run: |
-        echo "CI linting not impplemmented"
+        echo "CI linting not implemented"
         # stop the build if there are Python syntax errors or undefined names
         #flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         #flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Running pytest tests
       run: |
-        # This assumes pytest is installed via the install-package step above
-        echo "CI tests not impplemmented"
+        echo "CI tests not implemented"
         # pip install -e .[test]  
         # pytest
