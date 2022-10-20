@@ -150,6 +150,7 @@ help <command>: give more explanation on <command>
         self.Config.openConfigFile()
     def do_j(self, arg):
         # print PythonPath:
+        
         self.Config.printPythonPath()
 
     def help_i(self):
@@ -303,30 +304,25 @@ In this VocolaUserDirectory your Vocola Command File are/will be located.
     def do_x(self, arg):
         self.message = 'Print debug output to "Messages from Natlink" window'
         print(f'do action: {self.message}')
-        self.Config.enableDebugOutput()
+
+        self.Config.setLogging('DEBUG')
     def do_X(self, arg):
         self.message = 'Disable printing debug output to "Messages from Natlink" window'
         print(f'do action: {self.message}')
-        self.Config.disableDebugOutput()
+        self.Config.setLogging('INFO')
 
     def help_x(self):
         print('-'*60)
         print("""Enable (x)/disable (X) Natlink debug output
 
 This sends (sometimes lengthy) debug messages to the
-"Messages from Natlink" window.
+"Messages from Natlink" window. Effectively this sets the
+logging variable to "DEBUG" or "INFO"
 """)
         print('='*60)
 
     help_X = help_x
     
-    # # register natlink.pyd
-    # def do_r(self, arg):
-    #     self.message = "(Re) register and enable natlink.pyd is done from the installer program"
-    #     
-    # def do_R(self, arg):
-    #     self.message = 'Unregister natlink.pyd and disable Natlink is done from the installer program,\nyou can uninstall Natlink via "Add or remove Programs" in Windows'
-    #     
     # different Vocola options
     def do_b(self, arg):
         self.message = "Enable Vocola different user directories for different languages"

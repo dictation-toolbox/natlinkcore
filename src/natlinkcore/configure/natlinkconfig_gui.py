@@ -1,3 +1,4 @@
+#pylint:disable=W0621, W0703
 import sys
 import platform
 
@@ -143,7 +144,7 @@ try:
             break
         # Hidden Columns logic
         # TODO: if project is enabled, update the project state to enabled.
-        elif event.startswith('dragonfly2'):
+        if event.startswith('dragonfly2'):
             dragonfly2 = not dragonfly2
             window['dragonfly2-checkbox'].update(dragonfly2)
             window['dragonfly2'].update(visible=dragonfly2)

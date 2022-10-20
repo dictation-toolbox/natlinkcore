@@ -1,6 +1,6 @@
 """CallbackHandler instances can handle callbacks (for Natlink, natlinkmain)$
 """
-#pylint:disable=C0115, C0116, W0703, R0201
+#pylint:disable=C0115, C0116, W0703
 import traceback
 
 class CallbackHandler:

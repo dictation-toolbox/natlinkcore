@@ -1113,7 +1113,6 @@ results.  The following callback functions can be defined:
     # This makes a raw dictation grammar.  The grammar is in SAPI binary
     # format as defined by Microsoft.
     def makeGrammar(self):
-        #pylint:disable=R0201
         output = []
         output.append(struct.pack("LL", 2, 0))
         return b"".join(output)
@@ -1269,7 +1268,6 @@ results.  The following callback functions can be defined:
     command grammars.
     selectWords and throughWords are lists or words
         """
-        #pylint:disable=R0201
         output = []
         output.append(struct.pack("LL", 10, 0))
         if isinstance(selectWords, str):
