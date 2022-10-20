@@ -1,3 +1,4 @@
+#pylint:disable=W0621, W0703
 import sys
 import platform
 
@@ -133,11 +134,11 @@ autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Se
 try:
     while True:
         event, values = window.read()
-        if event == sg.WIN_CLOSED or event == 'Exit':
+        if event in (sg.WIN_CLOSED, 'Exit'):
             break
         # Hidden Columns logic
         # TODO: if project is enabled, update the project state to enabled.
-        elif event.startswith('dragonfly2'):
+        if event.startswith('dragonfly2'):
             dragonfly2 = not dragonfly2
             window['dragonfly2-checkbox'].update(dragonfly2)
             window['dragonfly2'].update(visible=dragonfly2)

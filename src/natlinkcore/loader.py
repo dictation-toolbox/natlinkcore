@@ -4,6 +4,7 @@ import importlib.machinery
 import importlib.util
 import logging
 import os
+import copy
 import sys
 import sysconfig
 import time
@@ -135,6 +136,12 @@ class NatlinkMain(metaclass=Singleton):
     def user(self, value: str):
         self.__user = value or ''
 
+    # QH added, for _control grammar of Unimacro:
+    def get_loaded_modules(self) -> Dict:
+        """return a copy of the loaded modules
+        """
+        return copy.copy(self.loaded_modules)
+
     # load_on_begin_utterance is a property...
     def get_load_on_begin_utterance(self) -> Any:
         """this value is most often True or False, taken from the config file
@@ -143,7 +150,8 @@ class NatlinkMain(metaclass=Singleton):
         the load_on_begin_utterance so many times. After these utterances,
         the value falls back to False.
         
-        With Vocola, there is one utterance delay in the updating of the changed vocola command files.
+        With Vocola, this value is set to 1, for a one time load_on_begin_utterance, wihtout the
+        need to toggle the microphone.
         """
         return self.__load_on_begin_utterance
 

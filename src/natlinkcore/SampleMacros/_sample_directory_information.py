@@ -26,7 +26,6 @@ class ThisGrammar(GrammarBase):
         self.activateAll()
 
     def gotResults_start(self, words, fullResults):
-        #pylint:disable=R0201
         natlink.displayText('\nHeard macro "sample directory (info|information)"\n\n',0)
         language = status.get_language()
         print(f'Language is: {language}')
