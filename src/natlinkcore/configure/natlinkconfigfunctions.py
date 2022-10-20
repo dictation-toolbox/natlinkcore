@@ -313,7 +313,7 @@ class NatlinkConfig:
 
         uni_dir = self.status.getUnimacroDirectory()
         if uni_dir:
-            print('==== instal and/or update unimacro====\n')            
+            print('==== install and/or update unimacro====\n')            
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "unimacro"])
             except subprocess.CalledProcessError:
@@ -359,7 +359,7 @@ class NatlinkConfig:
 
         voc_dir = self.status.getVocolaDirectory()
         if voc_dir:
-            print('==== instal and/or update vocola2====\n')
+            print('==== install and/or update vocola2====\n')
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "vocola2"])
             except subprocess.CalledProcessError:
@@ -407,7 +407,7 @@ class NatlinkConfig:
         dfl_prev_dir = self.config_get('previous settings', key)
         if dfl_prev_dir:
 
-            print('==== instal and/or update dragonfly2====\n')
+            print('==== install and/or update dragonfly2====\n')
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "dragonfly2"])
             except subprocess.CalledProcessError:
