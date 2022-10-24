@@ -7,7 +7,7 @@
 ## Installing from PyPi
 You can install from [The Python Package Index (PyPI)](https://pypi.org/) with 
 
-`pip install natlinkcore`
+`py -m pip install natlinkcore`
 
  
 ## Test Framework
@@ -24,9 +24,9 @@ The build happens through a powershell script.  You don't have to know much powe
 The powershell script runs the tests using [pytest](https://docs.pytest.org/).  
 
 The package is built with [Flit](https://flit.pypa.io/).  The package will be produced in
-dist/natlinkcore-x.y.z-py3-none-any.whl.  To install it `pip install dist/natlinkcore-x.y.z-py3-none-any.whl` replacing x.y with the version numbers.
+dist/natlinkcore-x.y.z-py3-none-any.whl.  To install it `py -m pip install dist/natlinkcore-x.y.z-py3-none-any.whl` replacing x.y with the version numbers.
 
-Normally if you are developing natlinkcore, you will with instead to install with `pip install -e .`, which will
+Normally if you are developing natlinkcore, you will with instead to install with `py -m pip install -e .`, which will
 let you make and test changes without reinstalling natlinkcore with pip.  **Note the flit install --symlink or --pth-file options are problematic so just use pip.**
 
 
@@ -35,7 +35,7 @@ To start a powershell from the command prompt, type `powershell`.
 To build the package:
 
 
-`flit build`   from powershell or command prompt, which will run the the tests in natlinkcore/test, then build the the package.
+`py -m flit build`   from powershell or command prompt, which will run the the tests in natlinkcore/test, then build the the package.
 
 
 To publish the package to [The Python Package Index (PyPI)](https://pypi.org/)

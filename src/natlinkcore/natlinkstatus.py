@@ -4,7 +4,7 @@
 #
 #  (C) Copyright Quintijn Hoogenboom, February 2008/January 2018/extended for python3, Natlink5.0.1 Febr 2022
 #
-#pylint:disable=C0302, C0116, R0201, R0902, R0904, R0912, W0107, E1101
+#pylint:disable=C0302, C0116, R0902, R0904, R0912, W0107, E1101, C0415
 """The following functions are provided in this module:
 
 The functions below are put into the class NatlinkStatus.
@@ -156,6 +156,9 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         self.VocolaUserDirectory = None
         self.VocolaDirectory = None
         self.VocolaGrammarsDirectory = None
+        ## Dragonfly
+        self.DragonflyDirectory = None
+        self.DragonflyUserDirectory = None
         ## AutoHotkey:
         self.AhkUserDir = None
         self.AhkExeDir = None
@@ -184,7 +187,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         wVersion = platform.platform()
         if '-' in wVersion:
             return wVersion.split('-')[1]
-        print('Warning, probably cannot find correct Windows Version... (%s)'% wVersion)
+        print(f'Warning, probably cannot find correct Windows Version... ({wVersion})')
         return wVersion
     
     def getPythonVersion(self):
@@ -246,7 +249,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         value = self.natlinkmain.getconfigsetting(settings, key)
         if value:
             return value
-        return   
+        return None
     
     def getDNSVersion(self):
         """find the correct DNS version number (as an integer)
@@ -298,6 +301,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         if not uDir:
             # print('no valid UnimacroDirectory, Unimacro is disabled')
             return False
+            
         if isdir(uDir):
             files = os.listdir(uDir)
             if not '_control.py' in files:
@@ -310,6 +314,21 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         ugDir = self.getUnimacroGrammarsDirectory()
         if not (ugDir and isdir(ugDir)):
             print(f'UnimacroGrammarsDirectory ({ugDir}) not present, please create')
+            return False
+        return True            
+
+    def DragonflyIsEnabled(self):
+        """DragonflyIsEnabled:
+        return True if DragonflyDirectory and DragonflyUserDirectory are there
+
+        """
+        dDir = self.getDragonflyDirectory()
+        if not dDir:
+            # print('no valid DragonflyDirectory, Dragonfly is disabled')
+            return False
+            
+        udDir = self.getDragonflyUserDirectory()
+        if not udDir:
             return False
         return True            
 
@@ -371,24 +390,17 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         
         This is the directory where the _control.py grammar is, and
         is normally got via `pip install unimacro`
-
         """
         # When git cloned, relative to the Core directory, otherwise somewhere or in the site-packages (if pipped).
-        join, isdir, isfile, abspath = os.path.join, os.path.isdir, os.path.isfile, os.path.abspath
         if self.UnimacroDirectory is not None:
             return self.UnimacroDirectory
-        uDir = join(sys.prefix, "lib", "site-packages", "unimacro")
-        if isdir(uDir):
-            uFile = "_control.py"
-            controlGrammar = join(uDir, uFile)
-            if isfile(controlGrammar):
-                self.UnimacroDirectory = abspath(uDir)
-                return self.UnimacroDirectory
-            # print(f'UnimacroDirectory found: "{uDir}", but no valid file: "{uFile}", return ""')
+        try:
+            import unimacro
+        except ImportError:
+            self.UnimacroDirectory = ""
             return ""
-        # print('UnimacroDirectory not found in "lib/site-packages/unimacro", return ""')
-        self.UnimacroDirectory = ""
-        return ""
+        self.UnimacroDirectory = str(Path(unimacro.__file__).parent)
+        return self.UnimacroDirectory
         
     
     def getUnimacroGrammarsDirectory(self):
@@ -450,6 +462,27 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         self.UserDirectory = ''
         return ''
   
+    def getDragonflyDirectory(self):
+        """return the path to the DragonflyDirectory
+        
+        This is the directory where the _control.py grammar is, and
+        is normally got via `pip install dragonfly`
+
+        """
+        # When git cloned, relative to the Core directory, otherwise somewhere or in the site-packages (if pipped).
+        if self.DragonflyDirectory is not None:
+            return self.DragonflyDirectory
+        try:
+            import dragonfly
+        except ImportError:
+            self.DragonflyDirectory = ""
+            return ""
+    
+        self.DragonflyDirectory = str(Path(dragonfly.__file__).parent)
+        return self.DragonflyDirectory
+        
+
+
     def getDragonflyUserDirectory(self):
         """return the path to the Dragonfly User directory
 
@@ -457,6 +490,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         """
         isdir, abspath = os.path.isdir, os.path.abspath
+
         if not self.DragonflyUserDirectory is None:
             return self.DragonflyUserDirectory
         key = 'DragonflyUserDirectory'
@@ -509,20 +543,12 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         if self.VocolaDirectory is not None:
             return self.VocolaDirectory
 
-        ## try in site-packages:
-        vocDir = join(sys.prefix, "lib", "site-packages", "vocola2")
-        if not isdir(vocDir):
-            # print('VocolaDirectory not found in "lib/site-packages/vocola2", return ""')
+        try:
+            import vocola2
+        except ImportError:
             self.VocolaDirectory = ''
             return ''
-        vocFile = "_vocola_main.py"
-        checkGrammar = join(vocDir, vocFile)
-        if not isfile(checkGrammar):
-            print(f'VocolaDirectory found in "{vocDir}", but no file "{vocFile}" found, return ""')
-            self.VocolaDirectory = ''
-            return ''
-
-        self.VocolaDirectory = abspath(vocDir)
+        self.VocolaDirectory = str(Path(vocola2.__file__).parent)
         return self.VocolaDirectory
 
     
@@ -618,7 +644,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         ## TODO: must be windows language...
         windowsLanguage = 'enx'  ### ??? TODO QH
         try:
-            return "{%s}"% shiftKeyDict[windowsLanguage]
+            return f'{{{shiftKeyDict[windowsLanguage]}}}'
         except KeyError:
             print(f'no shiftKey code provided for language: "{windowsLanguage}", take empty string.')
             return ""
@@ -667,11 +693,11 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         for key in ['DNSIniDir', 'WindowsVersion', 'DNSVersion',
                     'PythonVersion',
                     'DNSName', 'NatlinkIni', 'Natlink_Userdir',
-                    'DragonflyUserDirectory', 
                     'UnimacroDirectory', 'UnimacroUserDirectory', 'UnimacroGrammarsDirectory',
                     'VocolaDirectory', 'VocolaUserDirectory', 'VocolaGrammarsDirectory',
                     'VocolaTakesLanguages', 'VocolaTakesUnimacroActions',
-                    'UserDirectory', 
+                    'UserDirectory',
+                    'DragonflyDirectory', 'DragonflyUserDirectory',
                     'ExtraGrammarDirectories',
                     'InstallVersion',
                     # 'IncludeUnimacroInPythonPath',
@@ -692,6 +718,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         D['unimacroIsEnabled'] = self.UnimacroIsEnabled()
         D['userIsEnabled'] = self.UserIsEnabled()
+        D['dragonflyIsEnabled'] = self.DragonflyIsEnabled()
         return D
 
     
@@ -713,11 +740,14 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             self.appendAndRemove(L, D, key)
 
         ## Dragonfly:
-        key = 'DragonflyUserDirectory'
-        if D[key]:
-            L.append('---Dragonfly is enabled')
-            self.appendAndRemove(L, D, key)
-            
+        if D['dragonflyIsEnabled']:
+            self.appendAndRemove(L, D, 'dragonflyIsEnabled', "---Dragonfly is enabled")
+            for key in ('DragonflyUserDirectory', 'DragonflyDirectory'):
+                self.appendAndRemove(L, D, key)
+        else:
+            self.appendAndRemove(L, D, 'dragonflyIsEnabled', "---Dragonfly is disabled")
+            for key in ('DragonflyUserDirectory', 'DragonflyDirectory'):
+                del D[key]
 
         ## Vocola::
         if D['vocolaIsEnabled']:
@@ -740,8 +770,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
                 self.appendAndRemove(L, D, key)
         else:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is disabled")
-            for key in ('UnimacroUserDirectory', 'UnimacroIniFilesEditor',
-                        'UnimacroDirectory', 'UnimacroGrammarsDirectory'):
+            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroGrammarsDirectory'):
                 del D[key]
         ##  UserDirectory:
         if D['userIsEnabled']:
@@ -796,9 +825,11 @@ def main():
     Lang = status.get_language()
     print(f'language: "{Lang}"')
     print(status.getNatlinkStatusString())
+    # shift_key = status.getShiftKey()
+    # print(f'shiftkey: {shift_key}')
     print(f'load_on_begin_utterance: {status.get_load_on_begin_utterance()}')
     dns_version = status.getDNSVersion()
-    print(f'DNSVersion: {dns_version} (type: {type(dns_version)})')
+    print(f'DNSVersion: {dns_version}')
  
 if __name__ == "__main__":
     natlink.natConnect()

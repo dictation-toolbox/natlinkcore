@@ -12,7 +12,7 @@
 # March 3, 1999
 #   - initial version
 #
-#pylint:disable=C0114, C0115, C0116, C0321, W0613, R0201, E1101, W0603
+#pylint:disable=C0114, C0115, C0116, C0321, W0613, E1101, W0603
 ############################################################################
 #
 # This is a sample grammar file.  I have implemented some basic global

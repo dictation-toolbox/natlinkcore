@@ -3,7 +3,7 @@
 #   (c) Copyright 1999 by Joel Gould
 #   Portions (c) Copyright 1999 by Dragon Systems, Inc.
 #
-#pylint:disable=C0115, C0116, R0201, W0613
+#pylint:disable=C0115, C0116, W0613
 """_sample_runmimic.py
 
 This script tests the commands with alternatives in interactive mode
