@@ -1,9 +1,12 @@
 
-#pylint:disable= C0114, C0116, W0401, W0614, W0621, W0108. W0212
+#pylint:disable= C0114, C0116, W0401, W0614, W0621, W0108. W0212, C2801, C3001
 
 import pytest
 
 from natlinkcore.loader import *
+
+def do_nothing():
+    return
 
 class MockLoggingHandler(logging.Handler):
     """Mock logging handler to check for expected logs."""
@@ -74,6 +77,43 @@ def test_pre_and_post_load_setter(empty_config, logger):
     cb = lambda: None
     main.set_pre_load_callback(cb)
     main.set_post_load_callback(cb)
+    
+def test_set_on_begin_utterance(empty_config, logger, monkeypatch):
+    main = NatlinkMain(logger, empty_config)
+    main.config = empty_config
+    monkeypatch.setattr(main._on_begin_utterance_callback, "run", do_nothing)
+    monkeypatch.setattr(main, "trigger_load", do_nothing)
+    
+    assert main.get_load_on_begin_utterance() is False
+    main.set_load_on_begin_utterance(True)
+    assert main.get_load_on_begin_utterance() is True
+    ## pass a few lines in the on_begin_callback function:
+    module_info = ('prog', 'title', 23)
+    main.prog_names_visited.add('prog')
+    
+    main.on_begin_callback(module_info)
+    assert main.get_load_on_begin_utterance() is True
+    
+    main.set_load_on_begin_utterance(False)
+    main.on_begin_callback(module_info)
+    assert main.get_load_on_begin_utterance() is False
+
+    # now check setting to a small positive int:
+    main.set_load_on_begin_utterance(2)
+    main.on_begin_callback(module_info)
+    assert main.get_load_on_begin_utterance() == 1
+
+    # now decrement the get_load_on_begin_utterance property to 0, property is set to False:
+    main.on_begin_callback(module_info)
+    assert main.get_load_on_begin_utterance() == 0
+    value = main.get_load_on_begin_utterance()
+    assert value is False
+    assert isinstance(value, bool)
+    
+    # check invalid values:
+    with pytest.raises(TypeError):
+        main.set_load_on_begin_utterance("invalid")
+    
     
 
 def test_trigger_load_calls_pre_and_post_load(empty_config, logger, monkeypatch):
