@@ -127,8 +127,8 @@ try:
             window['unimacro'].update(visible=unimacro_state)
 
         elif event.startswith('extras'):
-            extras_state = not extras_state
             window['extras-symbol-open'].update(SYMBOL_DOWN if extras_state else SYMBOL_UP)
+            extras_state = not extras_state
             window['extras'].update(visible=extras_state)
         
         # Wait for threaded perform_long_operation to complete 
