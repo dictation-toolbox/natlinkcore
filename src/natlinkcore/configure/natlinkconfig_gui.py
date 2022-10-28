@@ -18,7 +18,7 @@ SYMBOL_UP =    '▲'
 SYMBOL_DOWN =  '▼'
 
 # Hidden Columns and Project State
-dragonfly2_state, unimacro_state, extras_state = Status.DragonflyIsEnabled(), Status.UnimacroIsEnabled(), False
+dragonfly2_state, unimacro_state, extras_state = Status.dragonflyIsEnabled(), Status.unimacroIsEnabled(), False
 
 # Threaded perform_long_operation state
 Thread_Running = False
