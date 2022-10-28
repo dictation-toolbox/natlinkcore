@@ -18,7 +18,7 @@ SYMBOL_UP =    '▲'
 SYMBOL_DOWN =  '▼'
 
 # Hidden Columns and Project State
-dragonfly2, unimacro, extras = False, False, False
+dragonfly2_state, unimacro_state, extras_state = Status.DragonflyIsEnabled(), Status.UnimacroIsEnabled(), False
 
 # Threaded perform_long_operation state
 Thread_Running = False
@@ -48,11 +48,11 @@ extras_section = [[sg.T('Natlink Loglevel:'),  sg.Combo(default_value=Status.get
 #### Main UI Layout ####
 layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.major}, Build: {osVersion.build}'), sg.T(f'Python: {pyVersion}'), sg.T(f'Dragon Version: {Status.getDNSVersion()}')],
           #### Projects Checkbox ####
-          [sg.T('Configure Projects:', font='bold'), sg.Checkbox('Dragonfly', enable_events=True, key='dragonfly2-checkbox'), sg.Checkbox('Unimacro', enable_events=True, key='unimacro-checkbox')],
+          [sg.T('Configure Projects:', font='bold'), sg.Checkbox('Dragonfly', enable_events=True, key='dragonfly2-checkbox', default=dragonfly2_state), sg.Checkbox('Unimacro', enable_events=True, key='unimacro-checkbox', default=unimacro_state)],
           #### Projects Hidden UI Columns - See above ####
-          [collapse(dragonfly2_section, 'dragonfly2', dragonfly2)],
-          [collapse(unimacro_section, 'unimacro', unimacro)],
-          [collapse(extras_section, 'extras', extras)],
+          [collapse(dragonfly2_section, 'dragonfly2', dragonfly2_state)],
+          [collapse(unimacro_section, 'unimacro', unimacro_state)],
+          [collapse(extras_section, 'extras', extras_state)],
           [sg.T(SYMBOL_DOWN, enable_events=True, k='extras-symbol-open', text_color='black'), sg.T('Extras', enable_events=True, text_color='black', k='extras-open')],
           #### Buttons at bottom ####
           [sg.Button('Exit')]]
@@ -117,19 +117,19 @@ try:
         # Hidden Columns logic
         # TODO: if project is enabled, update the project state to enabled.
         if event.startswith('dragonfly2'):
-            dragonfly2 = not dragonfly2
-            window['dragonfly2-checkbox'].update(dragonfly2)
-            window['dragonfly2'].update(visible=dragonfly2)
+            dragonfly2_state = not dragonfly2_state
+            window['dragonfly2-checkbox'].update(dragonfly2_state)
+            window['dragonfly2'].update(visible=dragonfly2_state)
 
         elif event.startswith('unimacro'):
-            unimacro = not unimacro
-            window['unimacro-checkbox'].update(unimacro)
-            window['unimacro'].update(visible=unimacro)
+            unimacro_state = not unimacro_state
+            window['unimacro-checkbox'].update(unimacro_state)
+            window['unimacro'].update(visible=unimacro_state)
 
         elif event.startswith('extras'):
-            extras = not extras
-            window['extras-symbol-open'].update(SYMBOL_DOWN if extras else SYMBOL_UP)
-            window['extras'].update(visible=extras)
+            extras_state = not extras_state
+            window['extras-symbol-open'].update(SYMBOL_DOWN if extras_state else SYMBOL_UP)
+            window['extras'].update(visible=extras_state)
         
         # Wait for threaded perform_long_operation to complete 
         elif event.startswith('Thread_Done'):
