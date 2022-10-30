@@ -1,7 +1,6 @@
 '''Python portion of Natlink, a compatibility module for Dragon Naturally Speaking
 The python stuff including test modules'''
-__version__= "5.3.5"
-
+__version__="5.3.5"
 #pylint:disable=C0114, W0401
 from typing import Optional
 from pathlib import Path
