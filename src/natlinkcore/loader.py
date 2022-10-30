@@ -161,6 +161,9 @@ class NatlinkMain(metaclass=Singleton):
         For Vocola, setting this value to 1 did not work, setting to 2 does, so
         you need one extra utterance for a new vocola command to come through.
         """
+        if isinstance(value, bool):
+            self.__load_on_begin_utterance = value
+            return
         if isinstance(value, int):
             if value > 0:
                 self.logger.info(f'set_load_on_begin_utterance to {value}')
@@ -168,12 +171,8 @@ class NatlinkMain(metaclass=Singleton):
             else:
                 self.logger.info('set_load_on_begin_utterance to False')
                 self.__load_on_begin_utterance = False
-        elif value in [True, False]:
-            self.__load_on_begin_utterance = value
-        else:
-            raise TypeError(f'set_load_on_begin_utterance, invalid type for value: {value} (type: {type(value)})')
-        
-
+            return
+        raise TypeError(f'set_load_on_begin_utterance, invalid type for value: {value} (type: {type(value)})')
     load_on_begin_utterance = property(get_load_on_begin_utterance, set_load_on_begin_utterance)
 
     # def _module_paths_in_dir(self, directory: str) -> List[Path]:
@@ -413,9 +412,10 @@ class NatlinkMain(metaclass=Singleton):
         elif self.load_on_begin_utterance:
             # manipulate this setting:
             value = self.load_on_begin_utterance
-            if isinstance(value, int):
+            if isinstance(value, bool):
+                pass
+            elif isinstance(value, int):
                 value -= 1
-                value = value or False
                 self.load_on_begin_utterance = value
             self.trigger_load()
                 

@@ -272,7 +272,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         self.DNSVersion = version
         return self.DNSVersion
     
-    def VocolaIsEnabled(self):
+    def vocolaIsEnabled(self):
         """Return True if Vocola is enables
         
         To be so,
@@ -291,8 +291,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         return False
 
     
-    def UnimacroIsEnabled(self):
-        """UnimacroIsEnabled: see if UnimacroDirectory and UnimacroUserDirectory are there
+    def unimacroIsEnabled(self):
+        """unimacroIsEnabled: see if UnimacroDirectory and UnimacroUserDirectory are there
 
         _control.py should be in the UnimacroDirectory. 
         """
@@ -317,8 +317,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             return False
         return True            
 
-    def DragonflyIsEnabled(self):
-        """DragonflyIsEnabled:
+    def dragonflyIsEnabled(self):
+        """dragonflyIsEnabled:
         return True if DragonflyDirectory and DragonflyUserDirectory are there
 
         """
@@ -714,11 +714,11 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         D['NatlinkDirectory'] = self.getNatlinkDirectory()
         D['NatlinkcoreDirectory'] = self.getNatlinkcoreDirectory()
         # D['UserDirectory'] = self.getUserDirectory()
-        D['vocolaIsEnabled'] = self.VocolaIsEnabled()
+        D['vocolaIsEnabled'] = self.vocolaIsEnabled()
 
-        D['unimacroIsEnabled'] = self.UnimacroIsEnabled()
+        D['unimacroIsEnabled'] = self.unimacroIsEnabled()
         D['userIsEnabled'] = self.UserIsEnabled()
-        D['dragonflyIsEnabled'] = self.DragonflyIsEnabled()
+        D['dragonflyIsEnabled'] = self.dragonflyIsEnabled()
         return D
 
     
