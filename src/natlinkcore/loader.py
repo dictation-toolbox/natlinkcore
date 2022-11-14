@@ -15,7 +15,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import List, Dict, Set, Iterable, Any, Tuple, Callable
 
-from natlink import _natlink_core as natlink
+import natlink
 from natlinkcore.config import LogLevel, NatlinkConfig, expand_path
 from natlinkcore.readwritefile import ReadWriteFile
 from natlinkcore.callbackhandler import CallbackHandler

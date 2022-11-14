@@ -6,7 +6,7 @@ import os
 from enum import IntEnum
 from typing import List, Iterable, Dict
 from pathlib import Path
-from natlink import _natlink_core as natlink
+import natlink
 
 class NoGoodConfigFoundException(natlink.NatError):
     pass
