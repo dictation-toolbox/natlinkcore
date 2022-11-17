@@ -41,7 +41,9 @@ settings1 =  make_sample_config_fixture("settings_1.ini")
 settings2 = make_sample_config_fixture("settings_2.ini")
 packages_samples = make_sample_config_fixture('package_samples.ini') 
 package_load_test1 = make_sample_config_fixture('package_load_test1.ini')
-
+dap_settings1 = make_sample_config_fixture("dap_settings_1.ini")
+dap_settings2 = make_sample_config_fixture("dap_settings_2.ini")
+dap_settings3 = make_sample_config_fixture("dap_settings_3.ini")
 @pytest.fixture()
 def mock_syspath(monkeypatch):
     """Add a tempory path to mock modules in sys.pythonpath"""
@@ -101,6 +103,21 @@ def test_settings_2(mock_syspath,settings2):
     assert test_cfg.load_on_user_changed is False
 
 
+def test_dap_settings(dap_settings1,dap_settings2,dap_settings3):
+    test_cfg=dap_settings1
+    assert test_cfg.dap_enabled == False
+    assert test_cfg.dap_port == 7474
+    assert test_cfg.dap_wait_for_debugger_attach_on_startup == False
+
+    test_cfg=dap_settings2
+    assert test_cfg.dap_enabled ==True
+    assert test_cfg.dap_port == 0
+    assert test_cfg.dap_wait_for_debugger_attach_on_startup == True
+
+    test_cfg=dap_settings3
+    assert test_cfg.dap_enabled ==False
+    assert test_cfg.dap_port == 0
+    assert test_cfg.dap_wait_for_debugger_attach_on_startup == False
 
 
 def test_expand_path(mock_syspath,mock_userdir):
@@ -148,6 +165,9 @@ def test_config_locations():
     assert len(config_locations) > 0
     assert os.path.isfile(config_locations[0])
  
+
+
+
 def test_mocks_actually_work(mock_syspath):
     spec = u.find_spec('fake_package1')
     assert not spec is None

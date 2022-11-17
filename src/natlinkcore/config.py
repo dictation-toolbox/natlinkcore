@@ -69,7 +69,7 @@ class NatlinkConfig:
         sections = config.sections()
         sp = sys.path   #handy, leave in for debugging
 
- 
+
         for section in sections:
             if section.endswith('-directories'):
                 user = section[:-len('-directories')]
@@ -102,6 +102,19 @@ class NatlinkConfig:
                                                               fallback=ret.load_on_begin_utterance)
             ret.load_on_startup = settings.getboolean('load_on_startup', fallback=ret.load_on_startup)
             ret.load_on_user_changed = settings.getboolean('load_on_user_changed', fallback=ret.load_on_user_changed)
+
+        #default to no dap enabled.
+
+        dap_enabled, dap_port, dap_wait_for_debugger_attach_on_startup = (False,0,False)
+ 
+        if config.has_section('settings.debugadapterprotocol'):
+            dap_settings = config['settings.debugadapterprotocol']
+            dap_enabled = dap_settings.getboolean('dap_enabled', fallback=False)
+            dap_port = dap_settings.getint('dap_port', fallback=0)
+            dap_wait_for_debugger_attach_on_startup= dap_settings.getboolean('dap_wait_for_debugger_attach_on_startup', fallback=False)
+
+        ret.dap_enabled,ret.dap_port,ret.dap_wait_for_debugger_attach_on_startup = \
+            dap_enabled, dap_port, dap_wait_for_debugger_attach_on_startup
 
         return ret
 
