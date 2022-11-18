@@ -2,8 +2,9 @@
 #pylint:disable= C0114, C0116, W0401, W0614, W0621, W0108. W0212, C2801, C3001
 
 import pytest
-
+import pathlib as p
 from natlinkcore.loader import *
+import debugpy
 
 def do_nothing():
     return
@@ -28,15 +29,29 @@ class MockLoggingHandler(logging.Handler):
             'critical': [],
         }
 
+# a lot of this is copied from test_config.py
 
+def sample_config(sample_name) -> 'NatlinkConfig':
+    """
+    load a config file from the config files subfolder
+    """
+    sample_ini= (p.Path(__file__).parent) / "config_files" / sample_name
+    test_config = NatlinkConfig.from_file(sample_ini)
+    return test_config
+    
+#easier than using the decorator syntax
+def make_sample_config_fixture(settings_filename):
+    return pytest.fixture(lambda : sample_config(settings_filename))
 
-
+dap_settings1 = make_sample_config_fixture("dap_settings_1.ini")
+dap_settings2 = make_sample_config_fixture("dap_settings_2.ini")
+dap_settings3 = make_sample_config_fixture("dap_settings_3.ini")
 
 @pytest.fixture()
 def empty_config():
     config = NatlinkConfig.get_default_config()
     return config
-
+#end of copy from test_config.py
 
 @pytest.fixture()
 def logger():
@@ -428,6 +443,9 @@ def test_load_single_good_script_that_was_previously_bad(tmpdir, empty_config, l
 
     del_loaded_modules(main)
     
+def test_dap_settings1(dap_settings1):
+    #unsure how to test teh DAP functionality
+    pass
 
 def test_load_single_bad_script_that_was_previously_good(tmpdir, empty_config, logger, monkeypatch):
     config = empty_config

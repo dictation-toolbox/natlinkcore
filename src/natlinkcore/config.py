@@ -35,6 +35,9 @@ class NatlinkConfig:
         # for convenience in other places:
         self.home_path = str(Path.home())
         self.documents_path = str(Path.home()/'Documents')
+
+        #defaults for DAP configuration
+        self.dap_enabled,self.dap_port,self.dap_wait_for_debugger_attach_on_startup = False,0,False
         
     def __repr__(self) -> str:
         return  f'NatlinkConfig(directories_by_user={self.directories_by_user}, ...)'

@@ -21,8 +21,7 @@ __natLinkPythonDebugOnStartupVar="NatlinkPyDebugStartup"
 
 __pyDefaultPythonExecutor = "python.exe"
 __debug_started=False
-default_debugpy_port=7474
-__debugpy_debug_port=default_debugpy_port
+__debugpy_debug_port=0
 __debugger="not configured"
 dap="DAP"
 
@@ -32,38 +31,33 @@ dap_breakpoint = debugpy.breakpoint
 
 def dap_info():
     return f"""
-Debugger: {__debugger}  DAP Port:{__debugpy_debug_port} IsClientConnected: {dap_is_client_connected()} Default DAP Port {default_debugpy_port} 
+Debugger: {__debugger}  DAP Port:{__debugpy_debug_port} IsClientConnected: {dap_is_client_connected()}  
 Debug Started:{__debug_started}
 """
 
-def start_dap():
+def start_dap(debugpy_port, wait_now_for_debugger_attach):
     #pylint:disable=W0603
     global  __debug_started,__debugpy_debug_port,__debugger
     if __debug_started:
-        print(f"DAP already started with debugpy for port {__debugpy_debug_port}")
+        print(f"DAP already started with debugpy for port {debugpy_port}")
         return
     try:
 
-        if __natLinkPythonDebugPortEnviornmentVar in os.environ:
-            natLinkPythonPortStringVal = os.environ[__natLinkPythonDebugPortEnviornmentVar]
-            __debugpy_debug_port = int(natLinkPythonPortStringVal)
+        __debugpy_debug_port = int(natLinkPythonPortStringVal)
         print(f"Starting debugpy on port {natLinkPythonPortStringVal}")
 
         python_exec =  __pyDefaultPythonExecutor  #for now, only the python in system path can be used for natlink and this module
         print(f"Python Executable (required for debugging): '{python_exec}'")
         debugpy.configure(python=f"{python_exec}")
-        debugpy.listen(__debugpy_debug_port)
+        debugpy.listen(debugpy_port)
         print(f"debugpy listening on port {__debugpy_debug_port}")
         __debug_started = True
         __debugger = dap
 
-        if __natLinkPythonDebugOnStartupVar in os.environ:
-            dos_str=os.environ[__natLinkPythonDebugOnStartupVar]
-            dos=len(dos_str)==1 and dos_str in "YyTt"
 
-            if dos:
-                print(f"Waiting for DAP debugger to attach now as {__natLinkPythonDebugOnStartupVar} is set to {dos_str}")
-                debugpy.wait_for_client()
+        if wait_now_for_debugger_attach:
+            print(f"Waiting for DAP debugger to attach ")
+            debugpy.wait_for_client()
 
 
     except Exception as ee:
