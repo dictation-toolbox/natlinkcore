@@ -87,8 +87,8 @@ To enable DAP, add or edit your  natlink.ini to include this section.  Change th
    dap_port = 7474
    dap_wait_for_debugger_attach_on_startup = True
 
-You can check if your favorite debugger supports DAP.  Here are instructions for Visual
-Studio Code:  
+You can `check if your favorite debugger supports DAP https://microsoft.github.io/debug-adapter-protocol/implementors/tools/.  Here are instructions for Visual
+Studio Code`_:  
 
 Add this section to launch.json, ensuring the port number matchines natlink.ini, and noting
 the pathMappings have been commented out:
