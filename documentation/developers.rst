@@ -73,9 +73,55 @@ Setup Visual Studio Code environment
 .. |image1| image:: https://user-images.githubusercontent.com/24551569/164927468-68f101a5-9eed-4568-b251-0d09fde0394c.png
 .. |image2| image:: https://user-images.githubusercontent.com/24551569/164919729-bd4b2096-6af3-4307-ba3c-ef6ff3b98c41.png
 
+Debugging Natlink Python Code
+------------------
+Developers can debug their python natlink grammars or any
+other Python code running in natlink using a debugger supporting 
+`Debug Adapter Protocol: https://microsoft.github.io/debug-adapter-protocol/`_ (DAP).  
+
+To enable DAP, add or edit your  natlink.ini to include this section.  Change the port if you need to.
+::
+   [settings.debugadapterprotocol]
+
+   dap_enabled = True
+   dap_port = 7474
+   dap_wait_for_debugger_attach_on_startup = True
+
+You can check if your favorite debugger supports DAP.  Here are instructions for Visual
+Studio Code:  
+
+Add this section to launch.json, ensuring the port number matchines natlink.ini, and noting
+the pathMappings have been commented out:
+::
+        {
+            "name": "Natlink: Remote Attach",
+            "type": "python",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 7474
+            },
+            //DO NOT USE THE VISUAL STUDIO DEFAULTS
+            //FOR pathMappings.
+            //The defaults will not work and your breakpoints
+            //will never hit.  So delete the pathMappings
+            //section for local host debugging, or set them to 
+            //something meaningful.  
+            // "pathMappings": [
+            //     {
+            //         "localRoot": "${workspaceFolder}",
+            //         "remoteRoot": "."
+            //     }
+
+            //a good idea to set justMyCode to false.  Otherwise
+            //you may have breakpoints set that won't trigger.
+            "justMyCode": false
+        }
+
 
 Further instructions
 --------------------
+
 
 
 
