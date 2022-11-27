@@ -157,6 +157,13 @@ def test_expand_path(mock_syspath,mock_userdir):
     result = expand_path('/natlinkcore')
     assert not os.path.isdir(result)
 
+    result = expand_path('unimacro')
+    assert os.path.isdir(result)
+
+    result = expand_path('unimacro/unimacrogrammars')
+    assert os.path.isdir(result)
+
+
 
 def test_config_locations():
     """tests the lists of possible config_locations and of valid_locations

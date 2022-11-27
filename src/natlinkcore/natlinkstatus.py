@@ -120,7 +120,6 @@ shiftKeyDict = {"nld": "Shift",
                 "esp": "may\xfas"}
 
 thisDir, thisFile = os.path.split(__file__)
-thisDirSymlink = natlinkcore.getThisDir(__file__)
 
 class NatlinkStatus(metaclass=singleton.Singleton):
     """this class holds the Natlink status functions.
@@ -165,10 +164,9 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         self.symlink_line = ''
         
         if self.NatlinkDirectory is None:
-            self.NatlinkDirectory = natlink.__path__[0]   
-            self.NatlinkcoreDirectory = thisDirSymlink    # equal to thisDir if no symlinking is there.
-            if thisDirSymlink != thisDir:
-                self.symlink_line = f'NatlinkcoreDirectory is symlinked, for developing purposes.\n\tFiles seem to be in "{thisDirSymlink}",\n\tbut they can be edited in "{thisDir}".\n\tWhen debugging files from this directory, open and set breakpoints in files in the first (site-packages) directory!'
+            self.NatlinkDirectory = natlink.__path__[-1]
+            if len(natlinkcore.__path__) > 0:
+                self.symlink_line = 'NatlinkcoreDirectory is editable'
         
     def refresh(self):
         """rerun the __init__, refreshing all variables
@@ -399,7 +397,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         except ImportError:
             self.UnimacroDirectory = ""
             return ""
-        self.UnimacroDirectory = str(Path(unimacro.__file__).parent)
+        self.UnimacroDirectory = unimacro.__path__[-1]
         return self.UnimacroDirectory
         
     
@@ -539,7 +537,6 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         return ''
     
     def getVocolaDirectory(self):
-        isdir, isfile, join, abspath = os.path.isdir, os.path.isfile, os.path.join, os.path.abspath
         if self.VocolaDirectory is not None:
             return self.VocolaDirectory
 
@@ -548,7 +545,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         except ImportError:
             self.VocolaDirectory = ''
             return ''
-        self.VocolaDirectory = str(Path(vocola2.__file__).parent)
+        self.VocolaDirectory = vocola2.__path__[-1]
         return self.VocolaDirectory
 
     
@@ -726,7 +723,6 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         L = []
         D = self.getNatlinkStatusDict()
         if self.symlink_line:
-            L.append('--- warning:')
             L.append(self.symlink_line)
         L.append('--- properties:')
         self.appendAndRemove(L, D, 'user')

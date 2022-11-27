@@ -174,7 +174,7 @@ def expand_path(input_path: str) -> str:
         # find path for package.  not an alternative way without loading the package is to use importlib.util.findspec.
     try:
         pack = __import__(package_trunk)
-        package_path = pack.__path__[0]
+        package_path = pack.__path__[-1]
         if rest:
             dir_expanded = str(Path(package_path)/rest)
             return dir_expanded
