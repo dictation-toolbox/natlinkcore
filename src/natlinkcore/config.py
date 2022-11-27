@@ -126,7 +126,7 @@ def expand_path(input_path: str) -> str:
     
     Paths can be:
     
-    - the name of a python package, to be found along sys.path (typically in site-packages)
+    - the name of a python package, or a sub directory of a python package
     - natlink_userdir/...: the directory where natlink.ini is is searched for, either %(NATLINK_USERDIR) or ~/.natlink
     - ~/...: the home directory
     - some environment variable: this environment variable is expanded.
@@ -163,15 +163,26 @@ def expand_path(input_path: str) -> str:
         print(f'natlink_userdir does not expand to a valid directory: "{nud}"')
         return normpath(nud)
     
-    if not (input_path.find('/') >= 0 or input_path.find('\\') >= 0):
+    
+    # try if package:
+    if input_path.find('/') > 0:
+        package_trunk, rest = input_path.split('/', 1)
+    elif input_path.find('\\') > 0:
+        package_trunk, rest = input_path.split('\\', 1)
+    else:
+        package_trunk, rest = input_path, ''
         # find path for package.  not an alternative way without loading the package is to use importlib.util.findspec.
-        try:
-            pack = __import__(input_path)
-        except ModuleNotFoundError:
-            print(f'expand_path, package name "{input_path}" is not found')
-            return input_path
-        return pack.__path__[0]
-        
+    try:
+        pack = __import__(package_trunk)
+        package_path = pack.__path__[0]
+        if rest:
+            dir_expanded = str(Path(package_path)/rest)
+            return dir_expanded
+        return package_path
+
+    except ModuleNotFoundError:
+        pass
+    
     env_expanded = expandvars(input_path)
     # print(f'env_expanded: "{env_expanded}", from envvar: "{input_path}"')
     return normpath(env_expanded)

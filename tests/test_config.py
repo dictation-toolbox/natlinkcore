@@ -138,6 +138,26 @@ def test_expand_path(mock_syspath,mock_userdir):
     result = expand_path('natlink_userdir/invalid_dir')
     assert not os.path.isdir(result)
 
+    # try package
+    result = expand_path('natlinkcore')
+    assert os.path.isdir(result)
+
+    result = expand_path('natlinkcore/DefaultConfig')
+    assert os.path.isdir(result)
+
+    result = expand_path('natlinkcore\\DefaultConfig')
+    assert os.path.isdir(result)
+
+    result = expand_path('natlinkcore/NonExisting')
+    assert not os.path.isdir(result)
+
+    result = expand_path('natlinkcore\\NonExisting')
+    assert not os.path.isdir(result)
+
+    result = expand_path('/natlinkcore')
+    assert not os.path.isdir(result)
+
+
 def test_config_locations():
     """tests the lists of possible config_locations and of valid_locations
     """
