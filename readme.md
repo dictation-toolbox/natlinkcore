@@ -52,5 +52,8 @@ Before you bump the version number in __init__.py and publish:
 a dependancy such as dtactions?  Then add or update the version # requirement in dtactions.  
 - don't publish if the tests are failing.   The `publish_natlinkcore` will prevent this, please don't work around it.
 
+## Debugging Instructions
 
+Read the detailed developer instructions for setting up the debugger.  You can look in this projects tree until 
+documentation/developers.rst.
 
