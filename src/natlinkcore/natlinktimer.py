@@ -1,6 +1,8 @@
 """
 Handling of more calls to the Natlink timer
-Quintijn Hoogenboom, 25-4-2020
+
+make it a Singleton class (December 2022)
+Quintijn Hoogenboom
 
 """
 #---------------------------------------------------------------------------
@@ -8,9 +10,10 @@ import time
 import traceback
 
 import natlink
+from natlinkcore import singleton
 
+## this variable will hold the (only) NatlinkTimer instance
 natlinktimer = None
-
 
 class GrammarTimer:
     """object which specifies how to call the natlinkTimer
@@ -41,21 +44,20 @@ class GrammarTimer:
         return "\n".join(L)
 
 
-
-
-class NatlinkTimer:  
+class NatlinkTimer(metaclass=singleton.Singleton):  
     """
     This class utilises :meth:`natlink.setTimerCallback`, but multiplexes
     
     In this way, more grammars can use the single Natlink timer together.
     
-    First written by Christo Butcher for Dragonfly, now enhanced by Quintijn Hoogenboom, May 2020
+    First written by Christo Butcher for Dragonfly, now enhanced by Quintijn Hoogenboom, May 2020/December 2022
     
     """
     def __init__(self, minInterval=None):
         """initialize the natlink timer instance
         
-        Should be called only once in a session
+        This is singleton class, with only one instance, so more "calls" automatically connect
+        to the same instance.
         
         The grammar callback functions are the keys of the self.callbacks dict,
         The corresponding values are GrammarTimer instances, which specify interval and possibly other parameters
@@ -90,7 +92,7 @@ class NatlinkTimer:
             return None
         if interval <= self.minInterval:
             if self.debug:
-                print(f'addCallback {callback.__name}, set interval from {interval} to minInterval: {self.minInterval}')
+                print(f'addCallback {callback.__name__}, set interval from {interval} to minInterval: {self.minInterval}')
         interval = round(interval)
         gt = GrammarTimer(callback, interval)
         self.callbacks[callback] = gt
@@ -212,9 +214,6 @@ class NatlinkTimer:
             totaltime = nownownow - now
             print(f"time taken in closingphase: {timeinclosingphase}")
             print(f"total time spent hittimer: {totaltime}")
-                    
-    
-
 
     def stopTimer(self):
         """stop the natlink timer, by passing in None, 0
@@ -226,7 +225,9 @@ class NatlinkTimer:
 def setTimerCallback(callback, interval, debug=None):
     """This function sets a callback
     
-    Interval in seconds, unless larger than 24
+    Interval in milliseconds, unless smaller than 25
+    
+    When 0 or negative: it functions as removeTimerCallback!!
     callback: the function to be called
     """
     #pylint:disable=W0603
@@ -239,10 +240,11 @@ def setTimerCallback(callback, interval, debug=None):
     if callback is None:
         raise Exception("stop the timer callback with natlinktimer.removeCallback(callback)")
     
-    if interval:
+    if interval > 0:
         gt = natlinktimer.addCallback(callback, interval, debug=debug)
         return gt
-    natlinktimer.removeCallback(callback, debug=debug)
+    # interval is 0 (or negative), remove the callback
+    removeTimerCallback(callback, debug=debug)
     return None
     
 
@@ -251,8 +253,6 @@ def removeTimerCallback(callback, debug=None):
     
     callback: the function to be called
     """
-    #pylint:disable=W0603
-    global natlinktimer
     if not natlinktimer:
         print(f'no timers active, cannot remove {callback} from natlinktimer')
         return
@@ -269,4 +269,11 @@ def stopTimerCallback():
     global natlinktimer
     if natlinktimer:
         del natlinktimer
+        
+def getNatlinktimerStatus():
+    """report how many callbacks are active, None if natlinktimer is gone
+    """
+    if natlinktimer is None:
+        return None
+    return len(natlinktimer.callbacks)
 

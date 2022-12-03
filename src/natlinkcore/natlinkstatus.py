@@ -140,7 +140,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
                                'vocoladirectory', 'vocolagrammarsdirectory']
 
     def __init__(self):
-        """initialise all instance variables, in this singleton class, hoeinstance
+        """initialise all instance variables, in this singleton class, (only one instance)
         """
         self.natlinkmain = natlinkmain  # global
         self.DNSVersion = None
