@@ -21,18 +21,14 @@ import natlink
 from natlinkcore.natlinkutils import GrammarBase
 from natlinkcore import natlinktimer
 
-# try some experiments more times, because gotBegin sometimes seems
-# not to hit
-nTries = 10
-natconnectOption = 1 # or 1 for threading, 0 for not. Seems to make difference
-                     # with spurious error (if set to 1), missing gotBegin and all that...
-
 thisDir = Path(__file__).parent
 
 # define TestError, and mark is to be NOT a part of pytest:
 class TestError(Exception):
     pass
 TestError.__test__ = False
+
+debug = 1
 
 # make a TestGrammar, which can be called for different instances
 class TestGrammar(GrammarBase):
@@ -46,18 +42,40 @@ class TestGrammar(GrammarBase):
         self.MaxHit = 5
         self.sleepTime = 0 # to be specified by calling instance, the sleeping time after each hit
         self.results = []
+        self.starttime = round(time.time()*1000)
 
-    # def __del__(self):
-    #     """try to remove the grammarTimer first"""
-    #     del self.grammarTimer
+    def doTimerClassic(self):
+        """have no introspection, but be as close as possible to the old calling method of setTimerCallback
+        
+        """
+        now = round(time.time()*1000)
+        relTime = now - self.starttime
+        self.results.append(f'{self.Hit} {self.name}: {relTime}')
+        self.Hit +=1
+        if self.Hit:
+            # decrease the interval at each step. There should be
+            # a bottom, depending on the time the routine is taking (eg minimal 3 times the time the callback takes).
+            # this is tested by setting the sleeptime
+            self.interval -= 10
+            if self.sleepTime:
+                time.sleep(self.sleepTime/1000) 
+            natlinktimer.setTimerCallback(self.doTimerClassic, interval=self.interval)
+            
+        # time.sleep(self.sleepTime/1000)  # sleep 10 milliseconds
+        if self.Hit == self.MaxHit:
+            natlinktimer.setTimerCallback(self.doTimerClassic, 0)
 
     def doTimer(self):
-        self.results.append(f'doTimer {self.name}: {self.Hit}')
+        """the doTimer function can remove itself, return None or another interval
+        
+        """
+        relTime = round(time.time()*1000) - self.starttime
+        self.results.append(f'{self.Hit} {self.name} ({self.grammarTimer.interval}): {relTime}')
         self.Hit +=1
         time.sleep(self.sleepTime/1000)  # sleep 10 milliseconds
         if self.Hit == self.MaxHit:
             expectElapsed = self.Hit * self.interval
-            print(f'expect duration of this timer: {expectElapsed} milliseconds')
+            print(f'expect duration of timer {self.name}: {expectElapsed} milliseconds')
             natlinktimer.removeTimerCallback(self.doTimer)
         ## try to shorten interval:
         currentInterval = self.grammarTimer.interval
@@ -65,37 +83,109 @@ class TestGrammar(GrammarBase):
             newInterval = currentInterval - 25
             return newInterval
         return None
+    
+    def doTimerMicToggle(self):
+        """this doTimer toggles the microphone when halfway
+        
+        """
+        relTime = round(time.time()*1000) - self.starttime
+        self.results.append(f'{self.Hit} {self.name} ({self.grammarTimer.interval}): {relTime}')
+        self.Hit +=1
+        time.sleep(self.sleepTime/1000)  # sleep 10 milliseconds
+        if self.Hit == self.MaxHit:
+            expectElapsed = self.Hit * self.interval
+            print(f'expect duration of doTimerMicToggle {self.name}: {expectElapsed} milliseconds')
+            natlinktimer.removeTimerCallback(self.doTimer)
+        if self.Hit >= self.maxHit/2:
+            print(f'toggle mic at {relTime}')
+            self.toggleMicrophone()
+            return None
+
+        ## try to shorten interval:
+        currentInterval = self.grammarTimer.interval
+        if currentInterval > 250:
+            newInterval = currentInterval - 25
+            return newInterval
+        return None
+        
+    def toggleMicrophone(self):
+        micstate = natlink.getMicState()
+        if micstate == 'off':
+            natlink.setMicState('on')
+            time.sleep(0.1)
+        natlink.setMicState('off')
+    
 TestGrammar.__test__ = False
 
     
-# def testSingleTimer():
+def testSingleTimerClassic():
+    try:
+        natlink.natConnect()
+        testGram = TestGrammar(name="single")
+        testGram.resetExperiment()
+        testGram.interval = 100  # all milliseconds
+        testGram.sleepTime = 20
+        testGram.MaxHit = 6
+        assert natlinktimer.getNatlinktimerStatus() in (0, None) 
+        natlinktimer.setTimerCallback(testGram.doTimerClassic, interval=testGram.interval, debug=debug)
+        ## 1 timer active:
+        assert natlinktimer.getNatlinktimerStatus() == 1     
+        for _ in range(5):
+            if testGram.Hit >= testGram.MaxHit:
+                break
+            wait(500)   # 0.5 second
+            if debug:
+                print(f'waited 0.1 second for timer to finish testGram, Hit: {testGram.Hit} ({testGram.MaxHit})')
+        else:
+            raise TestError(f'not enough time to finish the testing procedure (came to {testGram.Hit} of {testGram.MaxHit})')
+        print(f'testGram.results: {testGram.results}')
+        assert len(testGram.results) == testGram.MaxHit
+        assert testGram.interval == 40
+        assert testGram.sleepTime == 20
+        assert natlinktimer.getNatlinktimerStatus() == 0    ## natlinktimer is NOT destroyed after last timer is gone. 
+
+
+    finally:
+        del natlinktimer.natlinktimer
+        natlinktimer.stopTimerCallback()
+        natlink.natDisconnect()
+        
+
+# def testStopAtMicOff():
 #     try:
 #         natlink.natConnect()
 #         testGram = TestGrammar(name="single")
-#         testGram.interval = 200  # all milliseconds
-#         testGram.sleepTime = 30
-#         assert natlinktimer.getNatlinktimerStatus() in (0, None) 
-#         cycles = 2
-#         for cycle in range(cycles):
-#             print(f'cycle: {cycle} of {cycles} (test is {testGram.name})')
-#             testGram.resetExperiment()
-#             testGram.grammarTimer = natlinktimer.setTimerCallback(testGram.doTimer, interval=testGram.interval) ##, debug=1)
-#             assert natlinktimer.getNatlinktimerStatus() == 1
-#             for _ in range(5):
-#                 if testGram.Hit >= testGram.MaxHit:
-#                     break
-#                 wait(1000)   # 1 second
-#             else:
-#                 raise TestError('not enough time to finish the testing procedure')
-#             print(f'testGram.results: {testGram.results}')
-#             assert len(testGram.results) == testGram.MaxHit
-#     
-#             assert natlinktimer.getNatlinktimerStatus() == 0    ## natlinktimer is NOT destroyed after last timer is gone. 
+#         testGram.interval = 100  # all milliseconds
+#         testGram.sleepTime = 20
+#         testGram.MaxHit = 10
+#         assert natlinktimer.getNatlinktimerStatus() in (0, None)
+#         testGram.resetExperiment()
+# 
+#         gt = testGram.grammarTimerMicOff = natlinktimer.setTimerCallback(testGram.doTimer, interval=testGram.interval, debug=debug)
+#         gtmicoff = testGram.grammarTimerMicOff = natlinktimer.setTimerCallback(testGram.doTimerMicToggle, interval=testGram.interval*3, debug=debug)
+#         gtstr = str(gt)
+#         gtmicoffstr = str(gtmicoff)
+#         assert gtstr == 'grammartimer, interval: 100, nextTime (relative): 100'
+#         assert gtmicoffstr == 'grammartimer, interval: 300, nextTime (relative): 300'
+#         ## 2 timers active:
+#         assert natlinktimer.getNatlinktimerStatus() == 2
+#         for _ in range(5):
+#             if testGram.Hit >= testGram.MaxHit:
+#                 break
+#             wait(1000)   # 0.1 second
+#             if debug:
+#                 print(f'waited 0.1 second for timer to finish testGram, Hit: {testGram.Hit} ({testGram.MaxHit})')
+#         else:
+#             raise TestError(f'not enough time to finish the testing procedure (came to {testGram.Hit} of {testGram.MaxHit})')
+#         print(f'testGram.results: {testGram.results}')
+#         assert len(testGram.results) == testGram.MaxHit
+# 
+#         assert natlinktimer.getNatlinktimerStatus() == 0    ## natlinktimer is NOT destroyed after last timer is gone. 
 # 
 #     finally:
 #         natlink.natDisconnect()
 #     
-# def testWrongValuesTimer():
+# def testWrongValuesTimer():  
 #     try:
 #         natlink.natConnect()
 #         testGram = TestGrammar(name="wrongvalues")
@@ -109,42 +199,47 @@ TestGrammar.__test__ = False
 # 
 #     finally:
 #         natlink.natDisconnect()
-
-def testTwoTimers():
-    try:
-        natlink.natConnect()
-        testGramOne = TestGrammar(name="timer_one")
-        testGramOne.interval = 100  # all milliseconds
-        testGramOne.sleepTime = 30
-        testGramTwo = TestGrammar(name="timer_two")
-        testGramTwo.interval = 77  # all milliseconds
-        testGramTwo.sleepTime = 10
-        assert natlinktimer.getNatlinktimerStatus() in (0, None)
-        testGramOne.grammarTimer = natlinktimer.setTimerCallback(testGramOne.doTimer, interval=testGramOne.interval) ##, debug=1)
-        testGramTwo.grammarTimer = natlinktimer.setTimerCallback(testGramTwo.doTimer, interval=testGramTwo.interval) ##, debug=1)
-        assert natlinktimer.getNatlinktimerStatus() == 2
-        for _ in range(5):
-            if testGramOne.Hit >= testGramOne.MaxHit and testGramTwo.Hit >= testGramTwo.MaxHit:
-                break
-            wait(1000)   # 1 second
-        else:
-            raise TestError('not enough time to finish the testing procedure')
-        print(f'testGramOne.results: {testGramOne.results}')
-        print(f'testGramTwo.results: {testGramTwo.results}')
-        assert len(testGramOne.results) == testGramOne.MaxHit
-        assert len(testGramTwo.results) == testGramTwo.MaxHit
-
-        assert natlinktimer.getNatlinktimerStatus() == 0    ## natlinktimer is NOT destroyed after last timer is gone. 
-
-
-
-
-
-    finally:
-        natlink.natDisconnect()
+# 
+#         
+# def testThreeTimersMinimalSleepTime():
+#     try:
+#         if debug:
+#             print('testThreeTimersMinimalSleepTime')
+#         natlink.natConnect()
+#         testGramOne = TestGrammar(name="min_sleeptime_one")
+#         testGramOne.interval = 100  # all milliseconds
+#         testGramOne.sleepTime = 2
+#         testGramTwo = TestGrammar(name="min_sleeptime_two")
+#         testGramTwo.interval = 50  # all milliseconds
+#         testGramTwo.sleepTime = 2
+#         testGramThree = TestGrammar(name="min_sleeptime_three")
+#         testGramThree.interval = 100  # all milliseconds
+#         testGramThree.sleepTime = 2
+#         testGramThree.MaxHit = 2
+#         assert natlinktimer.getNatlinktimerStatus() in (0, None)
+#         testGramOne.grammarTimer = natlinktimer.setTimerCallback(testGramOne.doTimer, interval=testGramOne.interval, debug=debug)
+#         testGramTwo.grammarTimer = natlinktimer.setTimerCallback(testGramTwo.doTimer, interval=testGramTwo.interval, debug=debug)
+#         testGramThree.grammarTimer = natlinktimer.setTimerCallback(testGramThree.doTimer, interval=testGramThree.interval, debug=debug)
+#         assert natlinktimer.getNatlinktimerStatus() == 3
+#         for _ in range(5):
+#             if testGramOne.Hit >= testGramOne.MaxHit and testGramTwo.Hit >= testGramTwo.MaxHit:
+#                 break
+#             wait(1000)   # 1 second
+#         else:
+#             raise TestError('not enough time to finish the testing procedure')
+#         print(f'testGramOne.results: {testGramOne.results}')
+#         print(f'testGramTwo.results: {testGramTwo.results}')
+#         print(f'testGramThree.results: {testGramThree.results}')
+#         assert len(testGramOne.results) == testGramOne.MaxHit
+#         assert len(testGramTwo.results) == testGramTwo.MaxHit
+# 
+#         assert natlinktimer.getNatlinktimerStatus() == 0    ## natlinktimer is NOT destroyed after last timer is gone. 
+# 
+#     finally:
+#         natlink.natDisconnect()
+#     
     
-    
-    
+
     
     
 def wait(tmilli=100):

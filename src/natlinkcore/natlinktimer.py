@@ -5,9 +5,12 @@ make it a Singleton class (December 2022)
 Quintijn Hoogenboom
 
 """
+#pylint:disable=R0913
+
 #---------------------------------------------------------------------------
 import time
 import traceback
+import operator
 
 import natlink
 from natlinkcore import singleton
@@ -20,13 +23,14 @@ class GrammarTimer:
     
     """
     #pylint:disable=R0913
-    def __init__(self, callback, interval, startNow=False, stopAtMicOff=False, maxIterations=None):
+    def __init__(self, callback, interval, stopAtMicOff=False, maxIterations=None):
         curTime = self.starttime = round(time.time()*1000)
         self.callback = callback
         self.interval = interval
-        self.nextTime = curTime + interval
+        
+        self.nextTime = curTime +  interval
+            
         self.stopAtMicOff = stopAtMicOff
-        self.startNow = startNow
         self.maxIterations = maxIterations
 
     def __str__(self):
@@ -37,11 +41,20 @@ class GrammarTimer:
 
     def __repr__(self):
         L = ['GrammarTimer instance:']
-        for varname in 'interval', 'nextTime', 'stopAtMicOff', 'startNow', 'maxIterations':
+        for varname in 'interval', 'nextTime', 'stopAtMicOff', 'maxIterations':
             value = self.__dict__.get(varname, None)
             if not value is None:
                 L.append(f'    {varname.ljust(13)}: {value}')
         return "\n".join(L)
+
+    def start(self, newInterval=0):
+        """start (or continue), optionally with new interval
+        """
+        if newInterval:
+            oldInterval, self.interval = self.interval, newInterval
+            self.nextTime = self.nextTime - oldInterval + newInterval
+        if not natlinktimer.in_timer:
+            natlinktimer.hittimer()
 
 
 class NatlinkTimer(metaclass=singleton.Singleton):  
@@ -65,40 +78,47 @@ class NatlinkTimer(metaclass=singleton.Singleton):
         The minimum interval for the timer can be specified, is 50 by default.
         """
         self.callbacks = {}
-        self.debug = None
+        self.debug = False
         self.timerStartTime = self.getnow()
         self.minInterval = minInterval or 50
         self.tolerance = min(10, int(self.minInterval/4))
+        self.in_timer = False
         
     def __del__(self):
         """stop the timer, when destroyed
         """
         self.stopTimer()
+
+    def setDebug(self, debug):
+        """set debug option
+        """
+        if debug:
+            self.debug = True
+    def clearDebug(self):
+        """clear debug option
+        """
+        self.debug = False
     
     def getnow(self):
         """get time in milliseconds
         """
         return round(time.time()*1000)
 
-    
-    def addCallback(self, callback, interval, debug=None):
+    def addCallback(self, callback, interval, stopAtMicOff=False, maxIterations=None, debug=None):
         """add an interval 
-        """
-        self.debug = self.debug or debug
+        """ 
+        self.debug = debug
         now = self.getnow()
 
         if interval <= 0:
             self.removeCallback(callback)
             return None
-        if interval <= self.minInterval:
-            if self.debug:
-                print(f'addCallback {callback.__name__}, set interval from {interval} to minInterval: {self.minInterval}')
-        interval = round(interval)
-        gt = GrammarTimer(callback, interval)
+        interval = max(round(interval), self.minInterval)
+        gt = GrammarTimer(callback, interval, stopAtMicOff=stopAtMicOff, maxIterations=maxIterations)
         self.callbacks[callback] = gt
         if self.debug:
-            print(f'set new timer{callback.__name__}: {interval} ({now}')
-        self.hittimer()
+            print(f'set new timer {callback.__name__},  {interval} ({now})')
+        
         return gt
 
     def removeCallback(self, callback, debug=None):
@@ -119,121 +139,135 @@ class NatlinkTimer(metaclass=singleton.Singleton):
             self.stopTimer()
             return
         
-        self.hittimer()
         
     def hittimer(self):
         """move to a next callback point
         """
         #pylint:disable=R0914, R0912, R0915, W0702
-        now = self.getnow()
-        nowRel = now - self.timerStartTime
-        if self.debug:
-            print("start hittimer at", nowRel)
-
-        toBeRemoved = []
-        # c = callbackFunc, g = grammarTimer
-        decorated = [(g.interval, c, g) for (c, g)  in self.callbacks.items()]
-        sortedList = sorted(decorated)
-        
-        
-        for interval, callbackFunc, grammarTimer in sortedList:
+        self.in_timer = True
+        try:
             now = self.getnow()
-            # for printing: 
+            nowRel = now - self.timerStartTime
             if self.debug:
-                nowRel, nextTimeRel = now - self.timerStartTime, grammarTimer.nextTime - self.timerStartTime
-            if grammarTimer.nextTime > (now + self.tolerance):
+                print(f'start hittimer at {nowRel}')
+    
+            toBeRemoved = []
+            # c = callbackFunc, g = grammarTimer
+            # sort for shortest interval times first, only sort on interval:
+            decorated = [(g.interval, c, g) for (c, g)  in self.callbacks.items()]
+            sortedList = sorted(decorated, key=operator.itemgetter(0))
+            
+            
+            for interval, callbackFunc, grammarTimer in sortedList:
+                now = self.getnow()
+                # for printing: 
                 if self.debug:
-                    print(f'no need for {callbackFunc.__name__}, now: {nowRel}, nextTime: {nextTimeRel}')
-                continue
-
-            # now treat the callback, grammarTimer.nextTime > now - tolerance:
-            hitTooLate = now - grammarTimer.nextTime
-            
-            if self.debug:
-                print(f"do callback {callbackFunc.__name__} at {nowRel}, was expected at: {nextTimeRel}, interval: {interval}")
-
-            ## now do the callback function:
-            newInterval = None
-            startCallback = now
-            try:
-                newInterval = callbackFunc()
-            except:
-                print(f"exception in callbackFunc ({callbackFunc}), remove from list")
-                traceback.print_exc()
-                toBeRemoved.append(callbackFunc)
-                endCallback = None
-            else:
-                endCallback = self.getnow()
-                
-            if newInterval and newInterval >= 0:
-                print(f"newInterval as result of {callbackFunc.__name__}: {newInterval}")
-                grammarTimer.interval = interval = newInterval
-            elif newInterval and newInterval <= 0:
-                print(f"newInterval <= 0, as result of {callbackFunc.__name__}: {newInterval}, remove the callback function")
-                toBeRemoved.append(callbackFunc)
-                continue
-            
-            # if cbFunc ended correct, but took too much time, its interval should be doubled:
-            if endCallback is None:
-                pass
-            else:
-                spentInCallback = endCallback - startCallback
-                if spentInCallback > interval:
+                    nowRel, nextTimeRel = now - self.timerStartTime, grammarTimer.nextTime - self.timerStartTime
+                if grammarTimer.nextTime > (now + self.tolerance):
                     if self.debug:
-                        print(f"spent too much time in {callbackFunc.__name__}, increase interval from {interval} to: {spentInCallback*2}")
-                    grammarTimer.interval = interval = spentInCallback*2
-                grammarTimer.nextTime += interval
+                        print(f'no need for {callbackFunc.__name__}, now: {nowRel}, nextTime: {nextTimeRel}')
+                    continue
+    
+                # now treat the callback, grammarTimer.nextTime > now - tolerance:
+                hitTooLate = now - grammarTimer.nextTime
+                
                 if self.debug:
-                    nextTimeRelative = grammarTimer.nextTime - endCallback
-                    print(f"new nextTime: {nextTimeRelative}, interval: {interval}, from gt instance: {grammarTimer.interval}")
-
-        for gt in toBeRemoved:
-            del self.callbacks[gt]
-        
-        if not self.callbacks:
+                    print(f"do callback {callbackFunc.__name__} at {nowRel}, was expected at: {nextTimeRel}, interval: {interval}")
+    
+                ## now do the callback function:
+                newInterval = None
+                startCallback = now
+                try:
+                    newIntervalOrNone = callbackFunc()
+                except:
+                    print(f"exception in callbackFunc ({callbackFunc}), remove from list")
+                    traceback.print_exc()
+                    toBeRemoved.append(callbackFunc)
+                    endCallback = None
+                    newIntervalOrNone = None
+                else:
+                    endCallback = self.getnow()
+                
+                if newIntervalOrNone is None:
+                    pass
+                elif newIntervalOrNone <= 0:
+                    print(f"newInterval <= 0, as result of {callbackFunc.__name__}: {newInterval}, remove the callback function")
+                    toBeRemoved.append(callbackFunc)
+                    continue
+                
+                # if cbFunc ended correct, but took too much time, its interval should be doubled:
+                if endCallback is None:
+                    pass
+                else:
+                    spentInCallback = endCallback - startCallback
+                    if spentInCallback > interval:
+                        if self.debug:
+                            print(f"spent too much time in {callbackFunc.__name__}, increase interval from {interval} to: {spentInCallback*2}")
+                        grammarTimer.interval = interval = spentInCallback*2
+                    grammarTimer.nextTime += interval
+                    if self.debug:
+                        nextTimeRelative = grammarTimer.nextTime - endCallback
+                        print(f"new nextTime: {nextTimeRelative}, interval: {interval}, from gt instance: {grammarTimer.interval}")
+    
+            for gt in toBeRemoved:
+                del self.callbacks[gt]
+            
+            if not self.callbacks:
+                if self.debug:
+                    print("no callbackFunction any more, switch off the natlink timerCallback")
+                self.stopTimer()
+                return
+            
+            nownow = self.getnow()
+            timeincallbacks = nownow - now
             if self.debug:
-                print("no callbackFunction any more, switch off the natlink timerCallback")
-            self.stopTimer()
-            return
-        
-        nownow = self.getnow()
-        timeincallbacks = nownow - now
-        if self.debug:
-            print(f'time in callbacks: {timeincallbacks}')
-        nextTime = min(gt.nextTime-nownow for gt in self.callbacks.values())
-        if nextTime < self.minInterval:
+                print(f'time in callbacks: {timeincallbacks}')
+            nextTime = min(gt.nextTime-nownow for gt in self.callbacks.values())
+            if nextTime < self.minInterval:
+                if self.debug:
+                    print(f"warning, nextTime too small: {nextTime}, set at minimum {self.minInterval}")
+                nextTime = self.minInterval
             if self.debug:
-                print(f"warning, nextTime too small: {nextTime}, set at minimum {self.minInterval}")
-            nextTime = self.minInterval
-        if self.debug:
-            print(f'set nextTime to: {nextTime}')
-        natlink.setTimerCallback(self.hittimer, nextTime)
-        if self.debug:
-            nownownow = self.getnow()
-            timeinclosingphase = nownownow - nownow
-            totaltime = nownownow - now
-            print(f"time taken in closingphase: {timeinclosingphase}")
-            print(f"total time spent hittimer: {totaltime}")
-
+                print(f'set nextTime to: {nextTime}')
+            natlink.setTimerCallback(self.hittimer, nextTime)
+            if self.debug:
+                nownownow = self.getnow()
+                timeinclosingphase = nownownow - nownow
+                totaltime = nownownow - now
+                print(f"time taken in closingphase: {timeinclosingphase}")
+                print(f"total time spent hittimer: {totaltime}")
+        finally:
+            self.in_timer = False
+            
+            
     def stopTimer(self):
         """stop the natlink timer, by passing in None, 0
         """
         natlink.setTimerCallback(None, 0)
         
-
-
-def setTimerCallback(callback, interval, debug=None):
-    """This function sets a callback
+def createGrammarTimer(callback, interval=0, stopAtMicOff=False, maxIterations=None, debug=None):
+    """return a grammarTimer instance
     
-    Interval in milliseconds, unless smaller than 25
+    parameters:
+    callback: a function into which natlinktime will callback
+    interval: a starting interval (or 0), with which the timer shall run (initially)
+    optional:
+    stopAtMicOff: default False. When True, the timer stops when the mic is toggled to off
+    maxIterations: default None. When a positive int, stop when this count is exceeded
+    debug: sets the debug status for the whole natlinktimer instance, including the grammarTimer instance
+
+    Note: the grammarTimer is NOT started, but when other timers are running it is taken in the flow.
+    Call grammarTimer.start(newInterval=None) to start the timer (starting with the waiting interval) or
+    grammarTimer.startNow(newInterval=None) to start immediate and then hits at each interval.
     
-    When 0 or negative: it functions as removeTimerCallback!!
-    callback: the function to be called
+    Note: all intervals are in milliseconds.
     """
     #pylint:disable=W0603
     global natlinktimer
     if not natlinktimer:
         natlinktimer = NatlinkTimer()
+    if debug:
+        natlinktimer.setDebug(debug)
     if not natlinktimer:
         raise Exception("NatlinkTimer cannot be started")
     
@@ -241,11 +275,38 @@ def setTimerCallback(callback, interval, debug=None):
         raise Exception("stop the timer callback with natlinktimer.removeCallback(callback)")
     
     if interval > 0:
-        gt = natlinktimer.addCallback(callback, interval, debug=debug)
+        gt = natlinktimer.addCallback(callback, interval, stopAtMicOff=stopAtMicOff, maxIterations=maxIterations, debug=debug)
         return gt
+    raise ValueError(f'Did not start grammarTimer instance {callback}, because the interval is not a positive value')
+    
+    
+def setTimerCallback(callback, interval, stopAtMicOff=False, maxIterations=None, debug=None):
+    """This function sets a timercallback, nearly the same as natlink.setTimerCallback
+    
+    Interval in milliseconds, unless smaller than 25
+    
+    When 0 or negative: it functions as removeTimerCallback!!
+    callback: the function to be called
+    
+    But there are extra parameters possible, which are passed on to createGrammarTimer, see there
+    
+    """
+    #pylint:disable=W0603
+    if interval > 0:
+        if natlinktimer and callback in natlinktimer.callbacks:
+            gt = natlinktimer.callbacks[callback]
+            rel_cur_time = round(time.time()*1000) - gt.starttime
+
+            if natlinktimer.debug:
+                print(f'{gt}\n\ttime: {rel_cur_time}, new interval: {interval}, nextTime: {gt.nextTime-gt.starttime}')
+            gt.start(newInterval=interval)
+        else:
+            createGrammarTimer(callback, interval, stopAtMicOff=stopAtMicOff, maxIterations=maxIterations, debug=debug)
+            natlinktimer.hittimer()
+        return 
     # interval is 0 (or negative), remove the callback
-    removeTimerCallback(callback, debug=debug)
-    return None
+    removeTimerCallback(callback)
+    return 
     
 
 def removeTimerCallback(callback, debug=None):
@@ -267,8 +328,11 @@ def stopTimerCallback():
     """
     #pylint:disable=W0603    
     global natlinktimer
-    if natlinktimer:
+    natlink.setTimerCallback(None, 0)
+    try:
         del natlinktimer
+    except NameError:
+        pass
         
 def getNatlinktimerStatus():
     """report how many callbacks are active, None if natlinktimer is gone
