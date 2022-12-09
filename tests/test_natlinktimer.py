@@ -40,9 +40,13 @@ class TestGrammar(GrammarBase):
     def resetExperiment(self):
         self.Hit = 0
         self.MaxHit = 5
+        self.toggleMicAt = None
         self.sleepTime = 0 # to be specified by calling instance, the sleeping time after each hit
         self.results = []
         self.starttime = round(time.time()*1000)
+
+    def cancelMode(self):
+        natlinktimer.setTimerCallback(self.doTimerClassic,0)
 
     def doTimerClassic(self):
         """have no introspection, but be as close as possible to the old calling method of setTimerCallback
@@ -53,13 +57,15 @@ class TestGrammar(GrammarBase):
         self.results.append(f'{self.Hit} {self.name}: {relTime}')
         self.Hit +=1
         if self.Hit:
+            if self.toggleMicAt and self.toggleMicAt == self.Hit:
+                self.toggleMicrophone()
             # decrease the interval at each step. There should be
             # a bottom, depending on the time the routine is taking (eg minimal 3 times the time the callback takes).
             # this is tested by setting the sleeptime
             self.interval -= 10
             if self.sleepTime:
                 time.sleep(self.sleepTime/1000) 
-            natlinktimer.setTimerCallback(self.doTimerClassic, interval=self.interval)
+            natlinktimer.setTimerCallback(self.doTimerClassic, interval=self.interval, callAtMicOff=self.cancelMode)
             
         # time.sleep(self.sleepTime/1000)  # sleep 10 milliseconds
         if self.Hit == self.MaxHit:
@@ -118,18 +124,51 @@ class TestGrammar(GrammarBase):
 TestGrammar.__test__ = False
 
     
-def testSingleTimerClassic():
+# def testSingleTimerClassic():
+#     try:
+#         natlink.natConnect()
+#         testGram = TestGrammar(name="single")
+#         testGram.resetExperiment()
+#         testGram.interval = 100  # all milliseconds
+#         testGram.sleepTime = 20
+#         testGram.MaxHit = 6
+# 
+#         assert natlinktimer.getNatlinktimerStatus() in (0, None) 
+#         natlinktimer.setTimerCallback(testGram.doTimerClassic, interval=testGram.interval, debug=debug)
+#         ## 1 timer active:
+#         assert natlinktimer.getNatlinktimerStatus() == 1     
+#         for _ in range(5):
+#             if testGram.Hit >= testGram.MaxHit:
+#                 break
+#             wait(500)   # 0.5 second
+#             if debug:
+#                 print(f'waited 0.1 second for timer to finish testGram, Hit: {testGram.Hit} ({testGram.MaxHit})')
+#         else:
+#             raise TestError(f'not enough time to finish the testing procedure (came to {testGram.Hit} of {testGram.MaxHit})')
+#         print(f'testGram.results: {testGram.results}')
+#         assert len(testGram.results) == testGram.MaxHit
+#         assert testGram.interval == 40
+#         assert testGram.sleepTime == 20
+#         assert natlinktimer.getNatlinktimerStatus() == 0    ## natlinktimer is NOT destroyed after last timer is gone. 
+# 
+#     finally:
+#         del natlinktimer.natlinktimer
+#         natlinktimer.stopTimerCallback()
+#         natlink.natDisconnect()
+        
+    
+def testStopAtMicOff():
     try:
         natlink.natConnect()
-        testGram = TestGrammar(name="single")
+        testGram = TestGrammar(name="stop_at_mic_off")
         testGram.resetExperiment()
         testGram.interval = 100  # all milliseconds
         testGram.sleepTime = 20
         testGram.MaxHit = 6
+        testGram.toggleMicAt = 3
         assert natlinktimer.getNatlinktimerStatus() in (0, None) 
-        natlinktimer.setTimerCallback(testGram.doTimerClassic, interval=testGram.interval, debug=debug)
+        natlinktimer.setTimerCallback(testGram.doTimerClassic, interval=testGram.interval, callAtMicOff=testGram.cancelMode, debug=debug)
         ## 1 timer active:
-        assert natlinktimer.getNatlinktimerStatus() == 1     
         for _ in range(5):
             if testGram.Hit >= testGram.MaxHit:
                 break
@@ -139,14 +178,10 @@ def testSingleTimerClassic():
         else:
             raise TestError(f'not enough time to finish the testing procedure (came to {testGram.Hit} of {testGram.MaxHit})')
         print(f'testGram.results: {testGram.results}')
-        assert len(testGram.results) == testGram.MaxHit
-        assert testGram.interval == 40
-        assert testGram.sleepTime == 20
+        assert len(testGram.results) == testGram.toggleMicAt
         assert natlinktimer.getNatlinktimerStatus() == 0    ## natlinktimer is NOT destroyed after last timer is gone. 
 
-
     finally:
-        del natlinktimer.natlinktimer
         natlinktimer.stopTimerCallback()
         natlink.natDisconnect()
         

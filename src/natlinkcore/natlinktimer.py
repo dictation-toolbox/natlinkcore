@@ -11,9 +11,13 @@ Quintijn Hoogenboom
 import time
 import traceback
 import operator
+import logging
 
 import natlink
-from natlinkcore import singleton
+from natlinkcore import singleton, loader, config
+Logger = logging.getLogger('natlink')
+Config = config.NatlinkConfig.from_first_found_file(loader.config_locations())
+natlinkmain = loader.NatlinkMain(Logger, Config)
 
 ## this variable will hold the (only) NatlinkTimer instance
 natlinktimer = None
@@ -21,16 +25,17 @@ natlinktimer = None
 class GrammarTimer:
     """object which specifies how to call the natlinkTimer
     
+    The function to be called when the mic switches off needs to be set only once, and is then preserved
     """
     #pylint:disable=R0913
-    def __init__(self, callback, interval, stopAtMicOff=False, maxIterations=None):
+    def __init__(self, callback, interval, callAtMicOff=False, maxIterations=None):
         curTime = self.starttime = round(time.time()*1000)
         self.callback = callback
         self.interval = interval
         
         self.nextTime = curTime +  interval
-            
-        self.stopAtMicOff = stopAtMicOff
+        
+        self.callAtMicOff = callAtMicOff
         self.maxIterations = maxIterations
 
     def __str__(self):
@@ -41,7 +46,7 @@ class GrammarTimer:
 
     def __repr__(self):
         L = ['GrammarTimer instance:']
-        for varname in 'interval', 'nextTime', 'stopAtMicOff', 'maxIterations':
+        for varname in 'interval', 'nextTime', 'callAtMicOff', 'maxIterations':
             value = self.__dict__.get(varname, None)
             if not value is None:
                 L.append(f'    {varname.ljust(13)}: {value}')
@@ -83,6 +88,7 @@ class NatlinkTimer(metaclass=singleton.Singleton):
         self.minInterval = minInterval or 50
         self.tolerance = min(10, int(self.minInterval/4))
         self.in_timer = False
+        natlinkmain.set_on_mic_off_callback(self.on_mic_off_callback)
         
     def __del__(self):
         """stop the timer, when destroyed
@@ -104,7 +110,18 @@ class NatlinkTimer(metaclass=singleton.Singleton):
         """
         return round(time.time()*1000)
 
-    def addCallback(self, callback, interval, stopAtMicOff=False, maxIterations=None, debug=None):
+    def on_mic_off_callback(self):
+        """all callbacks that have callAtMicOff set, will be stopped (and deleted)
+        """
+        to_stop = [(cb, gt) for (cb, gt) in self.callbacks.items() if gt.callAtMicOff]
+        if not to_stop:
+            print('natlinktimer: no timers to stop')
+            return
+        for cb, gt in to_stop:
+            print(f'natlinktimer: stopping {cb}, {gt}')
+            self.removeCallback(cb)
+
+    def addCallback(self, callback, interval, callAtMicOff=False, maxIterations=None, debug=None):
         """add an interval 
         """ 
         self.debug = debug
@@ -114,7 +131,7 @@ class NatlinkTimer(metaclass=singleton.Singleton):
             self.removeCallback(callback)
             return None
         interval = max(round(interval), self.minInterval)
-        gt = GrammarTimer(callback, interval, stopAtMicOff=stopAtMicOff, maxIterations=maxIterations)
+        gt = GrammarTimer(callback, interval, callAtMicOff=callAtMicOff, maxIterations=maxIterations)
         self.callbacks[callback] = gt
         if self.debug:
             print(f'set new timer {callback.__name__},  {interval} ({now})')
@@ -245,14 +262,14 @@ class NatlinkTimer(metaclass=singleton.Singleton):
         """
         natlink.setTimerCallback(None, 0)
         
-def createGrammarTimer(callback, interval=0, stopAtMicOff=False, maxIterations=None, debug=None):
+def createGrammarTimer(callback, interval=0, callAtMicOff=False, maxIterations=None, debug=None):
     """return a grammarTimer instance
     
     parameters:
     callback: a function into which natlinktime will callback
     interval: a starting interval (or 0), with which the timer shall run (initially)
     optional:
-    stopAtMicOff: default False. When True, the timer stops when the mic is toggled to off
+    callAtMicOff: default False. When True, the timer stops when the mic is toggled to off
     maxIterations: default None. When a positive int, stop when this count is exceeded
     debug: sets the debug status for the whole natlinktimer instance, including the grammarTimer instance
 
@@ -275,33 +292,41 @@ def createGrammarTimer(callback, interval=0, stopAtMicOff=False, maxIterations=N
         raise Exception("stop the timer callback with natlinktimer.removeCallback(callback)")
     
     if interval > 0:
-        gt = natlinktimer.addCallback(callback, interval, stopAtMicOff=stopAtMicOff, maxIterations=maxIterations, debug=debug)
+        gt = natlinktimer.addCallback(callback, interval, callAtMicOff=callAtMicOff, maxIterations=maxIterations, debug=debug)
         return gt
     raise ValueError(f'Did not start grammarTimer instance {callback}, because the interval is not a positive value')
     
     
-def setTimerCallback(callback, interval, stopAtMicOff=False, maxIterations=None, debug=None):
+def setTimerCallback(callback, interval, callAtMicOff=None, maxIterations=None, debug=None):
     """This function sets a timercallback, nearly the same as natlink.setTimerCallback
     
-    Interval in milliseconds, unless smaller than 25
+    Interval in milliseconds, unless smaller than 25 (default)
     
     When 0 or negative: it functions as removeTimerCallback!!
-    callback: the function to be called
+    
+    callAtMicOff: the function that will be called when the mic switches off
     
     But there are extra parameters possible, which are passed on to createGrammarTimer, see there
     
     """
     #pylint:disable=W0603
+    try:
+        natlinktimer
+    except NameError:
+        print('natlinktimer is gone')
+        return
+    
     if interval > 0:
         if natlinktimer and callback in natlinktimer.callbacks:
             gt = natlinktimer.callbacks[callback]
             rel_cur_time = round(time.time()*1000) - gt.starttime
-
+            if callAtMicOff:
+                gt.callAtMicOff = callAtMicOff
             if natlinktimer.debug:
                 print(f'{gt}\n\ttime: {rel_cur_time}, new interval: {interval}, nextTime: {gt.nextTime-gt.starttime}')
             gt.start(newInterval=interval)
         else:
-            createGrammarTimer(callback, interval, stopAtMicOff=stopAtMicOff, maxIterations=maxIterations, debug=debug)
+            createGrammarTimer(callback, interval, callAtMicOff=callAtMicOff, maxIterations=maxIterations, debug=debug)
             natlinktimer.hittimer()
         return 
     # interval is 0 (or negative), remove the callback
@@ -337,6 +362,10 @@ def stopTimerCallback():
 def getNatlinktimerStatus():
     """report how many callbacks are active, None if natlinktimer is gone
     """
+    try:
+        natlinktimer
+    except NameError:
+        return None
     if natlinktimer is None:
         return None
     return len(natlinktimer.callbacks)
