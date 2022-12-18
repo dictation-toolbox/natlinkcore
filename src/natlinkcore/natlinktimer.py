@@ -88,6 +88,7 @@ class NatlinkTimer(metaclass=singleton.Singleton):
         self.minInterval = minInterval or 50
         self.tolerance = min(10, int(self.minInterval/4))
         self.in_timer = False
+        self.timers_to_stop = set()    # will be used when a timer wants to be removed when in_timer is True
         natlinkmain.set_on_mic_off_callback(self.on_mic_off_callback)
         
     def __del__(self):
@@ -145,6 +146,12 @@ class NatlinkTimer(metaclass=singleton.Singleton):
         if self.debug:
             print(f'remove timer for {callback.__name__}')
 
+        if self.in_timer:
+            print(f'removeCallback, in_timer: {self.in_timer}, add {callback} to timers_to_stop')
+            self.timers_to_stop.add(callback)
+            return
+
+        # outside in_timer:
         try:
             del self.callbacks[callback]
         except KeyError:
@@ -255,6 +262,12 @@ class NatlinkTimer(metaclass=singleton.Singleton):
                 print(f"total time spent hittimer: {totaltime}")
         finally:
             self.in_timer = False
+            if self.timers_to_stop:
+                print(f'stop timers: {self.timers_to_stop}')
+                for callback in self.timers_to_stop:
+                    self.removeCallback(callback)
+                self.timers_to_stop = set()
+                
             
             
     def stopTimer(self):

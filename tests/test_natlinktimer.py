@@ -58,7 +58,8 @@ class TestGrammar(GrammarBase):
         self.Hit +=1
         if self.Hit:
             if self.toggleMicAt and self.toggleMicAt == self.Hit:
-                self.toggleMicrophone()
+                ## run the on_mic_off_callback function:
+                natlinktimer.natlinktimer.on_mic_off_callback()
             # decrease the interval at each step. There should be
             # a bottom, depending on the time the routine is taking (eg minimal 3 times the time the callback takes).
             # this is tested by setting the sleeptime
@@ -90,29 +91,7 @@ class TestGrammar(GrammarBase):
             return newInterval
         return None
     
-    def doTimerMicToggle(self):
-        """this doTimer toggles the microphone when halfway
-        
-        """
-        relTime = round(time.time()*1000) - self.starttime
-        self.results.append(f'{self.Hit} {self.name} ({self.grammarTimer.interval}): {relTime}')
-        self.Hit +=1
-        time.sleep(self.sleepTime/1000)  # sleep 10 milliseconds
-        if self.Hit == self.MaxHit:
-            expectElapsed = self.Hit * self.interval
-            print(f'expect duration of doTimerMicToggle {self.name}: {expectElapsed} milliseconds')
-            natlinktimer.removeTimerCallback(self.doTimer)
-        if self.Hit >= self.maxHit/2:
-            print(f'toggle mic at {relTime}')
-            self.toggleMicrophone()
-            return None
 
-        ## try to shorten interval:
-        currentInterval = self.grammarTimer.interval
-        if currentInterval > 250:
-            newInterval = currentInterval - 25
-            return newInterval
-        return None
         
     def toggleMicrophone(self):
         micstate = natlink.getMicState()
@@ -170,6 +149,8 @@ def testStopAtMicOff():
         natlinktimer.setTimerCallback(testGram.doTimerClassic, interval=testGram.interval, callAtMicOff=testGram.cancelMode, debug=debug)
         ## 1 timer active:
         for _ in range(5):
+            if testGram.toggleMicAt and testGram.Hit >= testGram.toggleMicAt:
+                break
             if testGram.Hit >= testGram.MaxHit:
                 break
             wait(500)   # 0.5 second
