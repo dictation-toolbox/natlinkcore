@@ -116,10 +116,12 @@ class NatlinkTimer(metaclass=singleton.Singleton):
         """
         to_stop = [(cb, gt) for (cb, gt) in self.callbacks.items() if gt.callAtMicOff]
         if not to_stop:
-            print('natlinktimer: no timers to stop')
+            if self.debug:
+                print('natlinktimer: no timers to stop')
             return
         for cb, gt in to_stop:
-            print(f'natlinktimer: stopping {cb}, {gt}')
+            if self.debug:
+                print(f'natlinktimer: stopping {cb}, {gt}')
             self.removeCallback(cb)
 
     def addCallback(self, callback, interval, callAtMicOff=False, maxIterations=None, debug=None):
@@ -147,12 +149,13 @@ class NatlinkTimer(metaclass=singleton.Singleton):
             print(f'remove timer for {callback.__name__}')
 
         if self.in_timer:
-            print(f'removeCallback, in_timer: {self.in_timer}, add {callback} to timers_to_stop')
+            # print(f'removeCallback, in_timer: {self.in_timer}, add {callback} to timers_to_stop')
             self.timers_to_stop.add(callback)
             return
 
         # outside in_timer:
         try:
+            print('remove 1 timer')
             del self.callbacks[callback]
         except KeyError:
             pass
@@ -263,7 +266,11 @@ class NatlinkTimer(metaclass=singleton.Singleton):
         finally:
             self.in_timer = False
             if self.timers_to_stop:
-                print(f'stop timers: {self.timers_to_stop}')
+                n_timers = len(self.timers_to_stop)
+                if n_timers == 1:
+                    print('stop 1 timer (at end of hittimer)')
+                else:
+                    print(f'stop {n_timers} timers (at end of hittimer)')
                 for callback in self.timers_to_stop:
                     self.removeCallback(callback)
                 self.timers_to_stop = set()
