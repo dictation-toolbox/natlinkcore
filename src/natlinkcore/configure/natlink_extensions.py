@@ -19,7 +19,7 @@ def main():
         except Exception as e:
             path = e   
 
-        print(f"\n{n} {path}")
+        print(f"{n} {path}")
     return 0
  
 if '__main__' == __name__:
