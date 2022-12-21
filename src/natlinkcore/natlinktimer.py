@@ -114,6 +114,7 @@ class NatlinkTimer(metaclass=singleton.Singleton):
     def on_mic_off_callback(self):
         """all callbacks that have callAtMicOff set, will be stopped (and deleted)
         """
+        # print('on_mic_off_callback')
         to_stop = [(cb, gt) for (cb, gt) in self.callbacks.items() if gt.callAtMicOff]
         if not to_stop:
             if self.debug:
@@ -122,7 +123,7 @@ class NatlinkTimer(metaclass=singleton.Singleton):
         for cb, gt in to_stop:
             if self.debug:
                 print(f'natlinktimer: stopping {cb}, {gt}')
-            self.removeCallback(cb)
+            gt.callAtMicOff()
 
     def addCallback(self, callback, interval, callAtMicOff=False, maxIterations=None, debug=None):
         """add an interval 
