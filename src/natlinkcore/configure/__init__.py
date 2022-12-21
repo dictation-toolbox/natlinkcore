@@ -1,1 +1,1 @@
-from natlink_extensions import extensions_and_folders
+from  natlinkcore.configure.natlink_extensions import extensions_and_folders

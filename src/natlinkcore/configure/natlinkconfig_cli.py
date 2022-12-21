@@ -4,7 +4,7 @@ import getopt
 import cmd
 import os
 import os.path
-from natlink_extensions import extensions_and_folders
+from natlinkcore.configure import extensions_and_folders
 
 from natlinkcore.configure import natlinkconfigfunctions
 
