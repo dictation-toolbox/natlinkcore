@@ -20,7 +20,7 @@ def main():
             path = e   
 
         print(f"\n{n} {path}")
-        return 0
+    return 0
  
 if '__main__' == __name__:
     main()
