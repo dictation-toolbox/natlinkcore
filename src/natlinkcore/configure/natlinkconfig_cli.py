@@ -4,6 +4,7 @@ import getopt
 import cmd
 import os
 import os.path
+from natlink_extensions import extensions_and_folders
 
 from natlinkcore.configure import natlinkconfigfunctions
 
@@ -18,7 +19,7 @@ def _main(Options=None):
     """
     cli = CLI()
     cli.Config = natlinkconfigfunctions.NatlinkConfig()
-    shortOptions = "DVNOHKaAiIxXbBuq"
+    shortOptions = "DVNOHKaAiIxXbBuqe"
     shortArgOptions = "d:v:n:o:h:k:"
     if Options:
         if isinstance(Options, str):
@@ -129,6 +130,8 @@ n/N     - enable/disable UserDirectory, the directory where
 [AutoHotkey]
 h/H     - set/clear the AutoHotkey exe directory.
 k/K     - set/clear the User Directory for AutoHotkey scripts.
+[Extensions]
+e       - give a list of python modules registered as extensions.
 [Other]
 
 u/usage - give this list
@@ -152,6 +155,13 @@ help <command>: give more explanation on <command>
         # print PythonPath:
         
         self.Config.printPythonPath()
+
+    def do_e(self,arg):
+        print("extensions and folders for registered natlink extensions:")
+        ef=""
+        for n,f in extensions_and_folders():
+            ef+= f"\n{n} {f}" 
+        print(ef)
 
     def help_i(self):
         print('-'*60)
