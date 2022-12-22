@@ -16,7 +16,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import List, Dict, Set, Iterable, Any, Tuple, Callable
 
-from natlink import _natlink_core as natlink
+import natlink
 from natlinkcore.config import LogLevel, NatlinkConfig, expand_path
 from natlinkcore.readwritefile import ReadWriteFile
 from natlinkcore.callbackhandler import CallbackHandler
@@ -65,6 +65,7 @@ class NatlinkMain(metaclass=Singleton):
         self._pre_load_callback =  CallbackHandler('pre_load')
         self._post_load_callback =  CallbackHandler('post_load')
         self._on_mic_on_callback = CallbackHandler('on_mic_on')
+        self._on_mic_off_callback = CallbackHandler('on_mic_off')
         self._on_begin_utterance_callback = CallbackHandler('on_begin_utterance')
         self.seen: Set[Path] = set()     # start empty in trigger_load
         self.bom = self.encoding = self.config_text = ''   # getconfigsetting and writeconfigsetting
@@ -75,6 +76,9 @@ class NatlinkMain(metaclass=Singleton):
 
     def set_on_mic_on_callback(self, func: Callable[[], None]) -> None:
         self._on_mic_on_callback.set(func)
+    
+    def set_on_mic_off_callback(self, func: Callable[[], None]) -> None:
+        self._on_mic_off_callback.set(func)
     
     def set_pre_load_callback(self, func: Callable[[], None]) -> None:
         self._pre_load_callback.set(func)
@@ -87,6 +91,9 @@ class NatlinkMain(metaclass=Singleton):
 
     def delete_on_mic_on_callback(self, func: Callable[[], None]) -> None:
         self._on_mic_on_callback.delete(func)
+    
+    def delete_on_mic_off_callback(self, func: Callable[[], None]) -> None:
+        self._on_mic_off_callback.delete(func)
     
     def delete_pre_load_callback(self, func: Callable[[], None]) -> None:
         self._pre_load_callback.delete(func)
@@ -401,6 +408,9 @@ class NatlinkMain(metaclass=Singleton):
                     
             if self.config.load_on_mic_on:
                 self.trigger_load()
+        elif change_type == 'mic' and args == 'off':
+            self.logger.debug('on_change_callback called with: "mic", "off"')
+            self._on_mic_off_callback.run()
         else:
             self.logger.debug(f'on_change_callback unhandled: change_type: "{change_type}", args: "{args}"')
             

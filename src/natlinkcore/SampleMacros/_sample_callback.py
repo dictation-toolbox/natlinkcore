@@ -21,6 +21,8 @@ class ThisGrammar(GrammarBase):
         print('------- post_load_callback')
     def on_mic_on_callback(self):
         print('------- on_mic_on_callback')
+    def on_mic_off_callback(self):
+        print('------- on_mic_off_callback')
     def on_begin_utterance_callback(self):
         print('------- on_begin_utterance_callback')
         
@@ -28,6 +30,7 @@ thisGrammar = ThisGrammar()
 thisGrammar.initialize()
 natlinkmain.set_on_begin_utterance_callback(thisGrammar.on_begin_utterance_callback)
 natlinkmain.set_on_mic_on_callback(thisGrammar.on_mic_on_callback)
+natlinkmain.set_on_mic_off_callback(thisGrammar.on_mic_off_callback)
 natlinkmain.set_pre_load_callback(thisGrammar.pre_load_callback)
 natlinkmain.set_post_load_callback(thisGrammar.post_load_callback)
 
@@ -36,6 +39,7 @@ def unload():
     if thisGrammar:
         natlinkmain.delete_on_begin_utterance_callback(thisGrammar.on_begin_utterance_callback)
         natlinkmain.delete_on_mic_on_callback(thisGrammar.on_mic_on_callback)
+        natlinkmain.delete_on_mic_off_callback(thisGrammar.on_mic_off_callback)
         natlinkmain.delete_pre_load_callback(thisGrammar.pre_load_callback)
         natlinkmain.delete_post_load_callback(thisGrammar.post_load_callback)
         # extraneous deletes do not harm:

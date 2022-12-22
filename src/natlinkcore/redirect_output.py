@@ -12,7 +12,7 @@ outputDebugString(f"Loading {__file__}  sys.path={sys.path}" )
 
 outputDebugString(f"{__file__} importing _natlink_core" )
 
-from natlink import _natlink_core as natlink
+import natlink
 
 outputDebugString(f"{__file__} imported _natlink_core" )
 

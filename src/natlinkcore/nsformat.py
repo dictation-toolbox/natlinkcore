@@ -11,7 +11,7 @@
 """
 #pylint:disable=C0116, C0123, R0911, R0912, R0915, R0916
 import copy
-from natlink import _natlink_core as natlink
+import natlink
     
 flag_useradded = 0
 flag_varadded = 1
