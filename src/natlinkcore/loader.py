@@ -9,6 +9,7 @@ import sys
 import sysconfig
 import time
 import traceback
+import debugpy
 import winreg
 import configparser
 from pathlib import Path
@@ -38,6 +39,8 @@ UserLanguages = {
     "Italian": "ita",
     "Spanish": "esp",}
 
+python_exec= "python.exe"  #for DAP
+
 class NatlinkMain(metaclass=Singleton):
     """main class of Natlink, make it a "singleton"
     """
@@ -66,6 +69,7 @@ class NatlinkMain(metaclass=Singleton):
         self._on_begin_utterance_callback = CallbackHandler('on_begin_utterance')
         self.seen: Set[Path] = set()     # start empty in trigger_load
         self.bom = self.encoding = self.config_text = ''   # getconfigsetting and writeconfigsetting
+        self.dap_started=False
 
     def set_on_begin_utterance_callback(self, func: Callable[[], None]) -> None:
         self._on_begin_utterance_callback.set(func)
@@ -168,6 +172,9 @@ class NatlinkMain(metaclass=Singleton):
         For Vocola, setting this value to 1 did not work, setting to 2 does, so
         you need one extra utterance for a new vocola command to come through.
         """
+        if isinstance(value, bool):
+            self.__load_on_begin_utterance = value
+            return
         if isinstance(value, int):
             if value > 0:
                 self.logger.info(f'set_load_on_begin_utterance to {value}')
@@ -175,12 +182,8 @@ class NatlinkMain(metaclass=Singleton):
             else:
                 self.logger.info('set_load_on_begin_utterance to False')
                 self.__load_on_begin_utterance = False
-        elif value in [True, False]:
-            self.__load_on_begin_utterance = value
-        else:
-            raise TypeError(f'set_load_on_begin_utterance, invalid type for value: {value} (type: {type(value)})')
-        
-
+            return
+        raise TypeError(f'set_load_on_begin_utterance, invalid type for value: {value} (type: {type(value)})')
     load_on_begin_utterance = property(get_load_on_begin_utterance, set_load_on_begin_utterance)
 
     # def _module_paths_in_dir(self, directory: str) -> List[Path]:
@@ -423,9 +426,10 @@ class NatlinkMain(metaclass=Singleton):
         elif self.load_on_begin_utterance:
             # manipulate this setting:
             value = self.load_on_begin_utterance
-            if isinstance(value, int):
+            if isinstance(value, bool):
+                pass
+            elif isinstance(value, int):
                 value -= 1
-                value = value or False
                 self.load_on_begin_utterance = value
             self.trigger_load()
                 
@@ -615,8 +619,31 @@ def run() -> None:
             os.add_dll_directory(pywin32_dir)
         
         config = NatlinkConfig.from_first_found_file(config_locations())
+        dap_started=False
+        print(f"testing dap , enabled {config.dap_enabled} port {config.dap_port}")
+        try:
+            if config.dap_enabled:
+                print(f"Debugpy.configure ...")
+                debugpy.configure(python=f"{python_exec}")
+                print(f"Debugpy.listen ...")
+ 
+                debugpy.listen(config.dap_port)
+                dap_started=True
+
+                print(f"DAP Started on Port {config.dap_port} in {__file__}")
+                if config.dap_wait_for_debugger_attach_on_startup:
+                    print(" waiting for debugger to attach")
+            
+        except Exception as ee:
+            print(f"""
+                Exception {ee} while starting DAP in {__file__}.  Possible cause is incorrect python executable specified {python_exec}
+                """     )
+
         main = NatlinkMain(logger, config)
+        main.dap_started=dap_started
+
         main.setup_logger()
+        print(f"Dap enabled: {config.dap_enabled} port: {config.dap_port}  ")
         main.start()
     except Exception as exc:
         print(f'Exception: "{exc}" in loader.run', file=sys.stderr)
