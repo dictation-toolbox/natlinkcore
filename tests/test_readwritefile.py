@@ -87,7 +87,8 @@ def test_other_encodings_write_file(tmp_path):
      
     testDir = tmp_path / testFolderName
     testDir.mkdir()
-    oldFile = testDir/'latin1 accented.txt'
+
+    oldFile = mock_readwritefiledir/'latin1 accented.txt'
 
     rwfile = ReadWriteFile(encodings=['latin1'])  # optional encoding
     text = rwfile.readAnything(oldFile)
@@ -112,8 +113,10 @@ def test_read_write_file(tmp_path):
     listdir, join, splitext = os.listdir, os.path.join, os.path.splitext
     testDir = tmp_path / testFolderName
     testDir.mkdir()
+    mock_files_list=listdir(mock_readwritefiledir)
+    assert len(mock_files_list) > 0
 
-    for F in listdir(mock_readwritefiledir):
+    for F in mock_files_list:
         if not F.startswith('output-'):
             Fout = 'output-' + F
             #read the file from the mock folder
@@ -128,9 +131,11 @@ def test_read_write_file(tmp_path):
             #make sure they are the same
             assert open(F_path, 'rb').read() == open(Fout_path, 'rb').read()
             
-def test_read_config_file():
+def test_read_config_file(tmp_path):
     listdir, join, splitext = os.listdir, os.path.join, os.path.splitext
-    for F in listdir(testDir):
+    mock_files_list=listdir(mock_readwritefiledir)
+    assert len(mock_files_list) > 0
+    for F in mock_files_list:
         if F.endswith('.ini'):
             if F == 'acoustics.ini':
                 F_path = join(testDir, F)
