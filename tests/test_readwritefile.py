@@ -130,7 +130,17 @@ def test_read_write_file(tmp_path):
             rwfile.writeAnything(Fout_path, text)
             #make sure they are the same
             assert open(F_path, 'rb').read() == open(Fout_path, 'rb').read()
-            
+
+def test_acoustics_ini(tmp_path):
+    F='acoustic.ini'
+    F_path = mock_readwritefiledir/F
+    rwfile = ReadWriteFile()
+    config_text = rwfile.readAnything(F_path)
+    Config = configparser.ConfigParser()
+    Config.read_string(config_text)
+    assert Config.get('Acoustics', '2 2') == '2_2' 
+
+
 def test_read_config_file(tmp_path):
     listdir, join, splitext = os.listdir, os.path.join, os.path.splitext
     mock_files_list=listdir(mock_readwritefiledir)
