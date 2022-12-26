@@ -140,37 +140,24 @@ def test_acoustics_ini(tmp_path):
     Config.read_string(config_text)
     assert Config.get('Acoustics', '2 2') == '2_2' 
 
+@pytest.mark.parametrize("F", ['originalnatlink.ini', 'natlinkconfigured.ini'])
+def test_config_ini(tmp_path,F):
+    F_path = mock_readwritefiledir/ F
+    testDir = tmp_path / testFolderName
+    testDir.mkdir()
+    rwfile = ReadWriteFile()
+    config_text = rwfile.readAnything(F_path)
+    Config = configparser.ConfigParser()
+    Config.read_string(config_text)
+    debug_level = Config.get('settings', 'log_level')
+    assert debug_level == 'DEBUG'
+    Config.set('settings', 'log_level', 'INFO')
+    new_debug_level = Config.get('settings', 'log_level')
+    assert new_debug_level == 'INFO'
+    Fout_path = testDir/F
+    Config.write(open(Fout_path, 'w', encoding=rwfile.encoding))
 
-def test_read_config_file(tmp_path):
-    listdir, join, splitext = os.listdir, os.path.join, os.path.splitext
-    mock_files_list=listdir(mock_readwritefiledir)
-    assert len(mock_files_list) > 0
-    for F in mock_files_list:
-        if F.endswith('.ini'):
-            if F == 'acoustics.ini':
-                F_path = join(testDir, F)
-                rwfile = ReadWriteFile()
-                config_text = rwfile.readAnything(F_path)
-                Config = configparser.ConfigParser()
-                Config.read_string(config_text)
-                assert Config.get('Acoustics', '2 2') == '2_2' 
-                continue
 
-            if F in ['natlink.ini', 'natlinkconfigured.ini']:
-                F_path = join(testDir, F)
-                rwfile = ReadWriteFile()
-                config_text = rwfile.readAnything(F_path)
-                Config = configparser.ConfigParser()
-                Config.read_string(config_text)
-                debug_level = Config.get('settings', 'log_level')
-                assert debug_level == 'DEBUG'
-                Config.set('settings', 'log_level', 'INFO')
-                new_debug_level = Config.get('settings', 'log_level')
-                assert new_debug_level == 'INFO'
-                trunk, ext = splitext(F)
-                Fout = trunk + 'out' + ext
-                Fout_path = join(testDir, Fout)
-                Config.write(open(Fout_path, 'w', encoding=rwfile.encoding))
 
 if __name__ == "__main__":
     pytest.main(['test_readwritefile.py'])
