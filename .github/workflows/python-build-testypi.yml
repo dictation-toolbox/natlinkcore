@@ -1,4 +1,4 @@
-name:  Flit Package 📦 to Test PyPI
+name: Publish Flit Package 📦 to Test PyPI
 run-name: Flit Publish  
 on: [push]
  
