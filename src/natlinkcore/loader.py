@@ -311,7 +311,7 @@ class NatlinkMain(metaclass=Singleton):
                     self.loaded_modules[mod_path] = module
                     return
                 else:
-                    self.logger.info(f'skipping unchanged bad module: {mod_name}')
+                    # self.logger.debug(f'skipping unchanged bad module: {mod_name}')
                     return
             else:
                 maybe_module = self.loaded_modules.get(mod_path)
@@ -338,7 +338,7 @@ class NatlinkMain(metaclass=Singleton):
                         self.logger.debug(f'loaded module: {module.__name__}')
                         return
                     else:
-                        self.logger.debug(f'skipping unchanged loaded module: {mod_name}')
+                        # self.logger.debug(f'skipping unchanged loaded module: {mod_name}')
                         return
         except Exception:
             self.logger.exception(traceback.format_exc())
