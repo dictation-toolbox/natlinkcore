@@ -4,7 +4,7 @@ from importlib.metadata import entry_points
 import argparse
 
 def extensions_and_folders():
-    discovered_extensions=entry_points(group='natlink_extensions')
+    discovered_extensions=entry_points(group='natlink.extensions')
 
     for extension in discovered_extensions:
         n=extension.name
