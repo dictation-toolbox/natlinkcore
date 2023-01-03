@@ -29,7 +29,7 @@ test = [
     "pytest >=7.1.2",
 ]
 dev = [
-    "pyenvutils",
+    "pyenvutils","entry-point-inspector"
 ] 
 
 [tool.pytest.ini_options]
@@ -51,10 +51,11 @@ testpaths= [
 [project.scripts]
 natlinkconfig_cli = "natlinkcore.configure.natlinkconfig_cli:main_cli"
 natlink_extensions = "natlinkcore.configure.natlink_extensions:main"
+
 [project.gui-scripts]
 natlinkconfig_gui = "natlinkcore.configure.natlinkconfig_gui:main_gui"
 
-[project.entry-points.natlink_extensions]
+[project.entry-points."natlink.extensions"]
 natlink_sample_macros  = "natlinkcore.SampleMacros:locateme"
 
 [project.urls]

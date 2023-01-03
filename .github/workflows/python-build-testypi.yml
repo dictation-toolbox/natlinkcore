@@ -1,0 +1,42 @@
+name: Publish Flit Package 📦 to Test PyPI
+run-name: Flit Publish  
+on: [push]
+ 
+permissions:
+  contents: read
+
+
+jobs:
+  build:
+    # Set up the environment `CI` references the secret `TEST_PYPI_API_TOKEN` in repository settings
+    # https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#referencing-an-environment
+    environment: CI
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Python 3.10
+      uses: actions/setup-python@4
+      with:
+        python-version:  '3.10'
+        architecture: 'x86'
+    - name:  Display Python version
+      run:  py -c "import sys; print(f"{sys.version}")
+    - name: Installing build Dependencies
+      run: |
+          py -m pip install --upgrade pip
+          py -m pip install --upgrade flit
+    - name: Building package with flit
+      run: |
+            flit build
+    - name:  Upload package
+      uses:  actions/upload-artifact@v3
+      with:
+        name:  file results
+        path:  dist
+    - name: Publishing 📦 to Test PyPI
+      #always publish to Test PypPi, any branch.
+      # Regarding building artifacts within Platform specific environment see https://github.com/pypa/gh-action-pypi-publish#non-goals
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
