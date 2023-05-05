@@ -54,8 +54,8 @@ layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.majo
           #### Projects Hidden UI Columns - See above ####
           [collapse(dragonfly2_section, 'dragonfly2', dragonfly2_state)],
           [collapse(unimacro_section, 'unimacro', unimacro_state)],
+          [sg.T(SYMBOL_DOWN, enable_events=True, k='extras-symbol-open', text_color='black'), sg.T('Natlink Extras', enable_events=True, text_color='black', k='extras-open')],
           [collapse(extras_section, 'extras', extras_state)],
-          [sg.T(SYMBOL_DOWN, enable_events=True, k='extras-symbol-open', text_color='black'), sg.T('Extras', enable_events=True, text_color='black', k='extras-open')],
           #### Buttons at bottom ####
           [sg.Button('Exit')]]
 
