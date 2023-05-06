@@ -57,7 +57,7 @@ layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.majo
           [sg.T(SYMBOL_DOWN, enable_events=True, k='extras-symbol-open', text_color='black'), sg.T('Natlink Extras', enable_events=True, text_color='black', k='extras-open')],
           [collapse(extras_section, 'extras', extras_state)],
           #### Buttons at bottom ####
-          [sg.Button('Exit')]]
+          [sg.Button('Exit'), sg.B('Open Natlink Config File', key='Open_Config', enable_events=True, auto_size_button=True)]]
 
 window = sg.Window('Natlink configuration GUI', layout, enable_close_attempted_event=True)
 
@@ -103,9 +103,11 @@ def AhkUserDir(values, event):
         Config.clearAhkUserDir()
         window['Set_ScriptsDir_Ahk'].update("")
 
+def OpenNatlinkConfig(values, event):
+    Config.openConfigFile()
 
 # Lookup dictionary that maps keys as events to a function to call in Event Loop.
-natlink_dispatch = {'Set_Logging_Natlink': SetNatlinkLoggingOutput}
+natlink_dispatch = {'Set_Logging_Natlink': SetNatlinkLoggingOutput, 'Open_Config': OpenNatlinkConfig}
 dragonfly2_dispatch = {'Set_UserDir_Dragonfly2': Dragonfly2UserDir, 'Clear_UserDir_Dragonfly2': Dragonfly2UserDir}
 unimacro_dispatch = {'Set_UserDir_Unimacro': UnimacroUserDir, 'Clear_UserDir_Unimacro': UnimacroUserDir}
 autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Set_ScriptsDir_Ahk': AhkUserDir,'Clear_ScriptsDir_Ahk': AhkUserDir}
