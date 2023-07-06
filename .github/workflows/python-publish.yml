@@ -1,4 +1,4 @@
-name: Publish Package 📦 to Test PyPI
+name: Publish Package 📦 to  PyPI
 on:
   release:
     types: [published] # with prerelease and release
@@ -7,8 +7,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    # Set up the environment `CI` references the secret `TEST_PYPI_API_TOKEN` in repository settings
+  build_and_publish:
+    # Set up the environment `CI` references the secret `PYPI_API_TOKEN` in repository settings
     # https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#referencing-an-environment
     environment: CI
     runs-on: ubuntu-latest
@@ -25,5 +25,5 @@ jobs:
      # Regarding building artifacts within Platform specific environment see https://github.com/pypa/gh-action-pypi-publish#non-goals
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        repository_url: https://test.pypi.org/legacy/
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        repository-url: https://upload.pypi.org/legacy/
