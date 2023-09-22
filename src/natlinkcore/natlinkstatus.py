@@ -56,12 +56,14 @@ getUserDirectory: get the Natlink user directory,
     Especially Dragonfly users will use this directory for putting their grammar files in.
     Also users that have their own custom grammar files can use this user directory
 
-getUnimacroDirectory: get the directory where the Unimacro system is.
+getUnimacroDirectory: get the directory where the Unimacro system is, and also the most common grammars
     This directory is normally in the site-packages area of Python (name "unimacro"), but can be
     "linked" to your cloned source code when you installed the packages with "pip install -e ."
+    A set of common grammars are in this directory, so do NOT have to be copied into the UnimacroUserGrammarsDirectory
 
-getUnimacroGrammarsDirectory: get the directory, where the user can put his Unimacro grammars. This directory will be
-    located in the `ActiveGrammars` subdirectory of the `~/.unimacro' or `%NATLINK_USERDIR%/.unimacro`).
+getUnimacroUserGrammarsDirectory: get the directory, where the user can put his Unimacro grammars. This directory will be
+    located in the ~/.Natlink/UnimacroUserGrammars, or in %NATLINK_SETTINGSDIR%/UnimacroUserGrammars.
+    When using only "standard" unimacro grammars, this directory can be kept empty.
 
 getUnimacroUserDirectory: get the directory of Unimacro INI files, if not return '' or
       the Unimacro user directory
@@ -153,7 +155,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         ## Unimacro:
         self.UnimacroDirectory = None
         self.UnimacroUserDirectory = None
-        self.UnimacroGrammarsDirectory = None
+        self.UnimacroUserGrammarsDirectory = None
         self.UnimacroDataDirectory = None
         ## Vocola:
         self.VocolaUserDirectory = None
@@ -313,10 +315,6 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         uuDir = self.getUnimacroUserDirectory()
         if not uuDir:
             return False
-        ugDir = self.getUnimacroGrammarsDirectory()
-        if not (ugDir and isdir(ugDir)):
-            print(f'UnimacroGrammarsDirectory ({ugDir}) not present, please create')
-            return False
         return True            
 
     def dragonflyIsEnabled(self):
@@ -390,8 +388,9 @@ class NatlinkStatus(metaclass=singleton.Singleton):
     def getUnimacroDirectory(self):
         """return the path to the UnimacroDirectory
         
-        This is the directory where the _control.py grammar is, and
+        This is the directory where the _control.py grammar is, and the most common unimacro grammars.
         is normally got via `pip install unimacro`
+        
         """
         # When git cloned, relative to the Core directory, otherwise somewhere or in the site-packages (if pipped).
         if self.UnimacroDirectory is not None:
@@ -418,6 +417,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         natlink_user_dir = self.getNatlink_Userdir()
         
         um_data_dir = Path(natlink_user_dir)/'UnimacroData'
+        print(f'UnimacroDataDirectory: {um_data_dir}')
         if not um_data_dir.is_dir():
             um_data_dir.mkdir()
         um_data_dir = str(um_data_dir)
@@ -425,23 +425,26 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         return um_data_dir
 
-    def getUnimacroGrammarsDirectory(self):
-        """return the path to the directory where the ActiveGrammars of Unimacro are located.
+    def getUnimacroUserGrammarsDirectory(self):
+        """return the path to the directory where the user defined grammars of Unimacro are located.
         
-        Expected in "UnimacroGrammars" of the natlink user directory
+        When only using common grammars, like _folders.py, this directory can be left empty.
+        
+        Expected in "UnimacroUserGrammars" of the natlink user directory
         (May 2022)
 
         """
-        if self.UnimacroGrammarsDirectory is not None:
-            return self.UnimacroGrammarsDirectory
+        if self.UnimacroUserGrammarsDirectory is not None:
+            return self.UnimacroUserGrammarsDirectory
         
         natlink_user_dir = self.getNatlink_Userdir()
         
-        um_grammars_dir = Path(natlink_user_dir)/'UnimacroGrammars'
+        um_grammars_dir = Path(natlink_user_dir)/'UnimacroUserGrammars'
         if not um_grammars_dir.is_dir():
+            print(f'Creating UnimacroUserGrammarsDirectory:\n\t{um_grammars_dir}')
             um_grammars_dir.mkdir()
         um_grammars_dir = str(um_grammars_dir)
-        self.UnimacroGrammarsDirectory = um_grammars_dir
+        self.UnimacroUserGrammarsDirectory = um_grammars_dir
 
         return um_grammars_dir
     
@@ -714,7 +717,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         for key in ['DNSIniDir', 'WindowsVersion', 'DNSVersion',
                     'PythonVersion',
                     'DNSName', 'NatlinkIni', 'Natlink_Userdir',
-                    'UnimacroDirectory', 'UnimacroUserDirectory', 'UnimacroGrammarsDirectory', 'UnimacroDataDirectory',
+                    'UnimacroDirectory', 'UnimacroUserDirectory', 'UnimacroUserGrammarsDirectory', 'UnimacroDataDirectory',
                     'VocolaDirectory', 'VocolaUserDirectory', 'VocolaGrammarsDirectory',
                     'VocolaTakesLanguages', 'VocolaTakesUnimacroActions',
                     'UserDirectory',
@@ -786,11 +789,11 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         ## Unimacro:
         if D['unimacroIsEnabled']:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is enabled")
-            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroGrammarsDirectory', 'UnimacroDataDirectory'):
+            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroUserGrammarsDirectory', 'UnimacroDataDirectory'):
                 self.appendAndRemove(L, D, key)
         else:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is disabled")
-            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroGrammarsDirectory'):
+            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroUserGrammarsDirectory'):
                 del D[key]
         ##  UserDirectory:
         if D['userIsEnabled']:
