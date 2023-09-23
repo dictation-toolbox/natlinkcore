@@ -56,14 +56,14 @@ getUserDirectory: get the Natlink user directory,
     Especially Dragonfly users will use this directory for putting their grammar files in.
     Also users that have their own custom grammar files can use this user directory
 
-getUnimacroDirectory: get the directory where the Unimacro system is, and also the most common grammars
+getUnimacroDirectory: get the directory where the Unimacro system is, and also the control grammar _control
     This directory is normally in the site-packages area of Python (name "unimacro"), but can be
     "linked" to your cloned source code when you installed the packages with "pip install -e ."
-    A set of common grammars are in this directory, so do NOT have to be copied into the UnimacroUserGrammarsDirectory
 
-getUnimacroUserGrammarsDirectory: get the directory, where the user can put his Unimacro grammars. This directory will be
-    located in the ~/.Natlink/UnimacroUserGrammars, or in %NATLINK_SETTINGSDIR%/UnimacroUserGrammars.
-    When using only "standard" unimacro grammars, this directory can be kept empty.
+getUnimacroGrammarsDirectory (removed): get the directory, where the user grammars are located.
+    By default, this is the UnimacroGrammars subdirectory of the site-packages area of unimacro.
+    Another directory can be chosen or added, by manually editing the natlink.ini file.
+    *** This function is removed, because the directory can manually be changed by the user ***
 
 getUnimacroUserDirectory: get the directory of Unimacro INI files, if not return '' or
       the Unimacro user directory
@@ -138,7 +138,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
     """
     known_directory_options = ['userdirectory', 'dragonflyuserdirectory',
-                               'unimacrodirectory', 'unimacrogrammarsdirectory',
+                               'unimacrodirectory', #  'unimacrogrammarsdirectory',
                                'vocoladirectory', 'vocolagrammarsdirectory']
 
     def __init__(self):
@@ -155,7 +155,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         ## Unimacro:
         self.UnimacroDirectory = None
         self.UnimacroUserDirectory = None
-        self.UnimacroUserGrammarsDirectory = None
+        # self.UnimacroGrammarsDirectory = None
         self.UnimacroDataDirectory = None
         ## Vocola:
         self.VocolaUserDirectory = None
@@ -354,8 +354,9 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         setting `NATLINK_USERDIR` to for example `~/Documents`.
         
         Other directories that are created and checked by packages, and should be local, can be
-        stored here, for example `VocolaGrammarsDirectory` (VocolaGrammars) and
-        `UnimacroGrammarsDirectory` (UnimacroGrammars).
+        stored here, for example `VocolaGrammarsDirectory` (for the generated VocolaGrammars)
+        
+        No Unimacro Grammars directory is provided any more
         """
         natlink_ini_path = Path(self.getNatlinkIni())
         natlink_user_dir = natlink_ini_path.parent
@@ -388,7 +389,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
     def getUnimacroDirectory(self):
         """return the path to the UnimacroDirectory
         
-        This is the directory where the _control.py grammar is, and the most common unimacro grammars.
+        This is the directory where the _control.py grammar is, and
         is normally got via `pip install unimacro`
         
         """
@@ -425,28 +426,27 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         return um_data_dir
 
-    def getUnimacroUserGrammarsDirectory(self):
-        """return the path to the directory where the user defined grammars of Unimacro are located.
-        
-        When only using common grammars, like _folders.py, this directory can be left empty.
-        
-        Expected in "UnimacroUserGrammars" of the natlink user directory
-        (May 2022)
-
-        """
-        if self.UnimacroUserGrammarsDirectory is not None:
-            return self.UnimacroUserGrammarsDirectory
-        
-        natlink_user_dir = self.getNatlink_Userdir()
-        
-        um_grammars_dir = Path(natlink_user_dir)/'UnimacroUserGrammars'
-        if not um_grammars_dir.is_dir():
-            print(f'Creating UnimacroUserGrammarsDirectory:\n\t{um_grammars_dir}')
-            um_grammars_dir.mkdir()
-        um_grammars_dir = str(um_grammars_dir)
-        self.UnimacroUserGrammarsDirectory = um_grammars_dir
-
-        return um_grammars_dir
+    # def getUnimacroGrammarsDirectory(self):
+    #     """return the path to the directory where the unimacro grammars are located
+    #     normally the UnimacroGrammars sub directory of the unimacro area in the site-packages.
+    #     
+    #     Can manually be changed in the setup file natlink.ini.
+    #     So no reporting for this one.
+    # 
+    #     """
+    #     if self.UnimacroGrammarsDirectory is not None:
+    #         return self.UnimacroGrammarsDirectory
+    #     
+    #     natlink_user_dir = self.getNatlink_Userdir()
+    #     
+    #     um_grammars_dir = Path(natlink_user_dir)/'UnimacroUserGrammars'
+    #     if not um_grammars_dir.is_dir():
+    #         print(f'Creating UnimacroUserGrammarsDirectory:\n\t{um_grammars_dir}')
+    #         um_grammars_dir.mkdir()
+    #     um_grammars_dir = str(um_grammars_dir)
+    #     self.UnimacroGrammarsDirectory = um_grammars_dir
+    # 
+    #     return um_grammars_dir
     
     def getNatlinkDirectory(self):
         """return the path of the NatlinkDirectory, where the _natlink_core.pyd package (C++ code) is
@@ -717,7 +717,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         for key in ['DNSIniDir', 'WindowsVersion', 'DNSVersion',
                     'PythonVersion',
                     'DNSName', 'NatlinkIni', 'Natlink_Userdir',
-                    'UnimacroDirectory', 'UnimacroUserDirectory', 'UnimacroUserGrammarsDirectory', 'UnimacroDataDirectory',
+                    'UnimacroDirectory', 'UnimacroUserDirectory', 'UnimacroDataDirectory',
                     'VocolaDirectory', 'VocolaUserDirectory', 'VocolaGrammarsDirectory',
                     'VocolaTakesLanguages', 'VocolaTakesUnimacroActions',
                     'UserDirectory',
@@ -789,11 +789,11 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         ## Unimacro:
         if D['unimacroIsEnabled']:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is enabled")
-            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroUserGrammarsDirectory', 'UnimacroDataDirectory'):
+            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroDataDirectory'):
                 self.appendAndRemove(L, D, key)
         else:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is disabled")
-            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroUserGrammarsDirectory'):
+            for key in ('UnimacroUserDirectory', 'UnimacroDirectory'):
                 del D[key]
         ##  UserDirectory:
         if D['userIsEnabled']:
