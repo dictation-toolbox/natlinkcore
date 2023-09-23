@@ -660,8 +660,20 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         
         These directories can be entered "manually" in the `natlink.ini` file
         """
+        isdir = os.path.isdir
         result = self.natlinkmain.getconfigsetting(section='directories')
-        return [s for s in result if s not in self.known_directory_options]
+        strange = [s for s in result if s not in self.known_directory_options]
+        if not strange:
+            return ''
+        T = []
+        for key in strange:
+            value =  self.natlinkmain.getconfigsetting(section="directories", option=key)
+            expanded = config.expand_path(value)
+            if expanded and isdir(expanded):
+                T.append(f'{key}: {expanded}')
+            else:
+                T.append(f'{key}: (invalid) {value}')
+        return '\n'.join(T)
 
     def getUnimacroIniFilesEditor(self):
         raise DeprecationWarning('this option is no longer available: getUnimacroIniFilesEditor')
