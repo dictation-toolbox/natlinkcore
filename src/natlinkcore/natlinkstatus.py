@@ -168,7 +168,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         
         if self.NatlinkDirectory is None:
             self.NatlinkDirectory = natlink.__path__[-1]
-            if len(natlinkcore.__path__) > 0:
+            self.NatlinkcoreDirectory = natlinkcore.__path__[-1]
+            if self.NatlinkcoreDirectory.find('site-packages') == -1:
                 self.symlink_line = 'NatlinkcoreDirectory is editable'
         
     def refresh(self):
@@ -442,6 +443,11 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         if isdir(value):
             self.UnimacroGrammarDirectory = value
             return abspath(value)
+
+        expanded = config.expand_path(value)
+        if expanded and isdir(expanded):
+            self.UnimacroGrammarDirectory = abspath(expanded)
+            return self.UnimacroGrammarDirectory
 
         # check_natlinkini = 
         self.UnimacroGrammarsDirectory = ''
@@ -717,7 +723,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         for key in ['DNSIniDir', 'WindowsVersion', 'DNSVersion',
                     'PythonVersion',
                     'DNSName', 'NatlinkIni', 'Natlink_Userdir',
-                    'UnimacroDirectory', 'UnimacroUserDirectory', 'UnimacroDataDirectory',
+                    'UnimacroDirectory', 'UnimacroUserDirectory', 'UnimacroGrammarsDirectory', 'UnimacroDataDirectory',
                     'VocolaDirectory', 'VocolaUserDirectory', 'VocolaGrammarsDirectory',
                     'VocolaTakesLanguages', 'VocolaTakesUnimacroActions',
                     'UserDirectory',
@@ -789,7 +795,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         ## Unimacro:
         if D['unimacroIsEnabled']:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is enabled")
-            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroDataDirectory'):
+            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroGrammarsDirectory', 'UnimacroDataDirectory'):
                 self.appendAndRemove(L, D, key)
         else:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is disabled")
