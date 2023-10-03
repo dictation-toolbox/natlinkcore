@@ -135,7 +135,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
     """
     known_directory_options = ['userdirectory', 'dragonflyuserdirectory',
-                               'unimacrodirectory', 'unimacrogrammarsdirectory',
+                               'unimacrodirectory', 
                                'vocoladirectory', 'vocolagrammarsdirectory']
 
     def __init__(self):
@@ -152,7 +152,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         ## Unimacro:
         self.UnimacroDirectory = None
         self.UnimacroUserDirectory = None
-        self.UnimacroGrammarsDirectory = None
+        # self.UnimacroGrammarsDirectory = None
         self.UnimacroDataDirectory = None
         ## Vocola:
         self.VocolaUserDirectory = None
@@ -426,34 +426,34 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         return um_data_dir
 
-    def getUnimacroGrammarsDirectory(self):
-        """return the path to the directory where (part of) the ActiveGrammars of Unimacro are located.
-        
-        By default in the UnimacroGrammars subdirectory of site-packages/unimacro, but look in natlink.ini file...
-    
-        """
-        isdir, abspath = os.path.isdir, os.path.abspath
-        if self.UnimacroGrammarsDirectory is not None:
-            return self.UnimacroGrammarsDirectory
-        key = 'unimacrogrammarsdirectory'
-        value =  self.natlinkmain.getconfigsetting(section="directories", option=key)
-        if not value:
-            self.UnimacroGrammarsDirectory = ''
-            return ''
-        if isdir(value):
-            self.UnimacroGrammarDirectory = value
-            return abspath(value)
-
-        expanded = config.expand_path(value)
-        if expanded and isdir(expanded):
-            self.UnimacroGrammarDirectory = abspath(expanded)
-            return self.UnimacroGrammarDirectory
-
-        # check_natlinkini = 
-        self.UnimacroGrammarsDirectory = ''
-    
-        return ''
-    
+    # def getUnimacroGrammarsDirectory(self):
+    #     """return the path to the directory where (part of) the ActiveGrammars of Unimacro are located.
+    #     
+    #     By default in the UnimacroGrammars subdirectory of site-packages/unimacro, but look in natlink.ini file...
+    # 
+    #     """
+    #     isdir, abspath = os.path.isdir, os.path.abspath
+    #     if self.UnimacroGrammarsDirectory is not None:
+    #         return self.UnimacroGrammarsDirectory
+    #     key = 'unimacrogrammarsdirectory'
+    #     value =  self.natlinkmain.getconfigsetting(section="directories", option=key)
+    #     if not value:
+    #         self.UnimacroGrammarsDirectory = ''
+    #         return ''
+    #     if isdir(value):
+    #         self.UnimacroGrammarDirectory = value
+    #         return abspath(value)
+    # 
+    #     expanded = config.expand_path(value)
+    #     if expanded and isdir(expanded):
+    #         self.UnimacroGrammarDirectory = abspath(expanded)
+    #         return self.UnimacroGrammarDirectory
+    # 
+    #     # check_natlinkini = 
+    #     self.UnimacroGrammarsDirectory = ''
+    # 
+    #     return ''
+    # 
     def getNatlinkDirectory(self):
         """return the path of the NatlinkDirectory, where the _natlink_core.pyd package (C++ code) is
         """
@@ -807,7 +807,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         ## Unimacro:
         if D['unimacroIsEnabled']:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is enabled")
-            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroGrammarsDirectory', 'UnimacroDataDirectory'):
+            for key in ('UnimacroUserDirectory', 'UnimacroDirectory', 'UnimacroDataDirectory'):
                 self.appendAndRemove(L, D, key)
         else:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is disabled")
