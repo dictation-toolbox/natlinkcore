@@ -487,9 +487,8 @@ class NatlinkMain(metaclass=Singleton):
             self.logger.debug(f'set_user_language, user: "{self.user}", profile: "{self.profile}", language: "{self.language}"')
         else:
             self.user, self.profile = '', ''
-            self.logger.warning('set_user_language, cannot get input for get_user_language, set to "enx",\n\tprobably Dragon is not running')
+            self.logger.warning('set_user_language, cannot get input for get_user_language, set to "enx",\n\tprobably Dragon is not running or you are preforming pytests')
             self.language = 'enx'
-
 
     def start(self) -> None:
         self.logger.info(f'Starting natlink loader from config file:\n\t"{self.config.config_path}"')
