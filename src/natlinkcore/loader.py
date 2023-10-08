@@ -260,9 +260,12 @@ class NatlinkMain(metaclass=Singleton):
 
     def unload_module(self, module: ModuleType) -> None:
         unload = getattr(module, 'unload', None)
-        if unload is not None:
-            self.logger.debug(f'unloading module: {module.__name__}')
-            self._call_and_catch_all_exceptions(unload)
+        if unload is None:
+            self.logger.info(f'cannot unload module {module.__name__}')
+            return
+        self.logger.debug(f'unloading module: {module.__name__}')
+        self._call_and_catch_all_exceptions(unload)
+        
 
     @staticmethod
     def _import_module_from_path(mod_path: Path) -> ModuleType:
@@ -357,6 +360,13 @@ class NatlinkMain(metaclass=Singleton):
         for mod_path in mod_paths:
             self.load_or_reload_module(mod_path, force_load=force_load)
             self.seen.add(mod_path)
+    
+    def unload_all_loaded_modules(self):
+        """unload the modules that are loaded, and empty the bad modules list
+        """
+        for module in self.loaded_modules.values():
+            self.unload_module(module)
+        self.bad_modules.clear()
 
     def remove_modules_that_no_longer_exist(self) -> None:
         mod_paths = self.module_paths_for_user
@@ -401,6 +411,8 @@ class NatlinkMain(metaclass=Singleton):
             self.set_user_language(args)
             self.logger.debug(f'on_change_callback, user "{self.user}", profile: "{self.profile}", language: "{self.language}"')
             if self.config.load_on_user_changed:
+                # added line, QH, 2023-10-08
+                self.unload_all_loaded_modules()
                 self.trigger_load(force_load=True)
         elif change_type == 'mic' and args == 'on':
             self.logger.debug('on_change_callback called with: "mic", "on"')

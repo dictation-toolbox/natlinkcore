@@ -1,8 +1,9 @@
 
 #pylint:disable= C0114, C0116, W0401, W0614, W0621, W0108. W0212, C2801, C3001
 
+from pathlib import Path
+
 import pytest
-import pathlib as p
 from natlinkcore.loader import *
 import debugpy
 
@@ -35,7 +36,7 @@ def sample_config(sample_name) -> 'NatlinkConfig':
     """
     load a config file from the config files subfolder
     """
-    sample_ini= (p.Path(__file__).parent) / "config_files" / sample_name
+    sample_ini= (Path(__file__).parent) / "config_files" / sample_name
     test_config = NatlinkConfig.from_file(sample_ini)
     return test_config
     
@@ -213,7 +214,7 @@ def test_load_single_good_script_from_user_dir(tmpdir, empty_config, logger, mon
     assert set(main.load_attempt_times.keys()) == {a_path}
     assert main.load_attempt_times[a_path] == mtime
     assert main.loaded_modules[a_path].x == 0
-
+    assert logger.messages['info'][0] == 'loading module: _a'
     del_loaded_modules(main)
     
 
@@ -242,7 +243,7 @@ def test_reload_single_changed_good_script(tmpdir, empty_config, logger, monkeyp
     assert set(main.load_attempt_times.keys()) == {a_path}
     assert main.load_attempt_times[a_path] == mtime
     assert main.loaded_modules[a_path].x == 1
-
+    assert logger.messages['info'] == ['loading module: _a', 'reloading module: _a', 'cannot unload module _a']
     del_loaded_modules(main)
     
 
@@ -284,10 +285,11 @@ def test_reload_should_skip_single_good_unchanged_script(tmpdir, empty_config, l
 
     main.load_or_reload_modules(main.module_paths_for_user)
 
+    ## changing script, but NOT changing mtime
     a_script.write("""x=1""")
     # set the mtime to the old mtime, so natlink should NOT reload
     a_script.setmtime(mtime)
-    mtime += 1.0
+    # mtime += 1.0
     main.seen.clear()   # is done in trigger_load
     main.load_or_reload_modules(main.module_paths_for_user)
     assert set(main.loaded_modules.keys()) == {a_path}
@@ -298,9 +300,9 @@ def test_reload_should_skip_single_good_unchanged_script(tmpdir, empty_config, l
     # make sure it still has the old value, not the new one
     assert main.loaded_modules[a_path].x == 0
 
-    ## TODO how solve this (QH)
-    msg = 'skipping unchanged loaded module: _a'
-    assert msg in logger.messages['debug']
+    # removed this message, because of too many messages...
+    # msg = 'skipping unchanged loaded module: _a'
+    assert logger.messages['debug'] == []
 
     del_loaded_modules(main)
     
@@ -410,8 +412,10 @@ def test_reload_should_skip_single_bad_unchanged_script(tmpdir, empty_config, lo
     assert set(main.load_attempt_times.keys()) == {a_path}
     assert main.load_attempt_times[a_path] == mtime
 
-    msg = 'skipping unchanged bad module: _a'
-    assert msg in logger.messages['info']
+    # removed debug message, because of too many debug lines (QH)
+    # msg = 'skipping unchanged bad module: _a'
+    # the debug messages are the exception when loading the bad module
+    assert len(logger.messages['debug']) == 2
 
     del_loaded_modules(main)
     
@@ -477,6 +481,43 @@ def test_load_single_bad_script_that_was_previously_good(tmpdir, empty_config, l
 
     del_loaded_modules(main)
 #     
+
+def test_unload_all_loaded_modules(tmpdir, empty_config, logger, monkeypatch):
+    config = empty_config
+    config.directories_by_user['user'] = [tmpdir.strpath]
+    a_script = tmpdir.join('_a.py')
+    a_path = Path(a_script.strpath)
+    mtime = 123456.0
+    a_script.write("""x=0""")
+    a_script.setmtime(mtime)
+    monkeypatch.setattr(time, 'time', lambda: mtime)
+
+    bad_script = tmpdir.join('_bad.py')
+    bad_path = Path(bad_script.strpath)
+    mtime = 123456.0
+    bad_script.write("""x=; #a syntax error.""")
+    bad_script.setmtime(mtime)
+    monkeypatch.setattr(time, 'time', lambda: mtime)
+
+    main = NatlinkMain(logger, config)
+    main.config = config
+    main.__init__(logger=logger, config=config)
+
+    _modules = main.module_paths_for_user
+    assert main.module_paths_for_user == []
+    main.user = 'user'   # this way, because now user is a property
+    _modules = main.module_paths_for_user
+    assert main.module_paths_for_user == [a_path, bad_path]
+
+    main.load_or_reload_modules(main.module_paths_for_user)
+    _mainkeys = set(main.loaded_modules.keys())
+    assert set(main.loaded_modules.keys()) == {a_path}
+    assert len(main.bad_modules) == 1
+    # assume unloading takes place, because module has a unload attribute
+    main.unload_all_loaded_modules()
+    assert logger.messages['info'] == ['loading module: _a', 'loading module: _bad', 'cannot unload module _a']
+    assert main.bad_modules == set()
+    
 
 
 
