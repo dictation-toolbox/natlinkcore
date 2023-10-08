@@ -9,7 +9,7 @@
  removed pre 11 things,
  now for python3 version, with (normally) DNSVersion 15 (QH, June 2020)/Febr 2022
 """
-#pylint:disable=C0116, C0123, R0911, R0912, R0915, R0916
+#pylint:disable=C0116, C0123, R0911, R0912, R0915, R0916, R1735, R1728
 import copy
 import natlink
     
@@ -51,37 +51,37 @@ for name in globals():
     if name.startswith('flag_') and isinstance(globals()[name], int) and 0 < globals()[name] < 32:
         flagNames[globals()[name]] = name    
 #
-flags_like_period = (9, 4, 21, 17)  # flag_two_spaces_next = 9,  flag_passive_cap_next = 4, flag_no_space_before = 21
-flags_like_comma = (21, )  # flag_no_space_before = 21  (flag_nodelete = 3 we just ignore here, so leave out)
-flags_like_number = (10,)
-flags_like_point = (8, 10, 21)  # no spacing (combination with numbers seems
+flags_like_period = {9, 4, 21, 17}  # flag_two_spaces_next = 9,  flag_passive_cap_next = 4, flag_no_space_before = 21
+flags_like_comma = {21}  # flag_no_space_before = 21  (flag_nodelete = 3 we just ignore here, so leave out)
+flags_like_number = {10}
+flags_like_point = {8, 10, 21}  # no spacing (combination with numbers seems
                                 # obsolete (cond_no_space = 10)
-flags_like_hyphen = (8, 21)  # no spacing before and after
-flags_like_open_quote = (8, 20) # no space next and no cap change
-flags_like_close_quote = (21, 20, 19) # no space before, no cap change and no space change (??)
+flags_like_hyphen = {8, 21}  # no spacing before and after
+flags_like_open_quote = {8, 20} # no space next and no cap change
+flags_like_close_quote = {21, 20, 19} # no space before, no cap change and no space change (??)
 
 # word flags from properties part of the word:
 # Dragon 11...
 propDict = {}
-propDict['space-bar'] = (flag_space_bar, flag_no_space_next, flag_no_formatting,
-                         flag_no_cap_change, flag_no_space_before) #  (8, 18, 20, 21, 27)
+propDict['space-bar'] = {flag_space_bar, flag_no_space_next, flag_no_formatting,
+                         flag_no_cap_change, flag_no_space_before} #  {8, 18, 20, 21, 27}
 
 propDict['period'] = flags_like_period
 propDict['point'] = flags_like_point
 propDict['dot'] = flags_like_point
 propDict['comma'] = flags_like_comma
 propDict['cap'] = (19, 18, flag_active_cap_next)
-propDict['caps-on'] = (19, 18,  flag_cap_all)
-propDict['caps-off'] = (19, 18, flag_reset_uc_lc_caps)
-propDict['all-caps'] = (19, 18, flag_uppercase_next)
-propDict['all-caps-on'] = (19, 18, flag_uppercase_all)
-propDict['all-caps-off'] = (19, 18, flag_reset_uc_lc_caps)
-propDict['no-caps'] = (19, 18, flag_lowercase_next)
-propDict['no-caps-on'] = (19, 18, flag_lowercase_all)
-propDict['no-caps-off'] = (19, 18, flag_reset_uc_lc_caps)
-propDict['no-space'] = (18, 20, flag_no_space_next)
-propDict['no-space-on'] = (18, 20, flag_no_space_all)
-propDict['no-space-off'] = (18, 20, flag_reset_no_space)
+propDict['caps-on'] = {19, 18,  flag_cap_all}
+propDict['caps-off'] = {19, 18, flag_reset_uc_lc_caps}
+propDict['all-caps'] = {19, 18, flag_uppercase_next}
+propDict['all-caps-on'] = {19, 18, flag_uppercase_all}
+propDict['all-caps-off'] = {19, 18, flag_reset_uc_lc_caps}
+propDict['no-caps'] = {19, 18, flag_lowercase_next}
+propDict['no-caps-on'] = {19, 18, flag_lowercase_all}
+propDict['no-caps-off'] = {19, 18, flag_reset_uc_lc_caps}
+propDict['no-space'] = {18, 20, flag_no_space_next}
+propDict['no-space-on'] = {18, 20, flag_no_space_all}
+propDict['no-space-off'] = {18, 20, flag_reset_no_space}
 propDict['left-double-quote'] = flags_like_open_quote
 propDict['right-double-quote'] = flags_like_close_quote
 # left- as left-double-quote
@@ -112,15 +112,17 @@ propDict['uppercase-letter'] = (flag_no_space_next,)
 #
 # If you already have the wordInfo for each word, you can pass in a list of
 # tuples of (wordName,wordInfo) instead of just the list of words.
-
-def formatWords(wordList,state=None):
+def formatWords(wordList, state=None):
     """return the formatted words and the state at end.
     
     when passing this state in the next call, the spacing and capitalization
     will be maintained.
+
     """
     #pylint:disable=W0603
     global flags_like_period
+    assert isinstance(wordList, list)
+
     language = 'enx'
     if language != 'enx':
         flags_like_period = (4, 21, 17) # one space after period.
@@ -163,6 +165,41 @@ def formatWords(wordList,state=None):
         output = output + newText
 
     return output, state
+
+
+def formatString(text, state=None):
+    r"""pass in a string, and optionally the result of previous call
+    
+    Do NOT require the .\period\period specifications, so you can call this one from a plain sentence.
+    
+    
+    For frequent punctuation, like "." these are replaced by the counterparts.
+    """
+    like_period = ".?!"
+    like_comma = ",;:"
+    like_hyphen = "-"
+    
+    all_special = like_period + like_comma + like_hyphen
+    for char in all_special:
+        text = text.replace(char, f' {char} ')
+    
+    input_list = text.split()
+    for i, w in enumerate(input_list):
+        if w not in all_special:
+            continue
+        if w in like_period:
+            input_list[i] = (w, set(flags_like_period))
+        if w in like_comma:
+            input_list[i] = (w, set(flags_like_comma))
+        if w in like_hyphen:
+            input_list[i] = (w, set(flags_like_hyphen))
+                
+            
+            
+    result, state = formatWords(input_list, state=state)
+    return result, state
+    
+        
 
 countDict= dict(one=1, two=2, three=3, four=4, five=5, six=6, seven=7, eight=8, nine=9,
                 een=1, twee=2, drie=3, vier=4, vijf=5, zes=6, zeven=7, acht=8, negen=9)
@@ -236,7 +273,7 @@ def formatWord(wordName,wordInfo=None,stateFlags=None, gwi=None):
         elif isinstance(state, (list, tuple)):
             state = set(state)
         else:
-            raise ValueError("formatWord, invalid stateFlags: %s"% repr(stateFlags))
+            raise ValueError(f'formatWord, invalid stateFlags: {repr(stateFlags)}')
         stateFlags = copy.copy(state)
 
         
@@ -392,7 +429,7 @@ def getWordInfo(word):
             return set(propDict['left-double-quote'])
         if prop.startswith('right-'):
             return set(propDict['right-double-quote'])
-        print('getWordInfo11, unknown word property: "%s" ("%s")'% (prop, word))          
+        print(f'getWordInfo, unknown word property: {prop} {"word"}')          
         return set()  # empty tuple
     # should not come here
     return set()
@@ -445,8 +482,8 @@ def testSubroutine(state, Input, Output):
         words[i] = words[i].replace('_', ' ')
     actual,state = formatWords(words,state)
     if actual != Output:
-        print('Expected "%s"'%Output)
-        print('Actually "%s"'%actual)
+        print(f'Expected {"Output"}')
+        print(f'Actually {"actual"}')
         raise ValueError("test error")
     return state
 
