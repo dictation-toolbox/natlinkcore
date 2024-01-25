@@ -736,7 +736,7 @@ to save space.)
                 print(f'set exclusive mode to {exclusive} for rule "{ruleName}"')
             self.setExclusive(exclusive)
 
-    def deactivate(self, ruleName, noError=0):
+    def deactivate(self, ruleName, noError=0, dpi16trick=False):
         #pylint:disable=W0221
         if ruleName not in self.validRules:
             if noError:
@@ -748,6 +748,14 @@ to save space.)
             raise ValueError( "rule %s is not active (activeRules: %s)"% (ruleName, self.activeRules))
         if debugLoad:
             print('deactivate rule %s'% ruleName)
+        if dpi16trick:
+            # now deactivate  all and activate other rules again
+            # be sure, this one is not called recursive!!
+            active_rules = copy.copy(self.activeRules)
+            del active_rules[ruleName]
+            self.deactivateAll()
+            self.activateSet(list(active_rules.keys()))
+            return
         self.gramObj.deactivate(ruleName)
         del self.activeRules[ruleName]
 
