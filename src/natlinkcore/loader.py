@@ -6,15 +6,15 @@ import logging
 import os
 import copy
 import sys
-import sysconfig
+import sys
 import time
 import traceback
-import debugpy
 import winreg
 import configparser
 from pathlib import Path
 from types import ModuleType
 from typing import List, Dict, Set, Iterable, Any, Tuple, Callable
+import debugpy
 
 import natlink
 from natlinkcore.config import LogLevel, NatlinkConfig, expand_path
@@ -70,6 +70,10 @@ class NatlinkMain(metaclass=Singleton):
         self.seen: Set[Path] = set()     # start empty in trigger_load
         self.bom = self.encoding = self.config_text = ''   # getconfigsetting and writeconfigsetting
         self.dap_started=False
+        # for shorter logger.debug messages
+        self.prev_module_info = None
+
+
 
     def set_on_begin_utterance_callback(self, func: Callable[[], None]) -> None:
         self._on_begin_utterance_callback.set(func)
@@ -428,7 +432,13 @@ class NatlinkMain(metaclass=Singleton):
             
 
     def on_begin_callback(self, module_info: Tuple[str, str, int]) -> None:
-        self.logger.debug(f'on_begin_callback called with: moduleInfo: {module_info}')
+        if module_info != self.prev_module_info:
+            prog_name = Path(module_info[0]).stem
+            self.logger.debug(f'-on_begin_callback, new module info: ( (...){prog_name}, {module_info[1]}, {module_info[2]} )')
+            self.prev_module_info = module_info
+        else:
+            self.logger.debug('-on_begin_callback, same moduleInfo')
+            
         self._on_begin_utterance_callback.run()
        
         prog_name = Path(module_info[0].lower()).stem
@@ -623,20 +633,20 @@ def config_locations() -> Iterable[str]:
 def run() -> None:
     logger = logging.getLogger('natlink')
     try:
-        # TODO: remove this hack. As of October 2021, win32api does not load properly, except if
-        # the package pywin32_system32 is explictly put on new dll_directory white-list
-        pywin32_dir = os.path.join(sysconfig.get_path('platlib'), "pywin32_system32")
-        if os.path.isdir(pywin32_dir):
-            os.add_dll_directory(pywin32_dir)
+        # # TODO: remove this hack. As of October 2021, win32api does not load properly, except if
+        # # the package pywin32_system32 is explictly put on new dll_directory white-list
+        # pywin32_dir = os.path.join(sysconfig.get_path('platlib'), "pywin32_system32")
+        # if os.path.isdir(pywin32_dir):
+        #     os.add_dll_directory(pywin32_dir)
         
         config = NatlinkConfig.from_first_found_file(config_locations())
         dap_started=False
         print(f"testing dap , enabled {config.dap_enabled} port {config.dap_port}")
         try:
             if config.dap_enabled:
-                print(f"Debugpy.configure ...")
+                print("Debugpy.configure ...")
                 debugpy.configure(python=f"{python_exec}")
-                print(f"Debugpy.listen ...")
+                print("Debugpy.listen ...")
  
                 debugpy.listen(config.dap_port)
                 dap_started=True
