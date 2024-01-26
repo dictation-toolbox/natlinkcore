@@ -34,6 +34,7 @@ Python Macro Language for Dragon NaturallySpeaking
 
 """
 #pylint:disable=C0116, C0209, C0302, R0902, W0702, E1101, W0703
+#pylint:disable=W0237    # inconsistent calling sequences for different classes 
 
 import os
 import os.path
@@ -714,30 +715,26 @@ to save space.)
 
     def activate(self, ruleName, window=0, exclusive=None, noError=0):
         #pylint:disable=W0221, W0613
-        # TODO: remove debugLoad (via logger)
         # TODO: noError is not used
-        if debugLoad:
-            print(f'GrammarBase, activate ruleName "{ruleName}" in window {window}, exclusive: {exclusive}')
+        debug_print(f'GrammarBase, activate ruleName "{ruleName}" in window {window}, exclusive: {exclusive}')
         if ruleName not in self.validRules:
             raise ValueError( "rule %s was not exported in the grammar" % ruleName)
         if ruleName in self.activeRules:
             if window == self.activeRules[ruleName]:
-                if debugLoad:
-                    print('rule %s already active for window %s'% (ruleName, window))
+                debug_print('rule %s already active for window %s'% (ruleName, window))
                 return
-            if debugLoad:
-                print('change rule %s from window %s to window %s'% (ruleName, self.activeRules[ruleName], window))
+            debug_print('change rule %s from window %s to window %s'% (ruleName, self.activeRules[ruleName], window))
             self.gramObj.deactivate(ruleName)
-        # if debugLoad: print('activate rule %s (window: %s)'% (ruleName, window))
+        # debug_print( print('activate rule %s (window: %s)'% (ruleName, window))
         self.gramObj.activate(ruleName,window)
         self.activeRules[ruleName] = window
         if not exclusive is None:
-            if debugLoad:
-                print(f'set exclusive mode to {exclusive} for rule "{ruleName}"')
+            debug_print(f'set exclusive mode to {exclusive} for rule "{ruleName}"')
             self.setExclusive(exclusive)
 
-    def deactivate(self, ruleName, noError=0, dpi16trick=False):
+    def deactivate(self, ruleName, noError=0, dpi16trick=True):
         #pylint:disable=W0221
+        debug_print(f'deactivate: {ruleName}, activeRules: {self.activeRules}')
         if ruleName not in self.validRules:
             if noError:
                 return
@@ -746,15 +743,15 @@ to save space.)
             if noError:
                 return
             raise ValueError( "rule %s is not active (activeRules: %s)"% (ruleName, self.activeRules))
-        if debugLoad:
-            print('deactivate rule %s'% ruleName)
+        debug_print('deactivate rule %s'% ruleName)
         if dpi16trick:
             # now deactivate  all and activate other rules again
             # be sure, this one is not called recursive!!
             active_rules = copy.copy(self.activeRules)
             del active_rules[ruleName]
             self.deactivateAll()
-            self.activateSet(list(active_rules.keys()))
+            for rule, window in active_rules.items():
+                self.activate(rule, window)
             return
         self.gramObj.deactivate(ruleName)
         del self.activeRules[ruleName]
@@ -762,64 +759,45 @@ to save space.)
     def activateSet(self, ruleNames, window=0, exclusive=None):
         """activate a set of rules.
 
+        dpi16: deactivate all and activate the new rules.
         """
         #pylint:disable=R0912
-        if isinstance(ruleNames, list):
-            rulenames = copy.copy(ruleNames) # so we can pop items
-        elif isinstance(ruleNames, tuple):
-            rulenames = list(ruleNames) # so we can pop items
-        else:
-            raise TypeError("activateSet, ruleNames (%s) must be a list or a tuple, not: %s"%
-                            (repr(ruleNames), type(ruleNames)))
-        activeKeys = list(self.activeRules.keys())
-        for x in activeKeys:
+        debug_print(f'activateSet: {ruleNames}, window: {window}')
+        rulenames = set(ruleNames) # so we can pop items
 
-            curWindow = self.activeRules[x]
-            if x in rulenames:
-                if curWindow == window:
-                    rulenames.remove(x)
-                else:
-                    self.deactivate(x)
-            else:
-                # if same window, deactivate, otherwise just leave...
-                # deactivate direct to gramObj here:
-                if window == curWindow:
-                    if debugLoad:
-                        print('activateSet, do not want %s, so deactivate, same window: %s'% (x, curWindow))
-                    self.deactivate(x)
-                elif window == 0:
-                    if debugLoad:
-                        print('activateSet, deactivate rule %s (global), previous window: %s'% (x, curWindow))
-                    self.deactivate(x)
-                elif curWindow == 0:
-                    if debugLoad:
-                        print('activateSet, deactivate global rule %s, new window window: %s'% (x, window))
-                    self.deactivate(x)
-                else:
-                    if debugLoad:
-                        print('activateSet, deactivate not needed, different window: rule %s, previous window: %s new window: %s'% (x, curWindow, window))             
+        self.deactivateAll()
+          
         for x in rulenames:
             self.activate(x, window)
         if not exclusive is None:
             self.setExclusive(exclusive)
 
     def deactivateSet(self, ruleNames, noError=0):
-        if not type(ruleNames ) in (list, tuple):
-            raise TypeError("deactivateSet, ruleNames (%s) must be a list or a tuple, not: %s"%
-                            (repr(ruleNames), type(ruleNames)))
-        for x in ruleNames:
-            self.deactivate(x, noError=noError)
+        debug_print(f'deactivateSet: {ruleNames}')
+        rule_names = set(ruleNames)
+        active_names = set(self.activeNames.keys())
+        if active_names:
+            a = active_names.pop()
+            active_names.add(a)
+            window = self.activeNames[a]
+        else:
+            window = None
+        remain_names = active_names - rule_names
+        self.deactivateAll()
+        for x in remain_names:
+            self.activate(x, window)
 
     def activateAll(self, window=0, exclusive=None, exceptlist=None):
         """activate all rules
         
         as experiment first deactivate all rules before doing so
         """
+        print(f'activateAll, validRules: {self.validRules}')
         allRules = copy.copy(self.validRules)
         if exceptlist:
             for x in exceptlist:
                 allRules.remove(x)
-            # if debugLoad: print('activateAll except %s'% exceptlist)
+            # debug_print( print('activateAll except %s'% exceptlist)
             
         self.activateSet(allRules, window=window, exclusive=exclusive)
         if not exclusive is None:
@@ -831,7 +809,9 @@ to save space.)
         activeRules = list(self.activeRules.keys())
         
         for x in activeRules:
-            self.deactivate(x)
+            debug_print(f'deactivate rule {x}')
+            self.gramObj.deactivate(x)
+        self.activeRules = {}
 
     def deactivateAll(self):
         """deactivate all rules and reset explicit the exclusive state of the grammar
@@ -1318,3 +1298,9 @@ def convertResults(fullResults):
             _dict[x[1]] = [x[0]]
     return _dict
 
+def debug_print(msg):
+    """depends on variable debugLoad at top of module
+    """
+    if debugLoad:
+        print(msg)
+        
