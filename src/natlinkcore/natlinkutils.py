@@ -33,7 +33,7 @@ Python Macro Language for Dragon NaturallySpeaking
 
 
 """
-#pylint:disable=C0116, C0209, C0302, R0902, W0702, E1101, W0703
+#pylint:disable=C0116, C0209, C0302, R0902, W0702, E1101, W0703, R1735, W0719, 
 #pylint:disable=W0237    # inconsistent calling sequences for different classes 
 
 import os
@@ -47,7 +47,7 @@ import natlink
 from natlinkcore import gramparser
 
 # was set in config program, and passed via natlinkstatus.py but now removed...
-debugLoad = 0
+debugLoad = 1
 
 # The following constants define the common windows message codes which
 # are passed to playEvents.
@@ -364,8 +364,7 @@ class GramClassBase:
             func = getattr(self, funcName)
         except AttributeError:
             return None
-        else:
-            return func(*argList)
+        return func(*argList)
         
 
 #---------------------------------------------------------------------------
@@ -715,18 +714,20 @@ to save space.)
 
     def activate(self, ruleName, window=0, exclusive=None, noError=0):
         #pylint:disable=W0221, W0613
-        # TODO: noError is not used
         debug_print(f'GrammarBase, activate ruleName "{ruleName}" in window {window}, exclusive: {exclusive}')
         if ruleName not in self.validRules:
-            raise ValueError( "rule %s was not exported in the grammar" % ruleName)
+            if not noError:
+                print(f'rule "{ruleName}" was not exported in the grammar')
+            return
         if ruleName in self.activeRules:
             if window == self.activeRules[ruleName]:
-                debug_print('rule %s already active for window %s'% (ruleName, window))
+                if not noError:
+                    print(f'rule "{ruleName}" already active for window {window}')
                 return
-            debug_print('change rule %s from window %s to window %s'% (ruleName, self.activeRules[ruleName], window))
+            debug_print(f'change rule "{ruleName}" from window {self.activeRules[ruleName]} to {window}')
             self.gramObj.deactivate(ruleName)
         # debug_print( print('activate rule %s (window: %s)'% (ruleName, window))
-        self.gramObj.activate(ruleName,window)
+        self.gramObj.activate(ruleName, window)
         self.activeRules[ruleName] = window
         if not exclusive is None:
             debug_print(f'set exclusive mode to {exclusive} for rule "{ruleName}"')
@@ -753,6 +754,7 @@ to save space.)
             for rule, window in active_rules.items():
                 self.activate(rule, window)
             return
+        # previous behaviour (as long as dpi16trick is not changed in call)
         self.gramObj.deactivate(ruleName)
         del self.activeRules[ruleName]
 
@@ -775,13 +777,15 @@ to save space.)
     def deactivateSet(self, ruleNames, noError=0):
         debug_print(f'deactivateSet: {ruleNames}')
         rule_names = set(ruleNames)
-        active_names = set(self.activeNames.keys())
+        active_names = set(self.activeRules.keys())
         if active_names:
             a = active_names.pop()
             active_names.add(a)
-            window = self.activeNames[a]
+            window = self.activeRules[a]
         else:
-            window = None
+            if not noError:
+                print(f'deactiveSet "{ruleNames}", no rules are active in this grammar')
+            return
         remain_names = active_names - rule_names
         self.deactivateAll()
         for x in remain_names:
