@@ -33,7 +33,7 @@ Python Macro Language for Dragon NaturallySpeaking
 
 
 """
-#pylint:disable=C0116, C0209, C0302, R0902, W0702, E1101, W0703, R1735, W0719, 
+#pylint:disable=C0116, C0209, C0302, R0902, W0702, E1101, W0703, R1735
 #pylint:disable=W0237    # inconsistent calling sequences for different classes 
 
 import os
@@ -47,7 +47,7 @@ import natlink
 from natlinkcore import gramparser
 
 # was set in config program, and passed via natlinkstatus.py but now removed...
-debugLoad = 1
+debugLoad = 0
 
 # The following constants define the common windows message codes which
 # are passed to playEvents.
@@ -716,12 +716,13 @@ to save space.)
         #pylint:disable=W0221, W0613
         debug_print(f'GrammarBase, activate ruleName "{ruleName}" in window {window}, exclusive: {exclusive}')
         if ruleName not in self.validRules:
-            if not noError:
+            if not noError or debug_print:
                 print(f'rule "{ruleName}" was not exported in the grammar')
             return
+        
         if ruleName in self.activeRules:
             if window == self.activeRules[ruleName]:
-                if not noError:
+                if not noError or debug_print:
                     print(f'rule "{ruleName}" already active for window {window}')
                 return
             debug_print(f'change rule "{ruleName}" from window {self.activeRules[ruleName]} to {window}')
@@ -741,9 +742,9 @@ to save space.)
                 return
             raise ValueError(f'rule "{ruleName}" was not exported in the grammar')
         if ruleName not in self.activeRules:
-            if noError:
-                return
-            raise ValueError( "rule %s is not active (activeRules: %s)"% (ruleName, self.activeRules))
+            if not noError:
+                print(f'rule "{ruleName}" is not active, no need to deactivate (activeRules: {set(self.activeRules.keys())})')
+            return
         debug_print('deactivate rule %s'% ruleName)
         if dpi16trick:
             # now deactivate  all and activate other rules again
@@ -765,30 +766,38 @@ to save space.)
         """
         #pylint:disable=R0912
         debug_print(f'activateSet: {ruleNames}, window: {window}')
-        rulenames = set(ruleNames) # so we can pop items
+        active_rules = set(self.activeRules.keys())
+        if set(ruleNames) == active_rules:
+            for rule in ruleNames:
+                if not (rule in self.activeRules and self.activeRules[rule] == window):
+                    break
+            else:
+                debug_print(f'activateSet {ruleNames} not needed, set is already active for window: {window}')
+                return
 
         self.deactivateAll()
           
-        for x in rulenames:
+        for x in ruleNames:
             self.activate(x, window)
         if not exclusive is None:
             self.setExclusive(exclusive)
 
-    def deactivateSet(self, ruleNames, noError=0):
+    def deactivateSet(self, ruleNames):
         debug_print(f'deactivateSet: {ruleNames}')
         rule_names = set(ruleNames)
-        active_names = set(self.activeRules.keys())
-        if active_names:
-            a = active_names.pop()
-            active_names.add(a)
-            window = self.activeRules[a]
+        prev_rules = copy.copy(self.activeRules)
+        if prev_rules:
+            active_names = set(prev_rules.keys())
         else:
-            if not noError:
-                print(f'deactiveSet "{ruleNames}", no rules are active in this grammar')
+            debug_print(f'deactiveSet "{ruleNames}", no rules are active in this grammar')
+            return
+        if not active_names.intersection(ruleNames):
+            debug_print(f'deactiveSet, ruleNames {ruleNames} are not active in this grammar: {active_names}')
             return
         remain_names = active_names - rule_names
         self.deactivateAll()
         for x in remain_names:
+            window = prev_rules[x]
             self.activate(x, window)
 
     def activateAll(self, window=0, exclusive=None, exceptlist=None):
@@ -796,14 +805,15 @@ to save space.)
         
         as experiment first deactivate all rules before doing so
         """
-        print(f'activateAll, validRules: {self.validRules}')
-        allRules = copy.copy(self.validRules)
+        all_rules = set(self.validRules)
         if exceptlist:
             for x in exceptlist:
-                allRules.remove(x)
-            # debug_print( print('activateAll except %s'% exceptlist)
+                if x in all_rules:
+                    print(f'discard from allRules: {x}')
+                    all_rules.discard(x)
+            print(f'activateAll except {exceptlist}: {all_rules}')
             
-        self.activateSet(allRules, window=window, exclusive=exclusive)
+        self.activateSet(all_rules, window=window, exclusive=exclusive)
         if not exclusive is None:
             self.setExclusive(exclusive)
 
