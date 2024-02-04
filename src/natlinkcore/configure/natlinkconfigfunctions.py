@@ -8,7 +8,7 @@
 #   Quintijn Hoogenboom, January 2008 (...), August 2022
 #
 
-#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912, C0415, W0611
+#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912
 """With the functions in this module Natlink can be configured.
 
 These functions are called in different ways:
@@ -57,13 +57,6 @@ class NatlinkConfig:
         """
         config_path, fallback_path = loader.config_locations()
         
-        if isfile(config_path):
-            with open(config_path, 'r', encoding='utf-8') as fp:
-                text = fp.read().strip()
-            if not text:
-                print(f'empty natlink.ini file: "{config_path}",\n\tremove, and go back to default')
-                os.remove(config_path)
-        
         if not isfile(config_path):
             config_dir = Path(config_path).parent
             if not config_dir.is_dir():
@@ -75,43 +68,7 @@ class NatlinkConfig:
         """check config_file for possibly unwanted settings
         """
         self.config_remove(section='directories', option='default_config')
-        keys = self.config_get('directories')
-        
-        ## check vocola:
-        if 'vocoladirectory' in keys and 'vocolagrammarsdirectory' in keys:
-            try:
-                import vocola2
-            except ImportError:
-                # vocola has been gone, remove:
-                self.disable_vocola()
-                self.config_remove('vocola', 'vocolauserdirectory')
-        else:
-            ## just to be sure:
-            self.config_remove('vocola', 'vocolauserdirectory')
-            self.config_remove('directories', 'vocoladirectory')
-            self.config_remove('directories', 'vocolagrammarsdirectory')
 
-        if 'unimacrodirectory' in keys and 'unimacrogrammarsdirectory' in keys:
-            try:
-                import unimacro
-            except ImportError:
-                # unimacro has been gone, remove:
-                self.disable_unimacro()
-                self.config_remove('unimacro', 'unimacrouserdirectory')
-        else:
-            ## just to be sure:
-            self.config_remove('unimacro', 'unimacrouserdirectory')
-            self.config_remove('directories', 'unimacrodirectory')
-            self.config_remove('directories', 'unimacrogrammarsdirectory')
-        
-
-        if 'dragonflyuserdirectory' in keys:
-            try:
-                import dragonfly
-            except ImportError:
-                # dragonfly has been gone, remove:
-                self.disable_dragonfly()
-                
     def getConfig(self):
         """return the config instance
         """
@@ -122,16 +79,14 @@ class NatlinkConfig:
         self.config_encoding = rwfile.encoding
         return _config
 
-    def config_get(self, section, option=None):
-        """get the section keys or a setting from the natlink ini file
+    def config_get(self, section, option):
+        """set a setting into the natlink ini file
 
         """
-        if option:
-            try:
-                return self.Config.get(section, option)
-            except (configparser.NoSectionError, configparser.NoOptionError):
-                return None
-        return self.Config.options(section)
+        try:
+            return self.Config.get(section, option)
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            return None
  
     def config_set(self, section, option, value):
         """set a setting into an inifile (possibly other than natlink.ini)
@@ -152,7 +107,7 @@ class NatlinkConfig:
         value = str(value)
         self.Config.set(section, option, str(value))
         self.config_write()
-        self.status.__init__()
+        self.status = natlinkstatus.NatlinkStatus()
         return True
     
     def config_write(self):
@@ -180,7 +135,7 @@ class NatlinkConfig:
             if section not in ['directories', 'settings', 'userenglish-directories', 'userspanish-directories']:
                 self.Config.remove_section(section)
         self.config_write()
-        self.status.__init__()
+        self.status = natlinkstatus.NatlinkStatus()
 
     # def setUserDirectory(self, arg):
     #     self.setDirectory('UserDirectory', arg)
@@ -200,7 +155,7 @@ class NatlinkConfig:
                 print('No valid directory specified')
                 return
 
-        dir_path = dir_path.strip().replace('/', '\\')
+        dir_path = dir_path.strip()
         directory = createIfNotThere(dir_path, level_up=1)
         if not (directory and Path(directory).is_dir()):
             if directory is False:
@@ -284,25 +239,31 @@ class NatlinkConfig:
 
     def setLogging(self, logginglevel):
         """Sets the natlink logging output
-        logginglevel (str) -- CRITICAL, FATAL, ERROR, WARNING, INFO, DEBUG
-        
-        This one is used in the natlinkconfig_gui
+        logginglevel (str) -- Critical, Fatal, Error, Warning, Info, Debug
         """
-        key = 'log_level'
-        section = 'settings'        
-        value = logginglevel.upper()
-        old_value = self.config_get(section, key)
+        # Config.py handles log level str upper formatting from ini
+        value = logginglevel.title()
+        old_value = self.config_get('settings', "log_level")
         if old_value == value:
             print(f'setLogging, setting is already "{old_value}"')
             return True
-        if value in ["CRITICAL", "FATAL", "ERROR", "WARNING", "INFO", "DEBUG"]:
+        if value in ["Critical", "Fatal", "Error", "Warning", "Info", "Debug"]:
             print(f'setLogging, setting logging to: "{value}"')
-            self.config_set(section, key, value)
+            self.config_set('settings', "log_level", value)
             if old_value is not None:
-                self.config_set('previous settings', key, old_value)
+                self.config_set('previous settings', "log_level", old_value)
             return True
-        print(f'Invalid value for setLogging: "{value}"')
         return False
+
+    def disableDebugOutput(self):
+        """disables the Natlink debug output
+        """
+        key = 'log_level'
+        # section = 'settings'
+        old_value = self.config_get('previous settings', key)
+        if old_value:
+            self.config_set('settings', key, old_value)
+        self.config_set('settings', key, 'INFO')
 
     def enable_unimacro(self, arg):
         unimacro_user_dir = self.status.getUnimacroUserDirectory()
@@ -313,7 +274,7 @@ class NatlinkConfig:
 
         uni_dir = self.status.getUnimacroDirectory()
         if uni_dir:
-            print('==== install and/or update unimacro====\n')            
+            print('==== instal and/or update unimacro====\n')            
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "unimacro"])
             except subprocess.CalledProcessError:
@@ -359,7 +320,7 @@ class NatlinkConfig:
 
         voc_dir = self.status.getVocolaDirectory()
         if voc_dir:
-            print('==== install and/or update vocola2====\n')
+            print('==== instal and/or update vocola2====\n')
             try:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "vocola2"])
             except subprocess.CalledProcessError:
@@ -393,41 +354,6 @@ class NatlinkConfig:
         self.config_remove('directories', 'vocolagrammarsdirectory')   # could still be there
         self.config_remove('directories', 'vocola')
         self.config_remove('directories', 'vocoladirectory')   #could still be there...
-
-    def enable_dragonfly(self, arg):
-        """enable dragonfly, by setting arg (prompting if False), and other settings
-        """
-        key = 'dragonflyuserdirectory'
-        dragonfly_user_dir = self.status.getDragonflyUserDirectory()
-        if dragonfly_user_dir and isdir(dragonfly_user_dir):
-            print(f'dragonflyUserDirectory is already defined: "{dragonfly_user_dir}"\n\tto change, first clear (option "D") and then set again')
-            print('\nWhen you want to upgrade dragonfly (dragonfly2), also first clear ("D"), then choose this option ("d") again.\n')
-            return
-
-        dfl_prev_dir = self.config_get('previous settings', key)
-        if dfl_prev_dir:
-
-            print('==== install and/or update dragonfly2====\n')
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "dragonfly2"])
-            except subprocess.CalledProcessError:
-                print('====\ncould not pip install --upgrade dragonfly2\n====\n')
-                return
-        else:
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "dragonfly2"])
-            except subprocess.CalledProcessError:
-                print('====\ncould not pip install dragonfly2\n====\n')
-                return
-        self.status.refresh()   # refresh status
-
-        self.setDirectory(key, arg)
-
-    def disable_dragonfly(self, arg=None):
-        """disable dragonfly, arg not needed/used
-        """
-        key = 'dragonflyuserdirectory'
-        self.clearDirectory(key)
 
     def copyUnimacroIncludeFile(self):
         """copy Unimacro include file into Vocola user directory
@@ -525,20 +451,20 @@ class NatlinkConfig:
                 changed = 0
                 correct = 0
                 Output = []
-                rwfile = readwritefile.ReadWriteFile()
-                lines = rwfile.readAnything(F).split('\n')
-                for line in lines:
+                for line in open(F, 'r'):
                     if line.strip() == includeLine.strip():
                         correct = 1
-                    if line.strip() in oldIncludeLines:
-                        changed = 1
-                        continue
-                    Output.append(line)
+                    for oldLine in oldIncludeLines:
+                        if line.strip() == oldLine:
+                            changed = 1
+                            break
+                    else:
+                        Output.append(line)
                 if changed or not correct:
                     # changes were made:
                     if not correct:
                         Output.insert(0, includeLine)
-                    rwfile.writeAnything(F, Output)
+                    open(F, 'w').write(''.join(Output))
                     nFiles += 1
             elif len(f) == 3 and os.path.isdir(F):
                 # subdirectory, recursive
@@ -584,10 +510,7 @@ class NatlinkConfig:
             if f.endswith(".vcl"):
                 changed = 0
                 Output = []
-                rwfile = readwritefile.ReadWriteFile()
-                lines = rwfile.readAnything(F).split('\n')
-
-                for line in lines:
+                for line in open(F, 'r'):
                     for oldLine in oldIncludeLines:
                         if line.strip() == oldLine:
                             changed = 1
@@ -596,10 +519,11 @@ class NatlinkConfig:
                         Output.append(line)
                 if changed:
                     # had break, so changes were made:
-                    rwfile.writeAnything(F, Output)
+                    open(F, 'w').write(''.join(Output))
                     nFiles += 1
             elif len(f) == 3 and os.path.isdir(F):
                 self.removeUnimacroVchLineInVocolaFiles(F)
+        self.disableVocolaTakesUnimacroActions()
         mess = f'removed include lines from {nFiles} files in {toFolder}'
         print(mess)
 
@@ -749,3 +673,4 @@ if __name__ == "__main__":
     _home_path = _nc.home_path
     _natlinkconfig_path = _nc.natlinkconfig_path
     print(f'natlinkconfig_path: {_natlinkconfig_path}')
+    pass
