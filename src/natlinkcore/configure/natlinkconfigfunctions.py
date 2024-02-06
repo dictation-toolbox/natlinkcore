@@ -8,7 +8,7 @@
 #   Quintijn Hoogenboom, January 2008 (...), August 2022
 #
 
-#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912
+#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912, R1732, W1514, W0107
 """With the functions in this module Natlink can be configured.
 
 These functions are called in different ways:
@@ -306,6 +306,44 @@ class NatlinkConfig:
         self.config_remove('directories', 'unimacrogrammarsdirectory')   # could still be there...
         self.config_remove('directories', 'unimacro')
         self.config_remove('directories', 'unimacrodirectory')  # could still be there...
+        self.status.refresh()
+
+    ### Dragonfly:
+
+    def enable_dragonfly(self, arg):
+        dragonfly_user_dir = self.status.getDragonflyUserDirectory()
+        if dragonfly_user_dir and isdir(dragonfly_user_dir):
+            print(f'DragonflyUserDirectory is already defined: "{dragonfly_user_dir}"\n\tto change, first clear (option "D") and then set again')
+            print('\nWhen you want to upgrade Dragonfly, also first clear ("D"), then choose this option ("d") again.\n')
+            return
+
+        df_dir = self.status.getDragonflyDirectory()
+        if df_dir:
+            print('==== instal and/or update dragonfly2====\n')            
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "dragonfly2"])
+            except subprocess.CalledProcessError:
+                print('====\ncould not pip install --upgrade dragonfly2\n====\n')
+                return
+        else:
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "dragonfly2"])
+            except subprocess.CalledProcessError:
+                print('====\ncould not pip install dragonfly2\n====\n')
+                return
+        self.status.refresh()   # refresh status
+        df_dir = self.status.getDragonflyDirectory()
+
+        self.setDirectory('DragonflyUserDirectory', arg)
+        dragonfly_user_dir = self.config_get('dragonfly', 'dragonflyuserdirectory')
+        if not dragonfly_user_dir:
+            return
+
+
+    def disable_dragonfly(self, arg=None):
+        """disable dragonfly, do not expect arg
+        """
+        self.config_remove('directories', 'dragonflyuserdirectory')  # could still be there...
         self.status.refresh()
 
 

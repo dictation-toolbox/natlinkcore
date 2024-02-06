@@ -138,7 +138,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
     """
     known_directory_options = ['userdirectory', 'dragonflyuserdirectory',
-                               'unimacrodirectory', 
+                               'unimacrodirectory', 'unimacrogrammarsdirectory',
                                'vocoladirectory', 'vocolagrammarsdirectory']
 
     def __init__(self):
@@ -165,6 +165,9 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         ## Dragonfly
         self.DragonflyDirectory = None
         self.DragonflyUserDirectory = None
+        ## dtactions
+        self.DtactionsDirectory = None
+
         ## AutoHotkey:
         self.AhkUserDir = None
         self.AhkExeDir = None
@@ -500,12 +503,12 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         if self.DragonflyDirectory is not None:
             return self.DragonflyDirectory
         try:
-            import dragonfly
+            import dragonfly2
         except ImportError:
             self.DragonflyDirectory = ""
             return ""
     
-        self.DragonflyDirectory = str(Path(dragonfly.__file__).parent)
+        self.DragonflyDirectory = str(Path(dragonfly2.__file__).parent)
         return self.DragonflyDirectory
         
 
@@ -597,6 +600,20 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         self.VocolaGrammarsDirectory = voc_grammars_dir
         return voc_grammars_dir
     
+    def getDtactionsDirectory(self):
+        """dtactions directory should be found with an import (like getUnimacroDirectory)
+        """
+
+        if self.DtactionsDirectory is not None:
+            return self.DtactionsDirectory
+        try:
+            import dtactions
+        except ImportError:
+            self.DtactionsDirectory = ""
+            return ""
+        self.DtactionsDirectory = dtactions.__path__[-1]
+        return self.DtactionsDirectory
+
     def getAhkUserDir(self):
         return self.getAhkUserDirFromIni()
 
@@ -733,6 +750,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
                     'UserDirectory',
                     'DragonflyDirectory', 'DragonflyUserDirectory',
                     'ExtraGrammarDirectories',
+                    'DtactionsDirectory',
                     'InstallVersion',
                     # 'IncludeUnimacroInPythonPath',
                     'AhkExeDir', 'AhkUserDir']:
@@ -803,7 +821,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
                 self.appendAndRemove(L, D, key)
         else:
             self.appendAndRemove(L, D, 'unimacroIsEnabled', "---Unimacro is disabled")
-            for key in ('UnimacroUserDirectory', 'UnimacroDirectory'):
+            for key in ('UnimacroUserDirectory', 'UnimacroGrammarsDirectory', 'UnimacroDirectory'):
                 del D[key]
         ##  UserDirectory:
         if D['userIsEnabled']:

@@ -1,4 +1,4 @@
-#pylint:disable=W0621, W0703
+#pylint:disable=W0621, W0703, W0603
 import sys
 import platform
 
@@ -116,7 +116,7 @@ autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Se
 try:
     while True:
         event, values = window.read()
-        if (event == '-WINDOW CLOSE ATTEMPTED-' or event == 'Exit') and not Thread_Running:
+        if (event in ['-WINDOW CLOSE ATTEMPTED-', 'Exit']) and not Thread_Running:
             break
         # Hidden Columns logic
         # TODO: if project is enabled, update the project state to enabled.
@@ -140,7 +140,7 @@ try:
             Thread_Running = not Thread_Running
 
         elif Thread_Running:
-            choice = sg.popup(f'Please Wait: Pip install is in progress', keep_on_top=True, custom_text=('Wait','Force Close'))
+            choice = sg.popup('Please Wait: Pip install is in progress', keep_on_top=True, custom_text=('Wait','Force Close'))
             if choice == 'Force Close':
                 break
 
