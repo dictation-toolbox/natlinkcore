@@ -223,6 +223,7 @@ def formatPassword(wordList):
             nextRepeat = countDict[w]
             outList.append(str(nextRepeat))
         else:
+            w = w.split('\\')[0]
             outList.append(w.capitalize())
     return ''.join(outList)
         
