@@ -6,7 +6,7 @@ import PySimpleGUI as sg
 import logging
 from platformdirs import  user_log_dir
 from pathlib import Path
-appname="natlinkconfig_gui"
+appname="natlink"
 logdir =  Path(user_log_dir(appname=appname,ensure_exists=True))
 logfilename=logdir/"config_gui_log.txt"
 file_handler = logging.FileHandler(logfilename)
