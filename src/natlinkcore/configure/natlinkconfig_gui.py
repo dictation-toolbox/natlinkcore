@@ -3,6 +3,10 @@ import sys
 import platform
 
 import PySimpleGUI as sg
+import logging
+
+
+
 # https://www.pysimplegui.org/en/latest/
 from natlinkcore.configure.natlinkconfigfunctions import NatlinkConfig
 from natlinkcore import natlinkstatus
@@ -47,6 +51,8 @@ extras_section = [[sg.T('Natlink Loglevel:'),  sg.Combo(default_value=Status.get
                   [sg.T('Natlink GUI Output')],
                   [sg.Output(size=(40,10), echo_stdout_stderr=True, expand_x=True, key='-OUTPUT-')]]
 
+
+
 #### Main UI Layout ####
 layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.major}, Build: {osVersion.build}'), sg.T(f'Python: {pyVersion}'), sg.T(f'Dragon Version: {Status.getDNSVersion()}')],
           #### Projects Checkbox ####
@@ -60,6 +66,9 @@ layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.majo
           [sg.Button('Exit'), sg.B('Open Natlink Config File', key='Open_Config', enable_events=True, auto_size_button=True)]]
 
 window = sg.Window('Natlink configuration GUI', layout, enable_close_attempted_event=True)
+
+ 
+
 
 def ThreadIsRunning():
     global Thread_Running
@@ -114,6 +123,13 @@ autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Se
 
 #### Event Loop ####
 try:
+    #we want to set the logger up just before we call window.read()
+    handler = logging.StreamHandler(sys.stdout)
+    root = logging.getLogger()
+
+    handler.setLevel(logging.DEBUG)
+    root.addHandler(handler)
+    root.setLevel(logging.DEBUG) 
     while True:
         event, values = window.read()
         if (event in ['-WINDOW CLOSE ATTEMPTED-', 'Exit']) and not Thread_Running:

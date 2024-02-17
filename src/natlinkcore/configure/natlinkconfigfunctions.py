@@ -30,7 +30,23 @@ from natlinkcore import loader
 from natlinkcore import readwritefile
 from natlinkcore import tkinter_dialogs
 
+import logging
+
 isfile, isdir, join = os.path.isfile, os.path.isdir, os.path.join
+
+
+def do_pip(*args):
+    """
+    Run a pip command with args. 
+    Diagnostic logging.
+    """
+ 
+
+    command = [sys.executable,"-m", "pip"] + list(args)
+    logging.info(f"command:  {command} ")
+    completed_process=subprocess.run(command,capture_output=True)
+    logging.debug(f"completed_process:  {completed_process}")
+    completed_process.check_returncode
 
 class NatlinkConfig:
     """performs the configuration tasks of Natlink
@@ -276,13 +292,13 @@ class NatlinkConfig:
         if uni_dir:
             print('==== instal and/or update unimacro====\n')            
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "unimacro"])
+                do_pip("install", "--upgrade", "unimacro")
             except subprocess.CalledProcessError:
                 print('====\ncould not pip install --upgrade unimacro\n====\n')
                 return
         else:
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "unimacro"])
+                do_pip("install", "unimacro")
             except subprocess.CalledProcessError:
                 print('====\ncould not pip install unimacro\n====\n')
                 return
@@ -321,13 +337,13 @@ class NatlinkConfig:
         if df_dir:
             print('==== instal and/or update dragonfly2====\n')            
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "dragonfly2"])
+                do_pip( "install", "--upgrade", "dragonfly2")
             except subprocess.CalledProcessError:
                 print('====\ncould not pip install --upgrade dragonfly2\n====\n')
                 return
         else:
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "dragonfly2"])
+                do_pip( "install", "dragonfly2")
             except subprocess.CalledProcessError:
                 print('====\ncould not pip install dragonfly2\n====\n')
                 return
@@ -360,13 +376,13 @@ class NatlinkConfig:
         if voc_dir:
             print('==== instal and/or update vocola2====\n')
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "vocola2"])
+                do_pip("install", "--upgrade", "vocola2")
             except subprocess.CalledProcessError:
                 print('====\ncould not pip install --upgrade vocola2\n====\n')
                 return
         else:
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "vocola2"])
+                do_pip("install", "vocola2")
             except subprocess.CalledProcessError:
                 print('====\ncould not pip install vocola2\n====\n')
                 return

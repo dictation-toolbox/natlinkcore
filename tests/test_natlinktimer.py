@@ -144,36 +144,36 @@ TestGrammar.__test__ = False
         
     
 def testStopAtMicOff():
-    try:
-        natlink.natConnect()
-        testGram = TestGrammar(name="stop_at_mic_off")
-        testGram.resetExperiment()
-        testGram.interval = 100  # all milliseconds
-        testGram.sleepTime = 20
-        testGram.MaxHit = 6
-        testGram.toggleMicAt = 3
-        assert natlinktimer.getNatlinktimerStatus() in (0, None) 
-        natlinktimer.setTimerCallback(testGram.doTimerClassic, interval=testGram.interval, callAtMicOff=testGram.cancelMode, debug=debug)
-        ## 1 timer active:
-        for _ in range(5):
-            if testGram.toggleMicAt and testGram.Hit >= testGram.toggleMicAt:
-                break
-            if testGram.Hit >= testGram.MaxHit:
-                break
-            wait(500)   # 0.5 second
-            if debug:
-                print(f'waited 0.1 second for timer to finish testGram, Hit: {testGram.Hit} ({testGram.MaxHit})')
-        else:
-            raise TestError(f'not enough time to finish the testing procedure (came to {testGram.Hit} of {testGram.MaxHit})')
-        print(f'testGram.results: {testGram.results}')
-        assert len(testGram.results) == testGram.toggleMicAt
-        assert natlinktimer.getNatlinktimerStatus() == 0    ## natlinktimer is NOT destroyed after last timer is gone. 
-        assert testGram.startCancelMode is True
-        assert testGram.endCancelMode is True
+    
+    with natlink.natConnect():
+        try:
+            testGram = TestGrammar(name="stop_at_mic_off")
+            testGram.resetExperiment()
+            testGram.interval = 100  # all milliseconds
+            testGram.sleepTime = 20
+            testGram.MaxHit = 6
+            testGram.toggleMicAt = 3
+            assert natlinktimer.getNatlinktimerStatus() in (0, None) 
+            natlinktimer.setTimerCallback(testGram.doTimerClassic, interval=testGram.interval, callAtMicOff=testGram.cancelMode, debug=debug)
+            ## 1 timer active:
+            for _ in range(5):
+                if testGram.toggleMicAt and testGram.Hit >= testGram.toggleMicAt:
+                    break
+                if testGram.Hit >= testGram.MaxHit:
+                    break
+                wait(500)   # 0.5 second
+                if debug:
+                    print(f'waited 0.1 second for timer to finish testGram, Hit: {testGram.Hit} ({testGram.MaxHit})')
+            else:
+                raise TestError(f'not enough time to finish the testing procedure (came to {testGram.Hit} of {testGram.MaxHit})')
+            print(f'testGram.results: {testGram.results}')
+            assert len(testGram.results) == testGram.toggleMicAt
+            assert natlinktimer.getNatlinktimerStatus() == 0    ## natlinktimer is NOT destroyed after last timer is gone. 
+            assert testGram.startCancelMode is True
+            assert testGram.endCancelMode is True
 
-    finally:
-        natlinktimer.stopTimerCallback()
-        natlink.natDisconnect()
+        finally:
+            natlinktimer.stopTimerCallback()
         
 
 # def testStopAtMicOff():
