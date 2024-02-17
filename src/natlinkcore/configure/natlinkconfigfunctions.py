@@ -38,7 +38,7 @@ isfile, isdir, join = os.path.isfile, os.path.isdir, os.path.join
 def do_pip(*args):
     """
     Run a pip command with args. 
-    Diagnostic logging.
+    Diagnostic logging.3
     """
  
 
