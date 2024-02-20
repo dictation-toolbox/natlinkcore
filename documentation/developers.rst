@@ -79,6 +79,30 @@ Developers can debug their python natlink grammars or any
 other Python code running in natlink using a debugger supporting 
 `Debug Adapter Protocol: https://microsoft.github.io/debug-adapter-protocol/`_ (DAP).  
 
+Visual Studio Code TIPS 
+------------------
+Create a workspace for all the projects you might want to debug in your session.
+Consider making a folder like "dt" and git cloning all the projects you locally develop underneath it.
+
+Install each python package as local editable installs 
+https://pip.pypa.io/en/stable/topics/local-project-installs/ with pip.
+
+For example, to install dragonfly and unimacro, and you are in the terminal at the "dt" root mentioned above
+to install dragonfly, and unimacro (along wit the dependencies for developing and testing) from a dt directory with dragonfly: 
+```pip install -e ./dragonfly
+   pip install -e ./unimacro[dev,test]
+```
+or to install a package like dragonfly or unimacro from the git clone folder:
+pip install -e .
+
+
+For example, most developers will want natlink, natlinkcore, and dtactions in their workspace.
+Add in dragonfly, unimacro etc. as appropriate.
+
+It is also a good idea to add your .natlink folder into your workspace.  Then you can always quickly find your natlink.ini.
+
+
+
 To enable DAP, add or edit your  natlink.ini to include this section.  Change the port if you need to.
 ::
    [settings.debugadapterprotocol]
@@ -90,7 +114,63 @@ To enable DAP, add or edit your  natlink.ini to include this section.  Change th
 You can `check if your favorite debugger supports DAP https://microsoft.github.io/debug-adapter-protocol/implementors/tools/.  Here are instructions for Visual
 Studio Code`_:  
 
-Add this section to launch.json, ensuring the port number matchines natlink.ini, and noting
+Here is the Visual Studio code page on debugging with Python:  https://code.visualstudio.com/docs/python/debugging
+
+Create a launch configuration in one of the projects, where you plan to set a breakpoint, for Python debugger and 
+default type of Remote Attach. 
+
+dap_enabled is usually false.  When DAP is enabled, someone with access to your computer via a LAN or open internet port
+can attach a debugger to your dragon process.  If you are in a LAN environment like a corporation or university, 
+you might look into disallowing access to the dap_port with a firewall, if you are using debugging features on your 
+workstation.
+
+In Natlink.ini, check that dap_enabled=True:
+
+[settings.debugadapterprotocol]
+dap_enabled = True
+dap_port = 7474
+dap_wait_for_debugger_attach_on_startup = False
+
+If you change natlink.ini, restart Dragon.
+
+
+Here is a sample launch.json, which you can copy into one if your Python projects .vscode folder (i.e. unimacro/.vscode).  
+
+
+It is super important the pathMappings are as shown.  If you want to try remote debugging, you can explore pointing
+remoteRoot to the source code on another computer.  You can also explore using SSH for remote debugging https://code.visualstudio.com/docs/remote/ssh.
+If you have any sucess with those, please update this documentation.
+
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Natlink Remote Attach",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 7474
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "${workspaceFolder}"
+                }
+            ]
+        }
+    ]
+}
+
+
+Add this section to launch.json, ensuring the port number matchines natlink.ini.  Default port is 7474 
+but users can change it.
+
+
+ and noting
 the pathMappings have been commented out:
 ::
         {
