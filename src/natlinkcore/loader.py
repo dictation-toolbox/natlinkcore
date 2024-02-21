@@ -325,31 +325,31 @@ class NatlinkMain(metaclass=Singleton):
                     return
             else:
                 maybe_module = self.loaded_modules.get(mod_path)
-                if force_load or maybe_module is None:
+                # remove force_load here, in favor of below:
+                if maybe_module is None:
                     self.logger.info(f'loading module: {mod_name}')
                     module = self._import_module_from_path(mod_path)
                     self.loaded_modules[mod_path] = module
                     return
-                else:
-                    module = maybe_module
-                    last_modified_time = mod_path.stat().st_mtime
-                    diff = last_modified_time - last_attempt_time  # check for -0.1 instead of 0, a ???
-                                                                   # _pre_load_callback may need this..
-                    if force_load or diff > 0:
-                        if force_load:
-                            self.logger.info(f'reloading module: {mod_name}, force_load: {force_load}')
-                        else:
-                            self.logger.info(f'reloading module: {mod_name}')
-                            
-                        self.unload_module(module)
-                        del module
-                        module = self._import_module_from_path(mod_path)
-                        self.loaded_modules[mod_path] = module
-                        self.logger.debug(f'loaded module: {module.__name__}')
-                        return
+
+                module = maybe_module
+                last_modified_time = mod_path.stat().st_mtime
+                diff = last_modified_time - last_attempt_time  # check for -0.1 instead of 0, a ???
+                                                               # _pre_load_callback may need this..
+                if force_load or diff > 0:
+                    if force_load:
+                        self.logger.info(f'reloading module: {mod_name}, force_load: {force_load}')
                     else:
-                        # self.logger.debug(f'skipping unchanged loaded module: {mod_name}')
-                        return
+                        self.logger.info(f'reloading module: {mod_name}')
+                        
+                    self.unload_module(module)
+                    del module
+                    module = self._import_module_from_path(mod_path)
+                    self.loaded_modules[mod_path] = module
+                    self.logger.debug(f'loaded module: {module.__name__}')
+                    return
+                # self.logger.debug(f'skipping unchanged loaded module: {mod_name}')
+                return
         except Exception:
             self.logger.exception(traceback.format_exc())
             self.logger.debug(f'load_or_reload_module, exception, add to self.bad_modules {mod_path}')

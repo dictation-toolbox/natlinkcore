@@ -8,7 +8,7 @@
 #   Quintijn Hoogenboom, January 2008 (...), August 2022
 #
 
-#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912
+#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912, R1732, W1514, W0107
 """With the functions in this module Natlink can be configured.
 
 These functions are called in different ways:
@@ -20,7 +20,7 @@ import os
 import shutil
 import sys
 import subprocess
-from pprint import pprint
+from pprint import pformat
 from pathlib import Path
 import configparser
 
@@ -30,7 +30,23 @@ from natlinkcore import loader
 from natlinkcore import readwritefile
 from natlinkcore import tkinter_dialogs
 
+import logging
+
 isfile, isdir, join = os.path.isfile, os.path.isdir, os.path.join
+
+
+def do_pip(*args):
+    """
+    Run a pip command with args. 
+    Diagnostic logging.3
+    """
+ 
+
+    command = [sys.executable,"-m", "pip"] + list(args)
+    logging.info(f"command:  {command} ")
+    completed_process=subprocess.run(command,capture_output=True)
+    logging.debug(f"completed_process:  {completed_process}")
+    completed_process.check_returncode()
 
 class NatlinkConfig:
     """performs the configuration tasks of Natlink
@@ -148,7 +164,7 @@ class NatlinkConfig:
         """
         section = section or 'directories'
         if not dir_path:
-            print('==== Please specify the wanted directory in Dialog window ====\n')
+            logging.info('==== Please specify the wanted directory in Dialog window ====\n')
             prev_path = self.config_get('previous settings', option) or self.documents_path
             dir_path = tkinter_dialogs.GetDirFromDialog(title=f'Please choose a "{option}"', initialdir=prev_path)
             if not dir_path:
@@ -161,9 +177,9 @@ class NatlinkConfig:
             if directory is False:
                 directory = config.expand_path(dir_path)
             if dir_path == directory:
-                print(f'Cannot set "{option}", the given path is invalid: "{directory}"')
+                logging.info(f'Cannot set "{option}", the given path is invalid: "{directory}"')
             else:
-                print(f'Cannot set "{option}", the given path is invalid: "{directory}" ("{dir_path}")')
+                logging.info(f'Cannot set "{option}", the given path is invalid: "{directory}" ("{dir_path}")')
             return
         
         nice_dir_path = self.prefix_home(dir_path)
@@ -171,9 +187,9 @@ class NatlinkConfig:
         self.config_set(section, option, nice_dir_path)
         self.config_remove('previous settings', option)
         if section == 'directories':
-            print(f'Set option "{option}" to "{dir_path}"')
+            logging.info(f'Set option "{option}" to "{dir_path}"')
         else:
-            print(f'Set in section "{section}", option "{option}" to "{dir_path}"')
+            logging.info(f'Set in section "{section}", option "{option}" to "{dir_path}"')
         return
         
     def clearDirectory(self, option, section=None):
@@ -182,7 +198,7 @@ class NatlinkConfig:
         section = section or 'directories'
         old_value = self.config_get(section, option)
         if not old_value:
-            print(f'The "{option}" was not set, nothing changed...')
+            logging.info(f'The "{option}" was not set, nothing changed...')
             return
         if isValidDir(old_value):
             self.config_set('previous settings', option, old_value)
@@ -190,7 +206,7 @@ class NatlinkConfig:
             self.config_remove('previous settings', option)
             
         self.config_remove(section, option)
-        print(f'cleared "{option}"')
+        logging.info(f'cleared "{option}"')
  
  
     def prefix_home(self, dir_path):
@@ -210,15 +226,15 @@ class NatlinkConfig:
             prev_path = self.config_get('previous settings', option) or ""
             file_path = tkinter_dialogs.GetFileFromDialog(title=f'Please choose a "{option}"', initialdir=prev_path)
             if not file_path:
-                print('No valid file specified')
+                logging.info('No valid file specified')
                 return
         file_path = file_path.strip()
         if not Path(file_path).is_file():
-            print(f'No valid file specified ("{file_path}")')
+            logging.info(f'No valid file specified ("{file_path}")')
             
         self.config_set(section, option, file_path)
         self.config_remove('previous settings', option)
-        print(f'Set in section "{section}", option "{option}" to "{file_path}"')
+        logging.info(f'Set in section "{section}", option "{option}" to "{file_path}"')
         return
         
     def clearFile(self, option, section):
@@ -226,7 +242,7 @@ class NatlinkConfig:
         """
         old_value = self.config_get(section, option)
         if not old_value:
-            print(f'The "{option}" was not set, nothing changed...')
+            logging.info(f'The "{option}" was not set, nothing changed...')
             return
         if isValidFile(old_value):
             self.config_set('previous settings', option, old_value)
@@ -234,7 +250,7 @@ class NatlinkConfig:
             self.config_remove('previous settings', option)
             
         self.config_remove(section, option)
-        print(f'cleared "{option}"')
+        logging.info(f'cleared "{option}"')
   
 
     def setLogging(self, logginglevel):
@@ -245,10 +261,10 @@ class NatlinkConfig:
         value = logginglevel.title()
         old_value = self.config_get('settings', "log_level")
         if old_value == value:
-            print(f'setLogging, setting is already "{old_value}"')
+            logging.info(f'setLogging, setting is already "{old_value}"')
             return True
         if value in ["Critical", "Fatal", "Error", "Warning", "Info", "Debug"]:
-            print(f'setLogging, setting logging to: "{value}"')
+            logging.info(f'setLogging, setting logging to: "{value}"')
             self.config_set('settings', "log_level", value)
             if old_value is not None:
                 self.config_set('previous settings', "log_level", old_value)
@@ -268,23 +284,23 @@ class NatlinkConfig:
     def enable_unimacro(self, arg):
         unimacro_user_dir = self.status.getUnimacroUserDirectory()
         if unimacro_user_dir and isdir(unimacro_user_dir):
-            print(f'UnimacroUserDirectory is already defined: "{unimacro_user_dir}"\n\tto change, first clear (option "O") and then set again')
-            print('\nWhen you want to upgrade Unimacro, also first clear ("O"), then choose this option ("o") again.\n')
+            logging.info(f'UnimacroUserDirectory is already defined: "{unimacro_user_dir}"\n\tto change, first clear (option "O") and then set again')
+            logging.info('\nWhen you want to upgrade Unimacro, also first clear ("O"), then choose this option ("o") again.\n')
             return
 
         uni_dir = self.status.getUnimacroDirectory()
         if uni_dir:
-            print('==== instal and/or update unimacro====\n')            
+            logging.info('==== instal and/or update unimacro====\n')            
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "unimacro"])
+                do_pip("install", "--upgrade", "unimacro")
             except subprocess.CalledProcessError:
-                print('====\ncould not pip install --upgrade unimacro\n====\n')
+                logging.info('====\ncould not pip install --upgrade unimacro\n====\n')
                 return
         else:
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "unimacro"])
+                do_pip("install", "unimacro")
             except subprocess.CalledProcessError:
-                print('====\ncould not pip install unimacro\n====\n')
+                logging.info('====\ncould not pip install unimacro\n====\n')
                 return
         self.status.refresh()   # refresh status
         uni_dir = self.status.getUnimacroDirectory()
@@ -308,29 +324,67 @@ class NatlinkConfig:
         self.config_remove('directories', 'unimacrodirectory')  # could still be there...
         self.status.refresh()
 
+    ### Dragonfly:
+
+    def enable_dragonfly(self, arg):
+        dragonfly_user_dir = self.status.getDragonflyUserDirectory()
+        if dragonfly_user_dir and isdir(dragonfly_user_dir):
+            logging.info(f'DragonflyUserDirectory is already defined: "{dragonfly_user_dir}"\n\tto change, first clear (option "D") and then set again')
+            logging.info('\nWhen you want to upgrade Dragonfly, also first clear ("D"), then choose this option ("d") again.\n')
+            return
+
+        df_dir = self.status.getDragonflyDirectory()
+        if df_dir:
+            logging.info('==== instal and/or update dragonfly2====\n')            
+            try:
+                do_pip( "install", "--upgrade", "dragonfly2")
+            except subprocess.CalledProcessError:
+                logging.info('====\ncould not pip install --upgrade dragonfly2\n====\n')
+                return
+        else:
+            try:
+                do_pip( "install", "dragonfly2")
+            except subprocess.CalledProcessError:
+                logging.info('====\ncould not pip install dragonfly2\n====\n')
+                return
+        self.status.refresh()   # refresh status
+        df_dir = self.status.getDragonflyDirectory()
+
+        self.setDirectory('DragonflyUserDirectory', arg)
+        dragonfly_user_dir = self.config_get('dragonfly', 'dragonflyuserdirectory')
+        if not dragonfly_user_dir:
+            return
+
+
+    def disable_dragonfly(self, arg=None):
+        """disable dragonfly, do not expect arg
+        """
+        self.config_remove('directories', 'dragonflyuserdirectory')  # could still be there...
+        self.status.refresh()
+
 
     def enable_vocola(self, arg):
         """enable vocola, by setting arg (prompting if False), and other settings
         """
         vocola_user_dir = self.status.getVocolaUserDirectory()
         if vocola_user_dir and isdir(vocola_user_dir):
-            print(f'VocolaUserDirectory is already defined: "{vocola_user_dir}"\n\tto change, first clear (option "V") and then set again')
-            print('\nWhen you want to upgrade Vocola (vocola2), also first clear ("V"), then choose this option ("v") again.\n')
+            logging.info(f'VocolaUserDirectory is already defined: "{vocola_user_dir}"\n\tto change, first clear (option "V") and then set again')
+            logging.info('\nWhen you want to upgrade Vocola (vocola2), also first clear ("V"), then choose this option ("v") again.\n')
             return
 
         voc_dir = self.status.getVocolaDirectory()
         if voc_dir:
-            print('==== instal and/or update vocola2====\n')
+            logging.info('==== instal and/or update vocola2====\n')
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "vocola2"])
+                do_pip("install", "--upgrade", "vocola2")
             except subprocess.CalledProcessError:
-                print('====\ncould not pip install --upgrade vocola2\n====\n')
+                logging.info('====\ncould not pip install --upgrade vocola2\n====\n')
                 return
         else:
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "vocola2"])
+                do_pip("install", "vocola2")
             except subprocess.CalledProcessError:
-                print('====\ncould not pip install vocola2\n====\n')
+                logging.info('====\ncould not pip install vocola2\n====\n')
                 return
         self.status.refresh()   # refresh status
         voc_dir = self.status.getVocolaDirectory()
@@ -366,32 +420,32 @@ class NatlinkConfig:
         toFolder = Path(self.status.getVocolaUserDirectory())
         if not unimacroDir.is_dir():
             mess = f'copyUnimacroIncludeFile: unimacroDir "{str(unimacroDir)}" is not a directory'
-            print(mess)
+            logging.warn(mess)
             return
         fromFile = fromFolder/uscFile
         if not fromFile.is_file():
             mess = f'copyUnimacroIncludeFile: file "{str(fromFile)}" does not exist (is not a valid file)'
-            print(mess)
+            logging.warn(mess)
             return
         if not toFolder.is_dir():
             mess = f'copyUnimacroIncludeFile: vocolaUserDirectory does not exist "{str(toFolder)}" (is not a directory)'
-            print(mess)
+            logging.warn(mess)
             return
         
         toFile = toFolder/uscFile
         if toFolder.is_file():
-            print(f'remove previous "{str(toFile)}"')
+            logging.info(f'remove previous "{str(toFile)}"')
             try:
                 os.remove(toFile)
             except:
                 mess = f'copyUnimacroIncludeFile: Could not remove previous version of "{str(toFile)}"'
-                print(mess)
+                logging.info(mess)
         try:
             shutil.copyfile(fromFile, toFile)
-            print(f'copied "{uscFile}" from "{str(fromFolder)}" to "{str(toFolder)}"')
+            logging.info(f'copied "{uscFile}" from "{str(fromFolder)}" to "{str(toFolder)}"')
         except:
             mess = f'Could not copy new version of "{uscFile}", from "{str(fromFolder)}" to "{str(toFolder)}"'
-            print(mess)
+            logging.warn(mess)
             return
         return
 
@@ -404,17 +458,17 @@ class NatlinkConfig:
         toFolder = Path(self.status.getVocolaUserDirectory())
         if not toFolder.is_dir():
             mess = f'removeUnimacroIncludeFile: vocolaUserDirectory does not exist "{str(toFolder)}" (is not a directory)'
-            print(mess)
+            logging.warn(mess)
             return
         
         toFile = toFolder/uscFile
         if toFolder.is_file():
-            print(f'remove Unimacro include file "{str(toFile)}"')
+            logging.info(f'remove Unimacro include file "{str(toFile)}"')
             try:
                 os.remove(toFile)
             except:
                 mess = f'copyUnimacroIncludeFile: Could not remove previous version of "{str(toFile)}"'
-                print(mess)
+                logging.warning(mess)
 
     def includeUnimacroVchLineInVocolaFiles(self, subDirectory=None):
         """include the Unimacro wrapper support line into all Vocola command files
@@ -442,7 +496,7 @@ class NatlinkConfig:
             
         if not os.path.isdir(toFolder):
             mess = f'cannot find Vocola command files directory, not a valid path: {toFolder}'
-            print(mess)
+            logging.warning(mess)
             return mess
         nFiles = 0
         for f in os.listdir(toFolder):
@@ -470,7 +524,7 @@ class NatlinkConfig:
                 # subdirectory, recursive
                 self.includeUnimacroVchLineInVocolaFiles(F)
         mess = f'changed {nFiles} files in {toFolder}'
-        print(mess)
+        logging.warning(mess)
         return True
 
     def removeUnimacroVchLineInVocolaFiles(self, subDirectory=None):
@@ -502,7 +556,7 @@ class NatlinkConfig:
             
         if not os.path.isdir(toFolder):
             mess = f'cannot find Vocola command files directory, not a valid path: {toFolder}'
-            print(mess)
+            logging.warning(mess)
             return mess
         nFiles = 0
         for f in os.listdir(toFolder):
@@ -525,7 +579,7 @@ class NatlinkConfig:
                 self.removeUnimacroVchLineInVocolaFiles(F)
         self.disableVocolaTakesUnimacroActions()
         mess = f'removed include lines from {nFiles} files in {toFolder}'
-        print(mess)
+        logging.warning(mess)
 
         return True
 
@@ -567,7 +621,7 @@ class NatlinkConfig:
         """open the natlink.ini config file
         """
         os.startfile(self.config_path)
-        print(f'opened "{self.config_path}" in a separate window')
+        logging.info(f'opened "{self.config_path}" in a separate window')
         return True
 
     def setAhkExeDir(self, arg):
@@ -595,8 +649,8 @@ class NatlinkConfig:
         self.clearDirectory(key, section='autohotkey')
 
     def printPythonPath(self):
-        print('the python path:')
-        pprint(sys.path)
+        logging.info('the python path:')
+        logging.info(pformat(sys.path))
 
 
 def isValidDir(path):

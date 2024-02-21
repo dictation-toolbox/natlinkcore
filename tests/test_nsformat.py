@@ -11,6 +11,33 @@ from natlinkcore import nsformat
 
 
 def test_formatWords():
+
+    ## a\\determiner (Dragon 16??)  (added propDict[determiner] = tuple(), and likewise for I\\pronoun)
+    
+    Input = ["First", ".\\period\\full stop", "a", "test"]
+    result = nsformat.formatWords(Input)
+    print(f'result nsformat: "{result}"')
+    assert(nsformat.formatWords(Input)) == ("First.  A test", set())
+
+    Input = ["Second", ".\\dot\\dot stop", "a", "test"]
+    result = nsformat.formatWords(Input)
+    print(f'result nsformat: "{result}"')
+    assert(nsformat.formatWords(Input)) == ("Second.a test", set())
+
+
+
+    Input = "Third a\\determiner test".split()
+    result = nsformat.formatWords(Input)
+    print(f'result nsformat: "{result}"')
+    assert(nsformat.formatWords(Input)) == ("Third a test", set())
+
+    Input = "Fourth I\\pronoun test".split()
+    result = nsformat.formatWords(Input)
+    print(f'result nsformat: "{result}"')
+    assert(nsformat.formatWords(Input)) == ("Fourth I test", set())
+
+
+
     Input = "hello there".split()
     assert(nsformat.formatWords(Input)) == ("Hello there", set())
 
@@ -23,6 +50,10 @@ def test_formatWords():
     result_text, new_state = nsformat.formatWords(Next, state=state)
     assert result_text == "  Continue"
     assert new_state == set()
+    
+
+    
+    
     
     sentence = "this is wrong."
     with pytest.raises(AssertionError):

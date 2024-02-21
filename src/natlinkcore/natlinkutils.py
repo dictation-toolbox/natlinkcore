@@ -312,7 +312,10 @@ class GramClassBase:
         self.grammarName = ''
 
     def __del__(self):
-        self.gramObj.unload()
+        try:
+            self.gramObj.unload()
+        except AttributeError:
+            pass
 
     def load(self, gramSpec, allResults=0, hypothesis=0, grammarName=None):
         self.grammarName = grammarName or self.grammarName

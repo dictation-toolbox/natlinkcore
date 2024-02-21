@@ -104,6 +104,7 @@ propDict['spelling-cap'] = propDict['cap']
 propDict['letter'] = (flag_no_space_next,)   # lowercase is hardcoded in below.
 propDict['spelling-letter'] = (flag_no_space_next,)   # lowercase is hardcoded in below.
 propDict['uppercase-letter'] = (flag_no_space_next,)
+propDict['determiner'] = tuple()    # nothing special
 
 #---------------------------------------------------------------------------
 # This is the main formatting entry point.  It takes the old format state and
@@ -222,6 +223,7 @@ def formatPassword(wordList):
             nextRepeat = countDict[w]
             outList.append(str(nextRepeat))
         else:
+            w = w.split('\\')[0]
             outList.append(w.capitalize())
     return ''.join(outList)
         
@@ -419,7 +421,7 @@ def getWordInfo(word):
     if word.find('\\') == -1:
         return set()  # no flags
     wList = word.split('\\')
-    if len(wList) == 3:
+    if len(wList) in (2,3):
         prop = wList[1]
         if not prop:
             return set()
@@ -429,6 +431,9 @@ def getWordInfo(word):
             return set(propDict['left-double-quote'])
         if prop.startswith('right-'):
             return set(propDict['right-double-quote'])
+        if prop in ['determiner', 'pronoun']:
+            return set()
+            
         print(f'getWordInfo, unknown word property: {prop} {"word"}')          
         return set()  # empty tuple
     # should not come here
