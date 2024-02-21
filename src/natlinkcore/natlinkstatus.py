@@ -5,9 +5,16 @@
 #  (C) Copyright Quintijn Hoogenboom, February 2008/January 2018/extended for python3, Natlink5.0.1 Febr 2022
 #
 #pylint:disable=C0302, C0116, R0902, R0904, R0912, W0107, E1101, C0415
-"""The following functions are provided in this module:
+"""Normal use:
 
-The functions below are put into the class NatlinkStatus.
+```
+from natlinkcore import natlinkstatus
+...
+status = natlinkstatus.NatlinkStatus()
+```
+
+
+Then the following functions (methods) can be called:
 
 The functions below should not change anything in settings, only  get information.
 
