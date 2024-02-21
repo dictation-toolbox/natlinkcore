@@ -3,6 +3,24 @@ import sys
 import platform
 
 import PySimpleGUI as sg
+import logging
+from platformdirs import  user_log_dir
+from pathlib import Path
+appname="natlink"
+logdir =  Path(user_log_dir(appname=appname,ensure_exists=True))
+logfilename=logdir/"config_gui_log.txt"
+file_handler = logging.FileHandler(logfilename)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+logfile_logger = logging.getLogger()
+
+#always leave at debug.  So we have this if there is ever a problem.
+file_handler.setLevel(logging.DEBUG)
+logfile_logger.addHandler(file_handler)
+logfile_logger.setLevel(logging.DEBUG) 
+
+
+
 # https://www.pysimplegui.org/en/latest/
 from natlinkcore.configure.natlinkconfigfunctions import NatlinkConfig
 from natlinkcore import natlinkstatus
@@ -13,6 +31,8 @@ osVersion = sys.getwindowsversion()
 # Inlize the NatlinkConfig
 Config = NatlinkConfig()
 Status = natlinkstatus.NatlinkStatus()
+
+
 
 SYMBOL_UP =    '▲'
 SYMBOL_DOWN =  '▼'
@@ -47,6 +67,8 @@ extras_section = [[sg.T('Natlink Loglevel:'),  sg.Combo(default_value=Status.get
                   [sg.T('Natlink GUI Output')],
                   [sg.Output(size=(40,10), echo_stdout_stderr=True, expand_x=True, key='-OUTPUT-')]]
 
+
+
 #### Main UI Layout ####
 layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.major}, Build: {osVersion.build}'), sg.T(f'Python: {pyVersion}'), sg.T(f'Dragon Version: {Status.getDNSVersion()}')],
           #### Projects Checkbox ####
@@ -61,6 +83,23 @@ layout = [[sg.T('Environment:', font='bold'), sg.T(f'Windows OS: {osVersion.majo
 
 window = sg.Window('Natlink configuration GUI', layout, enable_close_attempted_event=True)
 
+ #this is for the GUI logging.
+#set the level on this corresponding to the natlink levels later.
+#This must be created after the window is created, or nothing gets logged.
+
+#and we don't add the handler until just before the window is read the first time
+#because a write during this period will cause a problem.
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+try:
+    ll=Config.config_get("settings","log_level")
+    if ll != "Debug":
+        handler.setLevel(logging.INFO)
+except Exception as ee:
+    logging.debug(f"{__file__} failed to get log_level {ee} ")
+
+
 def ThreadIsRunning():
     global Thread_Running
     Thread_Running = not Thread_Running      
@@ -69,6 +108,13 @@ def ThreadIsRunning():
 # Natlink
 def SetNatlinkLoggingOutput(values, event):
     Config.setLogging(values['Set_Logging_Natlink'])
+    #also if natlink is not debug level, use info for logging in this application also.
+    try:
+        ll=Config.config_get("settings","log_level")
+        if ll != "Debug":
+            handler.setLevel(logging.INFO)
+    except Exception as ee:
+        logging.debug(f"{__file__} failed to get log_level {ee} ")
 
 # Dragonfly2
 def Dragonfly2UserDir(values, event):
@@ -112,8 +158,21 @@ dragonfly2_dispatch = {'Set_UserDir_Dragonfly2': Dragonfly2UserDir, 'Clear_UserD
 unimacro_dispatch = {'Set_UserDir_Unimacro': UnimacroUserDir, 'Clear_UserDir_Unimacro': UnimacroUserDir}
 autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Set_ScriptsDir_Ahk': AhkUserDir,'Clear_ScriptsDir_Ahk': AhkUserDir}
 
+
 #### Event Loop ####
 try:
+    #we want to set the logger up just before we call window.read()
+    #because if something is logged before the first window.read() there will be a failure.
+
+
+
+    #this would be a good spot to change the logging level, based on the natlink logging level
+    #note the natlink logging level doesn't correspond one to one with the logging module levels.
+    logfile_logger.addHandler(handler)
+
+    handler.setLevel(logging.DEBUG)
+    #do not change the logger level from debug
+    #change it in the handler.   Because a file handler logs everything.
     while True:
         event, values = window.read()
         if (event in ['-WINDOW CLOSE ATTEMPTED-', 'Exit']) and not Thread_Running:

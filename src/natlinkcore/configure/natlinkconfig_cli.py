@@ -5,8 +5,25 @@ import cmd
 import os
 import os.path
 from natlinkcore.configure import extensions_and_folders
-
+from platformdirs import  user_log_dir
+from pathlib  import Path
 from natlinkcore.configure import natlinkconfigfunctions
+import logging
+appname="natlink"
+logdir =  Path(user_log_dir(appname=appname,ensure_exists=True))
+logfilename=logdir/f"cli_log.txt"
+file_handler = logging.FileHandler(logfilename)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+logfile_logger = logging.getLogger()
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+logfile_logger.addHandler(handler)
+
+file_handler.setLevel(logging.DEBUG)
+logfile_logger.addHandler(file_handler)
+logfile_logger.setLevel(logging.DEBUG) 
 
 def _main(Options=None):
     """Catch the options and perform the resulting command line functions
@@ -17,6 +34,8 @@ def _main(Options=None):
              etc., usage above...
 
     """
+
+
     cli = CLI()
     cli.Config = natlinkconfigfunctions.NatlinkConfig()
     shortOptions = "DVNOHKaAiIxXbBuqe"
