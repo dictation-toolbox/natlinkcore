@@ -1,16 +1,144 @@
-Developers instructions
-=======================
+# Developers instructions
 
-Python modules
-------------------
+This document gives an overview of developing and 
+debugging [natlink](https://github.com/dictation-toolbox/natlink), 
+[natlinkcore](https://github.com/dictation-toolbox/natlinkcore), and 
+Python executed by natlink such as user grammars.
 
-The python modules of Natlink are in a separate project 'natlinkcore'. Documentation of these modules will be developed ASAP.
+The python modules of Natlink are in the  'natlinkcore' project. 
 
-The inno setup program ensures, the different projects 'natlink' (C++ code and inno setup program) and 'natlinkcore' (the core python modules) are installed in one stroke.
+## Organizing Your workspace
+
+Consider creating a folder for your dictation related projects, where you git clone each project.
+For example `c:\users\yourname\code\dt`, and git clone the projects you want to view in your editor or IDE into dt.
+
+It is also helpful to add the `.natlink`` folder to your workspace, so you can quickly edit and view natlink.ini, 
+and any files natlink grammars might store there.   
+
+If you are using Visual Studio Code, save the workspace in that folder.  
+
+## Install Python Packages You Have Cloned.
+
+Install each python package as local editable installs 
+https://pip.pypa.io/en/stable/topics/local-project-installs/ with pip.  This allows the Python 
+system to run the python code in your workspace rather than in the site-packages area. 
+
+For example, from the workspace root, install dragonfly.
+
+`C:\Users\doug\code\dt> pip install -e ./dragonfly``
+
+or if you prefer, from the individual project root (Unimacro in this example):
+
+`C:\Users\doug\code\dt\unimacro> pip install -e .[dev,test]`.  
+
+The options  `[dev,test]` in the above example indicate pip should install the dependencies for development and test 
+as well as the user code.  This will bring in any other python development tools, and libraries required to run any tests.  
+
+If you are working on a module in dictation-toolbox, you should inspect pyproject.toml (if it exists) 
+the in the project root and see if there are extra depencies in the `[project.optional-dependencies]` section,
+and install them if they are available.  
+
+## Building Python Packages 
+
+If you wish to build a python package, in the project root diretory, use the [build](https://github.com/pypa/build) module, like this:
+
+`C:\Users\doug\code\dt\natlinkcore> python -m build`
+
+This will work regardless of whether the packaging is using [flit](https://github.com/pypa/flit), setuptools, Poetry, etc.  Using the  build instead of the underlying setuptools or flit commands is more robust.
+
+If you get an error like this:
+```PS C:\Users\doug\code\dt\natlinkcore> python -m build     
+C:\Users\doug\AppData\Local\Programs\Python\Python310-32\python.exe: No module named build```
+
+The just run `pip install build`.  Some of the python projects have added build to `[project.optional-dependencies]` section.  
 
 
-Compiling Natlink
-------------------
+
+
+### Debugging Natlink Python Code
+
+### print-style debugging
+
+For diagnostics and debugging, rather than using `print` statements, please using the [basic logging functions](https://docs.python.org/3/howto/logging.html#logging-basic-tutorial).  You are unlikely then to check in code with print statements you forgot to remove.  Just use something like `logging.debug("message")` and the output will only show in the natlink window
+when the level is set to DEBUG in in natlink.ini.  The configured natlink debug levels are compatible with the Python logging module.
+
+
+### Debug Adapters
+IDEs usually have some sort of mechansim to allow debugging Python in a running process.  
+Microsoft has one called the `Debug Adapter Protocol: https://microsoft.github.io/debug-adapter-protocol/`_ (DAP). It seems only Visual Studio Code currently supports this.  
+
+Other IDEs have a simimilar mechanisms, and it may be possible to support them.  If you wish to support another IDE and have an idea how to connect your IDE to a running process, 
+look in `natlinkcore/natlinkpydebug.py` for how support is implemented for the DAP.  Write a similar module for your favorite debugger.  You will also need to add a similar section to natlink.ini.
+
+### Debugging with Visual Studio Code 
+
+Understand that if you enable DAP, you are opening a TCP/IP port on your computer.  You should understand the security risks involved with that and how to mitigate them in your circumstances.
+
+To enable DAP, add or edit your  natlink.ini to include this section.  Change the port if you need to.
+```
+   [settings.debugadapterprotocol]
+
+   dap_enabled = True
+   dap_port = 7474
+   dap_wait_for_debugger_attach_on_startup = False
+```
+dap_enabled must be true to enable Python debugging when natlink starts.   If you change natlink.ini, restart Dragon.
+
+
+Here is the Visual Studio code page on debugging with Python:  https://code.visualstudio.com/docs/python/debugging
+
+Create a launch configuration in one of the projects, where you plan to set a breakpoint, for Python debugger and 
+default type of Remote Attach. 
+
+Here is a sample launch.json, which you can copy into one if your Python projects .vscode folder (i.e. unimacro/.vscode).  
+
+```
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Natlink Remote Attach",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 7474
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "${workspaceFolder}"
+                }
+            ]
+        }
+    ]
+}
+```
+
+It is *super important* the pathMappings are as shown.  If the pathMappings don't match the source files, your breakpoints and debugging won't work.  In theory localRoot and remoteRoot can be on different paths or even computers, as long as they have identical copies of the source files.
+
+If you want to try remote debugging, you can explore pointing
+remoteRoot to the source code on another computer.  You can also explore using SSH for remote debugging https://code.visualstudio.com/docs/remote/ssh.
+If you have any sucess with those, please update this documentation.
+
+#### Debugging Python on Startup
+In natlink.ini:
+
+```
+   [settings.debugadapterprotocol]
+
+   dap_enabled = True
+   dap_port = 7474
+   dap_wait_for_debugger_attach_on_startup = False
+```
+
+
+## Compiling Natlink
+
+You can skip this if you don't need to work on the C++ portion of natlink.
 
 The 'glue' file between python code and 'Dragon', the heart if the 'Natlink' project is a `.pyd` file, which needs to be compiled from C++ code. With this compile step, also the 'inno setup program' is compiled.
 
@@ -18,8 +146,7 @@ When you want to contribute to python packages, look into the instructions there
 
 When you want to contribute to the Natlink development, you will need to compile the C++ code and compile the inno setup program. Try the instructions below.
 
-Setup Visual Studio Code environment
-------------------------------------
+### Setup Visual Studio Code environment
 
 1. Install `Visual Studio <https://visualstudio.microsoft.com/>`__
    (Community Edition 2019 or above) with ``C++ Desktop Development``
@@ -72,133 +199,6 @@ Setup Visual Studio Code environment
 
 .. |image1| image:: https://user-images.githubusercontent.com/24551569/164927468-68f101a5-9eed-4568-b251-0d09fde0394c.png
 .. |image2| image:: https://user-images.githubusercontent.com/24551569/164919729-bd4b2096-6af3-4307-ba3c-ef6ff3b98c41.png
-
-Debugging Natlink Python Code
-------------------
-Developers can debug their python natlink grammars or any
-other Python code running in natlink using a debugger supporting 
-`Debug Adapter Protocol: https://microsoft.github.io/debug-adapter-protocol/`_ (DAP).  
-
-Visual Studio Code TIPS 
-------------------
-Create a workspace for all the projects you might want to debug in your session.
-Consider making a folder like "dt" and git cloning all the projects you locally develop underneath it.
-
-Install each python package as local editable installs 
-https://pip.pypa.io/en/stable/topics/local-project-installs/ with pip.
-
-For example, to install dragonfly and unimacro, and you are in the terminal at the "dt" root mentioned above
-to install dragonfly, and unimacro (along wit the dependencies for developing and testing) from a dt directory with dragonfly: 
-```pip install -e ./dragonfly
-   pip install -e ./unimacro[dev,test]
-```
-or to install a package like dragonfly or unimacro from the git clone folder:
-pip install -e .
-
-
-For example, most developers will want natlink, natlinkcore, and dtactions in their workspace.
-Add in dragonfly, unimacro etc. as appropriate.
-
-It is also a good idea to add your .natlink folder into your workspace.  Then you can always quickly find your natlink.ini.
-
-
-
-To enable DAP, add or edit your  natlink.ini to include this section.  Change the port if you need to.
-::
-   [settings.debugadapterprotocol]
-
-   dap_enabled = True
-   dap_port = 7474
-   dap_wait_for_debugger_attach_on_startup = True
-
-You can `check if your favorite debugger supports DAP https://microsoft.github.io/debug-adapter-protocol/implementors/tools/.  Here are instructions for Visual
-Studio Code`_:  
-
-Here is the Visual Studio code page on debugging with Python:  https://code.visualstudio.com/docs/python/debugging
-
-Create a launch configuration in one of the projects, where you plan to set a breakpoint, for Python debugger and 
-default type of Remote Attach. 
-
-dap_enabled is usually false.  When DAP is enabled, someone with access to your computer via a LAN or open internet port
-can attach a debugger to your dragon process.  If you are in a LAN environment like a corporation or university, 
-you might look into disallowing access to the dap_port with a firewall, if you are using debugging features on your 
-workstation.
-
-In Natlink.ini, check that dap_enabled=True:
-
-[settings.debugadapterprotocol]
-dap_enabled = True
-dap_port = 7474
-dap_wait_for_debugger_attach_on_startup = False
-
-If you change natlink.ini, restart Dragon.
-
-
-Here is a sample launch.json, which you can copy into one if your Python projects .vscode folder (i.e. unimacro/.vscode).  
-
-
-It is super important the pathMappings are as shown.  If you want to try remote debugging, you can explore pointing
-remoteRoot to the source code on another computer.  You can also explore using SSH for remote debugging https://code.visualstudio.com/docs/remote/ssh.
-If you have any sucess with those, please update this documentation.
-
-{
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Python Debugger: Natlink Remote Attach",
-            "type": "debugpy",
-            "request": "attach",
-            "connect": {
-                "host": "localhost",
-                "port": 7474
-            },
-            "pathMappings": [
-                {
-                    "localRoot": "${workspaceFolder}",
-                    "remoteRoot": "${workspaceFolder}"
-                }
-            ]
-        }
-    ]
-}
-
-
-Add this section to launch.json, ensuring the port number matchines natlink.ini.  Default port is 7474 
-but users can change it.
-
-
- and noting
-the pathMappings have been commented out:
-::
-        {
-            "name": "Natlink: Remote Attach",
-            "type": "python",
-            "request": "attach",
-            "connect": {
-                "host": "localhost",
-                "port": 7474
-            },
-            //DO NOT USE THE VISUAL STUDIO DEFAULTS
-            //FOR pathMappings.
-            //The defaults will not work and your breakpoints
-            //will never hit.  So delete the pathMappings
-            //section for local host debugging, or set them to 
-            //something meaningful.  
-            // "pathMappings": [
-            //     {
-            //         "localRoot": "${workspaceFolder}",
-            //         "remoteRoot": "."
-            //     }
-
-            //a good idea to set justMyCode to false.  Otherwise
-            //you may have breakpoints set that won't trigger.
-            "justMyCode": false
-        }
-
-
 Further instructions
 --------------------
 

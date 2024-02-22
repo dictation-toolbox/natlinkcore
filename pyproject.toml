@@ -30,7 +30,7 @@ test = [
     "pytest >=7.1.2",
 ]
 dev = [
-    "pyenvutils","entry-point-inspector"
+    "pyenvutils","entry-point-inspector","build"
 ] 
 
 [tool.pytest.ini_options]

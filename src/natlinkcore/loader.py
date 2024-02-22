@@ -630,16 +630,8 @@ def config_locations() -> Iterable[str]:
     # choose between .natlink/natlink.ini in home or the fallback_directory:         
     return [join(home, config_sub_dir, natlink_inifile), fallback_config_file]
 
-def run() -> None:
-    logger = logging.getLogger('natlink')
-    try:
-        # # TODO: remove this hack. As of October 2021, win32api does not load properly, except if
-        # # the package pywin32_system32 is explictly put on new dll_directory white-list
-        # pywin32_dir = os.path.join(sysconfig.get_path('platlib'), "pywin32_system32")
-        # if os.path.isdir(pywin32_dir):
-        #     os.add_dll_directory(pywin32_dir)
-        
-        config = NatlinkConfig.from_first_found_file(config_locations())
+def startDap(config : NatlinkConfig) -> bool:
+        """Returns True if DAP was started"""
         dap_started=False
         print(f"testing dap , enabled {config.dap_enabled} port {config.dap_port}")
         try:
@@ -654,12 +646,25 @@ def run() -> None:
                 print(f"DAP Started on Port {config.dap_port} in {__file__}")
                 if config.dap_wait_for_debugger_attach_on_startup:
                     print(" waiting for debugger to attach")
+                return dap_started
             
         except Exception as ee:
             print(f"""
                 Exception {ee} while starting DAP in {__file__}.  Possible cause is incorrect python executable specified {python_exec}
                 """     )
 
+
+def run() -> None:
+    logger = logging.getLogger('natlink')
+    try:
+        # # TODO: remove this hack. As of October 2021, win32api does not load properly, except if
+        # # the package pywin32_system32 is explictly put on new dll_directory white-list
+        # pywin32_dir = os.path.join(sysconfig.get_path('platlib'), "pywin32_system32")
+        # if os.path.isdir(pywin32_dir):
+        #     os.add_dll_directory(pywin32_dir)
+        
+        config = NatlinkConfig.from_first_found_file(config_locations())
+        dap_started=startDap(config)
         main = NatlinkMain(logger, config)
         main.dap_started=dap_started
 
