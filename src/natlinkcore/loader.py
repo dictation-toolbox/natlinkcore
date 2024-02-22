@@ -3,6 +3,7 @@ import importlib
 import importlib.machinery
 import importlib.util
 import logging
+from pydebugstring import outputDebugString,OutputDebugStringHandler
 import os
 import copy
 import sys
@@ -630,8 +631,51 @@ def config_locations() -> Iterable[str]:
     # choose between .natlink/natlink.ini in home or the fallback_directory:         
     return [join(home, config_sub_dir, natlink_inifile), fallback_config_file]
 
+def startDap(config : NatlinkConfig) -> bool:
+        """
+        Starts DAP (Debug Adapter Protocol) if there a DAP port specified in the config object.
+        returns True if the  dap was started.      
+
+        Natlink will startDap automatically if configured in the run method below.   
+        If you need to start the DAP sooner, edit your code to make a call to startDap.
+        Similarly, if you want to start the DAP later, call startDap.  You can call it from your grammar or 
+        anywhere else.
+        """
+
+        dap_started=False
+        logging.debug(f"testing dap , enabled {config.dap_enabled} port {config.dap_port}")
+        try:
+            logging.debug("Debugpy.configure ...")
+            debugpy.configure(python=f"{python_exec}")
+            logging.debug("Debugpy.listen ...")
+
+            debugpy.listen(config.dap_port)
+            dap_started=True
+
+            logging.debug(f"DAP Started on Port {config.dap_port} in {__file__}")
+            if config.dap_wait_for_debugger_attach_on_startup:
+                #use info level logging, the user will need to know as natlink and dragon will hang here.
+                #unti debuger is attached.
+                logging.info(f"waiting for debugger to attach using DAP in {__file__} ")
+                debugpy.wait_for_client()
+            return dap_started
+            
+        except Exception as ee:
+            logging.info(f"""
+                Exception {ee} while starting DAP in {__file__}.  Possible cause is incorrect python executable specified {python_exec}
+                """     )
+
+
 def run() -> None:
-    logger = logging.getLogger('natlink')
+    default_logger=logging.getLogger()
+    dh = OutputDebugStringHandler()
+    sh=logging.StreamHandler(sys.stdout)
+    for h in [sh,dh]:
+        default_logger.addHandler(h)
+
+    default_logger.setLevel(logging.DEBUG)
+
+    logging.debug(f"{__file__} run()")
     try:
         # # TODO: remove this hack. As of October 2021, win32api does not load properly, except if
         # # the package pywin32_system32 is explictly put on new dll_directory white-list
@@ -639,36 +683,26 @@ def run() -> None:
         # if os.path.isdir(pywin32_dir):
         #     os.add_dll_directory(pywin32_dir)
         
-        config = NatlinkConfig.from_first_found_file(config_locations())
-        dap_started=False
-        print(f"testing dap , enabled {config.dap_enabled} port {config.dap_port}")
-        try:
-            if config.dap_enabled:
-                print("Debugpy.configure ...")
-                debugpy.configure(python=f"{python_exec}")
-                print("Debugpy.listen ...")
- 
-                debugpy.listen(config.dap_port)
-                dap_started=True
+        #create a temporary logging handler, so we can log the startup of DAP
 
-                print(f"DAP Started on Port {config.dap_port} in {__file__}")
-                if config.dap_wait_for_debugger_attach_on_startup:
-                    print(" waiting for debugger to attach")
-            
-        except Exception as ee:
-            print(f"""
-                Exception {ee} while starting DAP in {__file__}.  Possible cause is incorrect python executable specified {python_exec}
-                """     )
+        config = NatlinkConfig.from_first_found_file(config_locations())
+    
+        dap_started = config.dap_enabled and startDap(config)           
+        logger=logging.getLogger("natlink")
+        logger.setLevel(logging.DEBUG)
 
         main = NatlinkMain(logger, config)
-        main.dap_started=dap_started
-
         main.setup_logger()
-        print(f"Dap enabled: {config.dap_enabled} port: {config.dap_port}  ")
+        main.dap_started=dap_started
+        for h in [sh,dh]:
+            default_logger.removeHandler(h)
+
+
+        logging.debug(f"Dap enabled: {config.dap_enabled} port: {config.dap_port}  ")
         main.start()
     except Exception as exc:
-        print(f'Exception: "{exc}" in loader.run', file=sys.stderr)
-        print(traceback.format_exc())
+        logging.info(f'Exception: "{exc}" in loader.run', file=sys.stderr)
+        logging.info(traceback.format_exc())
         raise Exception from exc
     
 if __name__ == "__main__":
