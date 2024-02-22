@@ -11,7 +11,7 @@ readme = "readme.md"
 dependencies= [
     "natlink>=5.3.4",
     "pysimplegui>=4.60.3", 
-    "pydebugstring",
+    "pydebugstring >= 1.0.0.1",
     "dtactions>=1.5.7",
     "platformdirs >= 4.2.0"
 ]
