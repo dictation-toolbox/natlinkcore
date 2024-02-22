@@ -656,11 +656,12 @@ def startDap(config : NatlinkConfig) -> bool:
             if config.dap_wait_for_debugger_attach_on_startup:
                 #use info level logging, the user will need to know as natlink and dragon will hang here.
                 #unti debuger is attached.
-                logging.info(" waiting for debugger to attach")
+                logging.info(f"waiting for debugger to attach using DAP in {__file__} ")
+                debugpy.wait_for_client()
             return dap_started
             
         except Exception as ee:
-            print(f"""
+            logging.info(f"""
                 Exception {ee} while starting DAP in {__file__}.  Possible cause is incorrect python executable specified {python_exec}
                 """     )
 
@@ -697,11 +698,11 @@ def run() -> None:
             default_logger.removeHandler(h)
 
 
-        print(f"Dap enabled: {config.dap_enabled} port: {config.dap_port}  ")
+        logging.debug(f"Dap enabled: {config.dap_enabled} port: {config.dap_port}  ")
         main.start()
     except Exception as exc:
-        print(f'Exception: "{exc}" in loader.run', file=sys.stderr)
-        print(traceback.format_exc())
+        logging.info(f'Exception: "{exc}" in loader.run', file=sys.stderr)
+        logging.info(traceback.format_exc())
         raise Exception from exc
     
 if __name__ == "__main__":
