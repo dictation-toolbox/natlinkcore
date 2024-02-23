@@ -1,7 +1,7 @@
 
-.. _RefSendkeys:
+.. _RefNatlinkstatus:
 
-natlinkstatus
+Natlinkstatus
 ====================
 
 The :code:`natlinkstatus` module keeps the status information of natlink
