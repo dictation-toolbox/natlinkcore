@@ -254,7 +254,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         if self.DNSIniDir is not None:
             return self.DNSIniDir
 
-        self.DNSIniDir = loader.get_config_info_from_registry("dragonIniDir")
+        self.DNSIniDir = loader.get_dns_config_info("dragonIniDir")
         return self.DNSIniDir
 
     def getLogging(self):
@@ -269,21 +269,18 @@ class NatlinkStatus(metaclass=singleton.Singleton):
     
     def getDNSVersion(self):
         """find the correct DNS version number (as an integer)
-
-        2022: extract from the dragonIniDir setting in the registry, via loader function
-
         """
         if self.DNSVersion is not None:
             return self.DNSVersion
-        dragonIniDir = loader.get_config_info_from_registry("dragonIniDir")
-        if dragonIniDir:
+        dragonversion = loader.get_dns_config_info("version")
+        if dragonversion:
             try:
-                version = int(dragonIniDir[-2:])
+                version = int(dragonversion)
             except ValueError:
-                print('getDNSVersion, invalid version found "{dragonIniDir[-2:]}", return 0')
+                print('getDNSVersion, invalid version found "{}", return 0')
                 version = 0
         else:
-            print(f'Error, cannot get dragonIniDir from registry, unknown DNSVersion "{dragonIniDir}", return 0')
+            print(f'Error, cannot get DNS Version from environment.json, unknown DNSVersion "{dragonversion}", return 0')
             version = 0
         self.DNSVersion = version
         return self.DNSVersion
@@ -728,7 +725,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
     
     def getInstallVersion(self):
-        version = loader.get_config_info_from_registry("version")
+        version = loader.get_dns_config_info("version")
         return version
     
     @staticmethod  

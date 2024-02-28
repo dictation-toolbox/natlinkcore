@@ -9,6 +9,7 @@ import sys
 import time
 import traceback
 import winreg
+import json
 import configparser
 from pathlib import Path
 from types import ModuleType
@@ -597,11 +598,21 @@ def get_natlinkcore_dirname() -> str:
     return thisDir
     # return get_config_info_from_registry('installPath')
 
-def get_config_info_from_registry(key_name: str) -> str:
-    hive, key, flags = (winreg.HKEY_LOCAL_MACHINE, r'Software\Natlink', winreg.KEY_WOW64_32KEY)
-    with winreg.OpenKeyEx(hive, key, access=winreg.KEY_READ | flags) as natlink_key:
-        result, _ = winreg.QueryValueEx(natlink_key, key_name)
-        return result
+def get_dns_config_info(key_name: str) -> str:
+    # get the value from the dns environment.json file
+    json_file = os.path.join(os.path.expanduser('~'),'.natlink','environment.json')
+    if not os.path.isfile(json_file):
+        raise OSError(f'get_dns_config_info, no valid json file at: "{json_file}"/n please run setup_dragon_env.bat')
+    else:
+        with open(json_file, encoding='utf-8-sig') as f:
+            data = json.load(f)
+    if key_name == 'version':
+        result = data['dragon_version']
+    elif key_name == 'dragonIniDir':
+        result = data['dragon_ini_dir']
+    else:
+        raise ValueError(f'get_dns_config_info, invalid key_name: "{key_name}"')
+    return result
 
 
 had_msg_error = False
