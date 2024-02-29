@@ -9,7 +9,7 @@ dynamic = ["version", "description"]
 requires-python = ">=3.9"
 readme = "readme.md"
 dependencies= [
-##  "natlink>=5.3.4",
+    "natlink>=5.3.4",
     "FreeSimpleGUI>=5.1.0", 
     "pydebugstring >= 1.0.0.1",
     "dtactions>=1.6.1",
@@ -57,6 +57,9 @@ natlink_extensions = "natlinkcore.configure.natlink_extensions:main"
 natlinkconfig_gui = "natlinkcore.configure.natlinkconfig_gui:main_gui"
 
 [project.entry-points."dt.loggers"]
+    natlink ="natlinkcore:logname"
+
+[project.entry-points."natlink.loggers"]
     natlink ="natlinkcore:logname"
 
 [project.entry-points."natlink.extensions"]
