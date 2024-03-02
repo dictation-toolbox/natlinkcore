@@ -174,6 +174,7 @@ def testStopAtMicOff():
 
         finally:
             natlinktimer.stopTimerCallback()
+            natlink.natDisconnect()
         
 
 # def testStopAtMicOff():
