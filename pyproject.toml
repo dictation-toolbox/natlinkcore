@@ -56,7 +56,7 @@ natlink_extensions = "natlinkcore.configure.natlink_extensions:main"
 [project.gui-scripts]
 natlinkconfig_gui = "natlinkcore.configure.natlinkconfig_gui:main_gui"
 
-[project.entry-points."natlink.loggers"]
+[project.entry-points."dt.loggers"]
     natlink ="natlinkcore:logname"
 
 [project.entry-points."natlink.extensions"]
