@@ -77,7 +77,7 @@ class NatlinkConfig:
         if config.has_section('settings.debugadapterprotocol'):
             dap_settings = config['settings.debugadapterprotocol']
             dap_enabled = dap_settings.getboolean('dap_enabled', fallback=False)
-            dap_port = dap_settings.getint('dap_port', fallback=0)
+            dap_port = dap_settings.getint('dap_port', fallback=7474)
             dap_wait_for_debugger_attach_on_startup= dap_settings.getboolean('dap_wait_for_debugger_attach_on_startup', fallback=False)
 
         ret.dap_enabled,ret.dap_port,ret.dap_wait_for_debugger_attach_on_startup = \
