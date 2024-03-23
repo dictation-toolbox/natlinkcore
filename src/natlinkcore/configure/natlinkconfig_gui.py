@@ -19,8 +19,6 @@ file_handler.setLevel(logging.DEBUG)
 logfile_logger.addHandler(file_handler)
 logfile_logger.setLevel(logging.DEBUG) 
 
-
-
 # https://www.pysimplegui.org/en/latest/
 from natlinkcore.configure.natlinkconfigfunctions import NatlinkConfig
 from natlinkcore import natlinkstatus
@@ -28,11 +26,14 @@ from natlinkcore import natlinkstatus
 pyVersion = platform.python_version()
 osVersion = sys.getwindowsversion()
 
-# Inlize the NatlinkConfig
-Config = NatlinkConfig()
-Status = natlinkstatus.NatlinkStatus()
 
-
+try:
+    # Initialize the NatlinkConfig, if this fails the gui will not start
+    Config = NatlinkConfig()
+    Status = natlinkstatus.NatlinkStatus()
+except Exception as e:
+    logging.error(f"Failed to initialize NatlinkConfig or NatlinkStatus: {e}")
+    raise Exception(f"Failed to initialize NatlinkConfig or NatlinkStatus: {e}")
 
 SYMBOL_UP =    '▲'
 SYMBOL_DOWN =  '▼'
@@ -161,18 +162,13 @@ autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Se
 
 #### Event Loop ####
 try:
-    #we want to set the logger up just before we call window.read()
-    #because if something is logged before the first window.read() there will be a failure.
-
-
-
-    #this would be a good spot to change the logging level, based on the natlink logging level
-    #note the natlink logging level doesn't correspond one to one with the logging module levels.
+    # we want to set the logger up just before we call window.read()
+    # because if something is logged before the first window.read() there will be a failure.
+    # note the natlink logging level doesn't correspond one to one with the logging module levels.
+    # do not change the logger level from debug
+    # change it in the handler. Because a file handler logs everything.
     logfile_logger.addHandler(handler)
-
     handler.setLevel(logging.DEBUG)
-    #do not change the logger level from debug
-    #change it in the handler.   Because a file handler logs everything.
     while True:
         event, values = window.read()
         if (event in ['-WINDOW CLOSE ATTEMPTED-', 'Exit']) and not Thread_Running:
@@ -218,6 +214,7 @@ try:
             func_to_call(values, event)
 
 except Exception as e:
+    logging.error(f"Exception in GUI: {e}")
     sg.Print('Exception in GUI event loop:', sg.__file__, e, keep_on_top=True, wait=True)
 finally:
     Config.status.refresh()
