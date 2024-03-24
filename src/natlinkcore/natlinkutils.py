@@ -42,7 +42,7 @@ import copy
 import struct
 import sys
 import traceback
-
+import time
 import natlink
 from natlinkcore import gramparser
 
@@ -1321,3 +1321,13 @@ def debug_print(msg):
     if debugLoad:
         print(msg)
         
+if __name__ == "__main__":
+    try:
+        natlink.natConnect()
+        buttonClick('right')
+        time.sleep(1)
+        natlink.playString('{esc}')
+    finally:
+        natlink.natDisconnect()
+    
+    
