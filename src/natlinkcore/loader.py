@@ -667,7 +667,7 @@ def startDap(config : NatlinkConfig) -> bool:
 
 
 def run() -> None:
-    default_logger=logging.getLogger()
+    default_logger=logging.getLogger("natlink")
     dh = OutputDebugStringHandler()
     sh=logging.StreamHandler(sys.stdout)
     for h in [sh,dh]:
@@ -688,7 +688,7 @@ def run() -> None:
         config = NatlinkConfig.from_first_found_file(config_locations())
     
         dap_started = config.dap_enabled and startDap(config)           
-        logger=logging.getLogger("natlink")
+        logger=logging.getLogger("natlinkcore")
         logger.setLevel(logging.DEBUG)
 
         main = NatlinkMain(logger, config)
