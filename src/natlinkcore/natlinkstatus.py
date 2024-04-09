@@ -603,6 +603,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         
         key = 'vocolagrammarsdirectory'
         value =  self.natlinkmain.getconfigsetting(section='directories', option=key)
+        if not value:
+            return ""
         voc_grammars_dir = natlinkcore.config.expand_path(value)
         self.VocolaGrammarsDirectory = voc_grammars_dir
         return voc_grammars_dir
