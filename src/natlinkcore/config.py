@@ -172,7 +172,7 @@ def expand_path(input_path: str) -> str:
 
     ## "natlink_userdir" will go obsolete, to be replaced with "natlink_settingsdir" below:
     if input_path.startswith('natlink_userdir/') or input_path.startswith('natlink_userdir\\'):
-        nud = expand_natlink_userdir()
+        nud = expand_natlink_settingsdir()
         if isdir(nud):
             dir_path = input_path.replace('natlink_userdir', nud)
             dir_path = normpath(dir_path)
@@ -219,7 +219,7 @@ def expand_path(input_path: str) -> str:
     # print(f'env_expanded: "{env_expanded}", from envvar: "{input_path}"')
     return normpath(env_expanded)
 
-def expand_natlink_userdir():
+def expand_natlink_settingsdir():
     """not with envvariables, but special:
     
     if NATLINK_USERDIR is set: return this, but... it should end with ".natlink"
@@ -229,7 +229,7 @@ def expand_natlink_userdir():
     nud = os.getenv('natlink_userdir') or str(Path.home()/'.natlink')
     nud = normpath(expand_path(nud))
     if not nud.endswith('.natlink'):
-        raise ValueError(f'expand_natlink_userdir: directory "{nud}" should end with ".natlink"\n\tprobably you did not set the windows environment variable "NATLINK_USERDIR" incorrect, let it end with ".natlink".\n\tNote: if this ".natlink" directory does not exist yet, it will be created there.')
+        raise ValueError(f'expand_natlink_settingsdir: directory "{nud}" should end with ".natlink"\n\tprobably you did not set the windows environment variable "NATLINK_USERDIR" incorrect, let it end with ".natlink".\n\tNote: if this ".natlink" directory does not exist yet, it will be created there.')
     return nud
 
 def expand_natlink_settingsdir():

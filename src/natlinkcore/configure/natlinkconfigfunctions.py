@@ -8,7 +8,7 @@
 #   Quintijn Hoogenboom, January 2008 (...), August 2022
 #
 
-#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912, R1732, W1514, W0107
+#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912, R1732, W1514, W0107, W1203
 """With the functions in this module Natlink can be configured.
 
 These functions are called in different ways:
@@ -23,14 +23,13 @@ import subprocess
 from pprint import pformat
 from pathlib import Path
 import configparser
+import logging
 
 from natlinkcore import natlinkstatus
 from natlinkcore import config
 from natlinkcore import loader
 from natlinkcore import readwritefile
 from natlinkcore import tkinter_dialogs
-
-import logging
 
 isfile, isdir, join = os.path.isfile, os.path.isdir, os.path.join
 
@@ -66,7 +65,8 @@ class NatlinkConfig:
         # for convenience in other places:
         self.home_path = str(Path.home())
         self.documents_path = str(Path.home()/'Documents')
-        self.natlinkconfig_path = config.expand_natlink_userdir()
+        self.natlinkconfig_path = config.expand_natlink_settingsdir()
+        pass
 
     def get_check_config_locations(self):
         
@@ -97,6 +97,16 @@ class NatlinkConfig:
             self.config_set(section, option, value)
             logging.info(f'changed in "natlink.ini", section "directories", unimacro setting "{option}" to value: "{value}"')
             pass
+        
+        if loader.had_msg_error:
+            logging.error('The environment variable "NATLINK_USERDIR" has been changed to "NATLINK_SETTINGSDIR" by the user, but has a conclicting value')
+            logging.error('Please remove "NATLINK_USERDIR", in the windows environment variables, dialog User variables, and restart your program')
+
+        if loader.had_msg_warning:
+            logging.error('The key of the environment variable "NATLINK_USERDIR" should be changed to "NATLINK_SETTINGSDIR"')
+            logging.error('You can do so in "windows environment variables", dialog "User variables". Then your program')
+            
+            
         # for key, value in self.Config[section].items():
         #     print(f'key: {key}, value: {value}')
 
@@ -435,16 +445,16 @@ class NatlinkConfig:
         toFolder = Path(self.status.getVocolaUserDirectory())
         if not unimacroDir.is_dir():
             mess = f'copyUnimacroIncludeFile: unimacroDir "{str(unimacroDir)}" is not a directory'
-            logging.warn(mess)
+            logging.warning(mess)
             return
         fromFile = fromFolder/uscFile
         if not fromFile.is_file():
             mess = f'copyUnimacroIncludeFile: file "{str(fromFile)}" does not exist (is not a valid file)'
-            logging.warn(mess)
+            logging.warning(mess)
             return
         if not toFolder.is_dir():
             mess = f'copyUnimacroIncludeFile: vocolaUserDirectory does not exist "{str(toFolder)}" (is not a directory)'
-            logging.warn(mess)
+            logging.warning(mess)
             return
         
         toFile = toFolder/uscFile
@@ -460,7 +470,7 @@ class NatlinkConfig:
             logging.info(f'copied "{uscFile}" from "{str(fromFolder)}" to "{str(toFolder)}"')
         except:
             mess = f'Could not copy new version of "{uscFile}", from "{str(fromFolder)}" to "{str(toFolder)}"'
-            logging.warn(mess)
+            logging.warning(mess)
             return
         return
 
@@ -473,7 +483,7 @@ class NatlinkConfig:
         toFolder = Path(self.status.getVocolaUserDirectory())
         if not toFolder.is_dir():
             mess = f'removeUnimacroIncludeFile: vocolaUserDirectory does not exist "{str(toFolder)}" (is not a directory)'
-            logging.warn(mess)
+            logging.warning(mess)
             return
         
         toFile = toFolder/uscFile
