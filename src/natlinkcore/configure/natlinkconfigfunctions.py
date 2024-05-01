@@ -69,6 +69,7 @@ class NatlinkConfig:
         self.natlinkconfig_path = config.expand_natlink_userdir()
 
     def get_check_config_locations(self):
+        
         """check the location/locations as given by the loader
         """
         config_path, fallback_path = loader.config_locations()
@@ -84,6 +85,20 @@ class NatlinkConfig:
         """check config_file for possibly unwanted settings
         """
         self.config_remove(section='directories', option='default_config')
+        
+        # change default unimacrogrammarsdirectory:
+        section = 'directories'
+        option = 'unimacrogrammarsdirectory'
+        old_prefix = 'natlink_user'
+        new_prefix = 'unimacro'
+        value = self.Config[section][option]
+        if value and value.find('natlink_user') == 0:
+            value = value.replace(old_prefix,new_prefix)
+            self.config_set(section, option, value)
+            logging.info(f'changed in "natlink.ini", section "directories", unimacro setting "{option}" to value: "{value}"')
+            pass
+        # for key, value in self.Config[section].items():
+        #     print(f'key: {key}, value: {value}')
 
     def getConfig(self):
         """return the config instance
@@ -309,7 +324,7 @@ class NatlinkConfig:
         unimacro_user_dir = self.config_get('unimacro', 'unimacrouserdirectory')
         if not unimacro_user_dir:
             return
-        uniGrammarsDir = r'natlink_userdir\unimacrogrammars'
+        uniGrammarsDir = r'unimacro\unimacrogrammars'
         self.setDirectory('unimacrodirectory','unimacro')  #always unimacro
 
         self.setDirectory('unimacrogrammarsdirectory', uniGrammarsDir)

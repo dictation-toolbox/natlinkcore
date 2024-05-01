@@ -604,8 +604,8 @@ def get_config_info_from_registry(key_name: str) -> str:
         return result
 
 
-msg_error = False
-msg_warning = False
+had_msg_error = False
+had_msg_warning = False
 
 def config_locations() -> Iterable[str]:
     """give two possible locations, the wanted and the "fallback" location
@@ -618,6 +618,7 @@ def config_locations() -> Iterable[str]:
     with the configurenatlink (natlinkconfigfunction.py or configfurenatlink.pyw) the fallback version
     of the config file is copied into the wanted location.
     """
+    global had_msg_warning, had_msg_error
     join, expanduser, getenv, isfile = os.path.join, os.path.expanduser, os.getenv, os.path.isfile
     home = expanduser('~')
     config_sub_dir = '.natlink'
@@ -633,14 +634,18 @@ def config_locations() -> Iterable[str]:
         if natlink_settingsdir_from_env and natlink_userdir_from_env_obsolete:
             pass
         elif natlink_settingsdir_from_env:
-            logging.warning('You defined env variable "NATLINK_SETTINGSDIR", but different from the obsolete env variable "NATLINK_USERDIR"...')
-            logging.warning('"NATLINK_SETTINGSDIR (valid): "%s"', natlink_settingsdir_from_env)
-            logging.warning('"NATLINK_USERDIR (obsolete): "%s"', natlink_userdir_from_env_obsolete)
+            if not had_msg_error:
+                logging.warning('You defined env variable "NATLINK_SETTINGSDIR", but different from the obsolete env variable "NATLINK_USERDIR"...')
+                logging.warning('"NATLINK_SETTINGSDIR (valid): "%s"', natlink_settingsdir_from_env)
+                logging.warning('"NATLINK_USERDIR (obsolete): "%s"', natlink_userdir_from_env_obsolete)
+                had_msg_error = True
         else:
             ## natlink_settingsdir_from_env is not set, but natlink_userdir_from_env_obsolete IS
-            logging.warning('You have set env variable "NATLINK_USERDIR", but this variable is obsolete.')
-            logging.warning('Please specify the env variable "NATLINK_SETTINGSDIR" to "%s", and restart Dragon', natlink_userdir_from_env_obsolete)
-
+            if not had_msg_warning:
+                logging.warning('You have set env variable "NATLINK_USERDIR", but this variable is obsolete.')
+                logging.warning('Please specify the env variable "NATLINK_SETTINGSDIR" to "%s", and restart Dragon', natlink_userdir_from_env_obsolete)
+                had_msg_warning = True
+                
     if natlink_settingsdir_from_env:
         nl_settings_dir = expand_path(natlink_settingsdir_from_env)
         nl_settings_file = join(nl_settings_dir, natlink_inifile)
