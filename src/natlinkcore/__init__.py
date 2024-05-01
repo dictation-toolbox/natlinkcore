@@ -8,7 +8,10 @@ def getThisDir(fileOfModule):
     """get directory of calling module
     """
     return Path(fileOfModule).parent
-
+def logname():
+    """ Returns the name of the logger module, which is simply 'natlink'.  An entry point is defined for this in pyproject.toml.
+    """
+    return "natlink"
 # warningTexts = []
 # def warning(text):
 #     """print warning only once, if warnings is set!
