@@ -603,10 +603,15 @@ def get_config_info_from_registry(key_name: str) -> str:
         result, _ = winreg.QueryValueEx(natlink_key, key_name)
         return result
 
+
+msg_error = False
+msg_warning = False
+
 def config_locations() -> Iterable[str]:
     """give two possible locations, the wanted and the "fallback" location
     
-    wanted: in the '.natlink' subdirectory of `home` or in "NATLINK_USERDIR".
+    wanted: in the '.natlink' subdirectory of `home` or in "NATLINK_USERDIR", this variable is
+    going to be replaced by "NATLINK_SETTINGSDIR".
     name is always 'natlink.ini'
     
     the fallback location is in the installed files, and provides the frame for the config file.
@@ -623,6 +628,7 @@ def config_locations() -> Iterable[str]:
     # try NATLINK_USERDIR setting (obsolete) and NATLINK_SETTINGSDIR (new):
     natlink_settingsdir_from_env = getenv("NATLINK_SETTINGSDIR")
     natlink_userdir_from_env_obsolete = getenv("NATLINK_USERDIR")
+    ## issue warnings if old setting is still there and conflicts with new setting:
     if natlink_userdir_from_env_obsolete:
         if natlink_settingsdir_from_env and natlink_userdir_from_env_obsolete:
             pass
