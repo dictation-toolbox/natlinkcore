@@ -518,7 +518,7 @@ class NatlinkConfig:
                 mess = f'copyUnimacroIncludeFile: Could not remove previous version of "{str(toFile)}"'
                 logging.warning(mess)
 
-    def includeUnimacroVchLineInVocolaFiles(self, subDirectory=None):
+    def includeUnimacroVchLineInVocolaFiles(self, toFolder=None):
         """include the Unimacro wrapper support line into all Vocola command files
         
         as a side effect, set the variable for Unimacro in Vocola support:
@@ -528,55 +528,66 @@ class NatlinkConfig:
         oldUscFile = 'usc.vch'
 ##        reInclude = re.compile(r'^include\s+.*unimacro.vch;$', re.MULTILINE)
 ##        reOldInclude = re.compile(r'^include\s+.*usc.vch;$', re.MULTILINE)
-        
+
         # also remove includes of usc.vch
-        toFolder = self.status.getVocolaUserDirectory()
+        vocUserDir = self.status.getVocolaUserDirectory()   
+        toFolder = toFolder or vocUserDir
+        subDirectory = toFolder != vocUserDir
         if subDirectory:
-            toFolder = os.path.join(toFolder, subDirectory)
             includeLine = f'include ..\\{uscFile};\n'
+            oldIncludeLines = [f'include {oldUscFile};',
+                               f'include ..\\{oldUscFile};',
+                               f'include {uscFile};'
+                               ]
         else:
             includeLine = f'include {uscFile};\n'
-        oldIncludeLines = [f'include {oldUscFile};',
-                           f'include ..\\{oldUscFile};',
-                           f'include {uscFile.lower()};',
-                           f'include ..\\{uscFile.lower()};',
-                           ]
+            oldIncludeLines = [f'include {oldUscFile};',
+                               f'include ..\\{oldUscFile};',
+                               f'include ..\\{uscFile};'
+                               ]
             
         if not os.path.isdir(toFolder):
-            mess = f'cannot find Vocola command files directory, not a valid path: {toFolder}'
+            if subDirectory:
+                mess = f'cannot find Vocola command files in sub directory, not a valid path: {toFolder}'
+            else:
+                mess = f'cannot find Vocola command files in irectory, not a valid path: {toFolder}'
             logging.warning(mess)
             return mess
+        
         nFiles = 0
         for f in os.listdir(toFolder):
-            F = os.path.join(toFolder, f)
             if f.endswith(".vcl"):
+                F = os.path.join(toFolder, f)
                 changed = 0
                 correct = 0
                 Output = []
                 for line in open(F, 'r'):
-                    if line.strip() == includeLine.strip():
+                    if line.strip().lower() == includeLine.strip().lower():
                         correct = 1
                     for oldLine in oldIncludeLines:
-                        if line.strip() == oldLine:
-                            changed = 1
+                        if line.strip().lower() == oldLine.lower():
+                            changed += 1
                             break
                     else:
                         Output.append(line)
                 if changed or not correct:
-                    # changes were made:
+                    # print(f'{F}: wrong lines: {changed}, had correct line: {bool(correct)}')   # changes were made:
                     if not correct:
+                        # print(f'\tinclude: "{includeLine.strip()}"')
                         Output.insert(0, includeLine)
                     open(F, 'w').write(''.join(Output))
                     nFiles += 1
-            elif len(f) == 3 and os.path.isdir(F):
+            elif len(f) == 3:
                 # subdirectory, recursive
-                self.includeUnimacroVchLineInVocolaFiles(F)
+                self.includeUnimacroVchLineInVocolaFiles(toFolder=os.path.join(toFolder, f))
         mess = f'changed {nFiles} files in {toFolder}'
         logging.warning(mess)
         return True
 
-    def removeUnimacroVchLineInVocolaFiles(self, subDirectory=None):
+    def removeUnimacroVchLineInVocolaFiles(self, toFolder=None):
         """remove the Unimacro wrapper support line into all Vocola command files
+        
+        toFolder set with recursive calls...
         """
         uscFile = 'Unimacro.vch'
         oldUscFile = 'usc.vch'
@@ -584,9 +595,8 @@ class NatlinkConfig:
 ##        reOldInclude = re.compile(r'^include\s+.*usc.vch;$', re.MULTILINE)
         
         # also remove includes of usc.vch
-        if subDirectory:
-            # for recursive call language subfolders:
-            toFolder = subDirectory
+        if toFolder:
+            pass            # for recursive call language subfolders:
         else:
             toFolder = self.status.getVocolaUserDirectory()
             
@@ -596,9 +606,6 @@ class NatlinkConfig:
                            f'include ..\\{uscFile};',
                            f'include ../{oldUscFile};',
                            f'include ../{uscFile};',
-                           f'include {uscFile.lower()};',
-                           f'include ..\\{uscFile.lower()};',
-                           f'include ../{uscFile.lower()};'
                            ]
 
             
@@ -614,7 +621,7 @@ class NatlinkConfig:
                 Output = []
                 for line in open(F, 'r'):
                     for oldLine in oldIncludeLines:
-                        if line.strip() == oldLine:
+                        if line.strip().lower() == oldLine.lower():
                             changed = 1
                             break
                     else:
@@ -623,9 +630,9 @@ class NatlinkConfig:
                     # had break, so changes were made:
                     open(F, 'w').write(''.join(Output))
                     nFiles += 1
-            elif len(f) == 3 and os.path.isdir(F):
-                self.removeUnimacroVchLineInVocolaFiles(F)
-        self.disableVocolaTakesUnimacroActions()
+            elif len(f) == 3:
+                self.removeUnimacroVchLineInVocolaFiles(toFolder=os.path.join(toFolder, f))
+        # self.disableVocolaTakesUnimacroActions()
         mess = f'removed include lines from {nFiles} files in {toFolder}'
         logging.warning(mess)
 
