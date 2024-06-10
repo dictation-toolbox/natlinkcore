@@ -435,6 +435,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         key = 'unimacrogrammarsdirectory'
         value =  self.natlinkmain.getconfigsetting(section='directories', option=key)
+        if not value:
+            return ""
         um_grammars_dir = natlinkcore.config.expand_path(value)
 
         self.UnimacroGrammarsDirectory = um_grammars_dir
