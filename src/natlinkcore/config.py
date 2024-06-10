@@ -133,8 +133,13 @@ class NatlinkConfig:
         for fn in files:
             if not isfile(fn):
                 continue
-            if config.read(fn):
-                return cls.from_config_parser(config, config_path=fn)
+            try:
+                if config.read(fn):
+                    return cls.from_config_parser(config, config_path=fn)
+            except Exception as exc:
+                mess = 'Error reading config file, %s\nPlease try to correct'% exc
+                os.startfile(fn)
+                raise OSError(mess) from exc
         # should not happen, because of DefaultConfig (was InstallTest)
         raise NoGoodConfigFoundException('No natlink config file found, please run configure natlink program\n\t(***configurenatlink***)')
 
@@ -235,7 +240,7 @@ def expand_natlink_settingsdir():
 def expand_natlink_settingsdir():
     """not with envvariables, but special:
     
-    if NATLINK_SETTINGsDIR is set: return this, but... it should end with ".natlink"
+    if NATLINK_SETTINGSDIR is set: return this, but... it should end with ".natlink"
     if NATLINK_SETTINGSDIR is NOT set: return Path.home()/'.natlink'
     """
     normpath = os.path.normpath

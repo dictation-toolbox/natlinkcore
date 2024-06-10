@@ -25,7 +25,10 @@ from pathlib import Path
 import configparser
 import logging
 
-from natlinkcore import natlinkstatus
+try:
+    from natlinkcore import natlinkstatus
+except OSError:
+    print('error when starting natlinkconfigfunctions')
 from natlinkcore import config
 from natlinkcore import loader
 from natlinkcore import readwritefile
@@ -84,18 +87,38 @@ class NatlinkConfig:
     def check_config(self):
         """check config_file for possibly unwanted settings
         """
+        # ensure the [directories] section is present:
+        try:
+            sect = self.Config['directories']
+        except KeyError:
+            self.Config.add_section('directories')
+            self.config_write()
+
+
         self.config_remove(section='directories', option='default_config')
+        
+        # check for default options missing:
+        # ret = config.NatlinkConfig.get_default_config()
+        # for ret_sect in ret.sections():
+        #     if self.Config.has_section(ret_sect):
+        #         continue
+        #     for ret_opt in self.Config[section].keys():
+        #         ret_value = ret[ret_sect][ret_opt]
+        #         print(f'fix default section/key: "ret_sect", "ret_opt" to "ret_value"')
         
         # change default unimacrogrammarsdirectory:
         section = 'directories'
         option = 'unimacrogrammarsdirectory'
         old_prefix = 'natlink_user'
         new_prefix = 'unimacro'
-        value = self.Config[section][option]
-        if value and value.find('natlink_user') == 0:
-            value = value.replace(old_prefix,new_prefix)
-            self.config_set(section, option, value)
-            logging.info(f'changed in "natlink.ini", section "directories", unimacro setting "{option}" to value: "{value}"')
+        try:
+            value = self.Config[section][option]
+            if value and value.find('natlink_user') == 0:
+                value = value.replace(old_prefix,new_prefix)
+                self.config_set(section, option, value)
+                logging.info(f'changed in "natlink.ini", section "directories", unimacro setting "{option}" to value: "{value}"')
+                pass
+        except KeyError:
             pass
         
         if loader.had_msg_error:
@@ -440,11 +463,11 @@ class NatlinkConfig:
         """
         uscFile = 'Unimacro.vch'
         # also remove usc.vch from VocolaUserDirectory
-        unimacroDir = Path(self.status.getUnimacroDirectory())
-        fromFolder = Path(unimacroDir)/'Vocola_compatibility'
+        dtactionsDir = Path(self.status.getDtactionsDirectory())
+        fromFolder = Path(dtactionsDir)/'Vocola_compatibility'
         toFolder = Path(self.status.getVocolaUserDirectory())
-        if not unimacroDir.is_dir():
-            mess = f'copyUnimacroIncludeFile: unimacroDir "{str(unimacroDir)}" is not a directory'
+        if not dtactionsDir.is_dir():
+            mess = f'copyUnimacroIncludeFile: dtactionsDir "{str(dtactionsDir)}" is not a directory'
             logging.warning(mess)
             return
         fromFile = fromFolder/uscFile
