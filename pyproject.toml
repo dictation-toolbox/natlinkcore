@@ -59,9 +59,6 @@ natlinkconfig_gui = "natlinkcore.configure.natlinkconfig_gui:main_gui"
 [project.entry-points."dt.loggers"]
     natlink ="natlinkcore:logname"
 
-[project.entry-points."dt.loggers"]
-    natlink ="natlinkcore:logname"
-
 [project.entry-points."natlink.extensions"]
 natlink_sample_macros  = "natlinkcore.SampleMacros:locateme"
 

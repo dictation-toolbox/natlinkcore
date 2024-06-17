@@ -3,6 +3,7 @@
 import os
 import configparser
 import pytest
+import filecmp
 from natlinkcore.readwritefile import ReadWriteFile
 from pathlib import Path
 
@@ -95,8 +96,41 @@ def test_other_encodings_write_file(tmp_path):
     assert text == 'latin1 café'
     
     
+def test_nsapps_utf16(tmp_path):
+    """try the encodings from the nsapps ini file, version of Aaron
+    """
+    testDir = tmp_path / testFolderName
+    testDir.mkdir()
+    # file_in = 'nsapps_aaron.ini'
+    file_in = 'nsapps_aaron.ini'
+    oldFile = mock_readwritefiledir/file_in
+    rwfile = ReadWriteFile(encodings=['utf-16le', 'utf-16be', 'utf-8'])  # optional encoding
+    text = rwfile.readAnything(oldFile)
+    bom = rwfile.bom
+    encoding = rwfile.encoding
+    assert text[0] == ';' 
+ 
+    assert bom == [255, 254]
+    assert encoding == 'utf-16le'
     
+    
+    newFile1 = 'output1' + file_in
+    newPath1 = testDir/newFile1
+    rwfile.writeAnything(newPath1, text)
+    
+    assert filecmp.cmp(oldFile, newPath1)
+    
+    rwfile2 = ReadWriteFile(encodings=['utf-16le'])  # optional encoding
+    text2 = rwfile2.readAnything(newPath1)
+    bom2 = rwfile2.bom
+    encoding2 = rwfile2.encoding
 
+    tRaw = rwfile.rawText
+    tRaw2 = rwfile2.rawText
+
+    assert text2[0] == ';'
+    assert bom2 == [255, 254]
+    assert encoding2 == 'utf-16le'
 
 def test_latin1_cp1252_write_file(tmp_path):
     testDir = tmp_path / testFolderName
@@ -129,7 +163,13 @@ def test_read_write_file(tmp_path):
             #write to our temp folder
             rwfile.writeAnything(Fout_path, text)
             #make sure they are the same
-            assert open(F_path, 'rb').read() == open(Fout_path, 'rb').read()
+            org = open(F_path, 'rb').read()
+            new = open(Fout_path, 'rb').read()
+            for i, (o,n) in enumerate(zip(org, new)):
+                if o != n:
+                    parto = org[i:i+2]
+                    partn = new[i:i+2]
+                    raise ValueError(f'old: "{F_path}", new: "{Fout_path}", differ at pos {i}: Old: "{o}", new: "{n}", partold (i:i+2): "{parto}", partnew: "{partn}"')
 
 def test_acoustics_ini(tmp_path):
     F='acoustic.ini'

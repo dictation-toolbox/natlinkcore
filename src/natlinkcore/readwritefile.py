@@ -27,6 +27,10 @@ Quintijn Hoogenboom, 2018, March 2022
 import os
 import sys
 
+# replacement strings
+WINDOWS_LINE_ENDING = '\r\n'
+UNIX_LINE_ENDING = '\n'
+
 class ReadWriteFile:
     """instance to read any text file and/or and write text into same or new file
     
@@ -78,7 +82,7 @@ class ReadWriteFile:
         
         with open(self.input_path, mode='rb') as file: # b is important -> binary
             self.rawText = file.read()
-        tRaw = fixCrLf(self.rawText)
+        tRaw = self.rawText
         #
         for codingscheme in self.encodings:
             result = DecodeEncode(tRaw, codingscheme)
@@ -87,9 +91,15 @@ class ReadWriteFile:
                     pass
                 if result and ord(result[0]) == 65279:  # BOM, remove
                     result = result[1:]
-                    self.bom = tRaw[0:3]
+                    if codingscheme.replace('-','').lower() == 'utf8':
+                        self.bom = [239, 187, 191]
+                    elif codingscheme.replace('-', '').lower() == 'utf16le':
+                        self.bom = [255, 254]
+                    else:
+                        raise OSError('file "{input_path}", BOM (byte order mark) found at start of file, but not "utf8" or "utf16le": "{codingscheme}"')
                 self.text = result
                 self.encoding = codingscheme
+                result = result.replace(WINDOWS_LINE_ENDING, UNIX_LINE_ENDING)
                 return result
         print(f'readAnything: no valid encoding found for file: {input_path}')
         self.text = ''
@@ -126,6 +136,13 @@ class ReadWriteFile:
         if not isinstance(content, str):
             raise TypeError("writeAnything, content should be str, not %s (%s)"% (type(content), filepath))
 
+        if sys.platform == 'win32':
+            # convert \n into \r\n:
+            content = content.replace(UNIX_LINE_ENDING, WINDOWS_LINE_ENDING)
+            # content = content.replace(b'\r\r\n', b'\r\n')  # just to be sure
+
+
+
         if self.encoding != 'ascii':
             i = self.encodings.index(self.encoding)
             # take 'ascii' and next encoding (will be 'utf-8')
@@ -148,28 +165,29 @@ class ReadWriteFile:
             else:
                 tRaw = content.encode(encoding=firstEncoding, errors=errors)
             
-        if sys.platform == 'win32':
-            tRaw = tRaw.replace(b'\n', b'\r\n')
-            tRaw = tRaw.replace(b'\r\r\n', b'\r\n')
             
         if self.bom:
             # print('add bom for tRaw')
-            tRaw = self.bom + tRaw 
-        outfile = open(filepath, 'wb')
-        # what difference does a bytearray make? (QH)
-        outfile.write(bytearray(tRaw))
-        outfile.close()
+            bombytes = bytearray(self.bom)
+            tRaw = bombytes + tRaw # now a bytesarray
+        with open(filepath, 'wb') as f:
+            # what difference does a bytearray make? (QH)
+            f.write(tRaw)
     
-def fixCrLf(tRaw):
-    """replace crlf into lf
-    """
-    if b'\r\r\n' in tRaw:
-        print('readAnything, fixCrLf: fix crcrlf')
-        tRaw = tRaw.replace(b'\r\r\n', b'\r\n')
-    if b'\r' in tRaw:
-        # print 'readAnything, self.fixCrLf, remove cr'
-        tRaw = tRaw.replace(b'\r', b'')
-    return tRaw
+# def fixCrLf(tRaw):
+#     """replace crlf into lf
+#     """
+#     if b'\r\n' in tRaw:
+#         print('readAnything, fixCrLf: fix crlf')
+#         tRaw = tRaw.replace(b'\r\n', b'\n')
+#         
+#     if b'\r\r\n' in tRaw:
+#         print('readAnything, fixCrLf: fix crcrlf')
+#         tRaw = tRaw.replace(b'\r\r\n', b'\r\n')
+#     if b'\r' in tRaw:
+#         # print 'readAnything, self.fixCrLf, remove cr'
+#         tRaw = tRaw.replace(b'\r', b'')
+#     return tRaw
     
 def DecodeEncode(tRaw, filetype):
     """return the decoded string or False
