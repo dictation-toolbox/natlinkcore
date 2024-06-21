@@ -3,6 +3,7 @@
 import os
 import configparser
 import pytest
+import filecmp
 from natlinkcore.readwritefile import ReadWriteFile
 from pathlib import Path
 
@@ -51,7 +52,7 @@ def test_accented_characters_write_file(tmp_path):
  #   newFile = join(testDir, 'output-accented.txt')
     testDir = tmp_path / testFolderName
     testDir.mkdir()
-    newFile = testDir/"outut-accented.txt"
+    newFile = testDir/"output-accented.txt"
     text = 'caf\xe9'
     rwfile = ReadWriteFile(encodings=['ascii'])  # optional encoding
     # this is with default errors='xmlcharrefreplace':
@@ -88,22 +89,76 @@ def test_other_encodings_write_file(tmp_path):
     testDir = tmp_path / testFolderName
     testDir.mkdir()
 
-    oldFile = mock_readwritefiledir/'latin1 accented.txt'
+    oldFile = mock_readwritefiledir/'latin1.txt'
 
     rwfile = ReadWriteFile(encodings=['latin1'])  # optional encoding
     text = rwfile.readAnything(oldFile)
     assert text == 'latin1 café'
     
     
-    
-
-
-def test_latin1_cp1252_write_file(tmp_path):
+def test_nsapps_utf16(tmp_path):
+    """try the encodings from the nsapps ini file, version of Aaron
+    """
     testDir = tmp_path / testFolderName
     testDir.mkdir()
-    _newFile = testDir/ 'latin1.txt'
-    _newFile = testDir/'cp1252.txt'
-    assert False, "QH TODO"
+    # file_in = 'nsapps_aaron.ini'
+    file_in = 'nsapps_aaron.ini'
+    oldFile = mock_readwritefiledir/file_in
+    rwfile = ReadWriteFile(encodings=['utf-16le', 'utf-16be', 'utf-8'])  # optional encoding
+    text = rwfile.readAnything(oldFile)
+    bom = rwfile.bom
+    encoding = rwfile.encoding
+    assert text[0] == ';' 
+ 
+    assert bom == [255, 254]
+    assert encoding == 'utf-16le'
+    
+    
+    newFile1 = 'output1' + file_in
+    newPath1 = testDir/newFile1
+    rwfile.writeAnything(newPath1, text)
+    
+    assert filecmp.cmp(oldFile, newPath1)
+    
+    rwfile2 = ReadWriteFile(encodings=['utf-16le'])  # optional encoding
+    text2 = rwfile2.readAnything(newPath1)
+    bom2 = rwfile2.bom
+    encoding2 = rwfile2.encoding
+
+    tRaw = rwfile.rawText
+    tRaw2 = rwfile2.rawText
+
+    assert text2[0] == ';'
+    assert bom2 == [255, 254]
+    assert encoding2 == 'utf-16le'
+
+def test_latin1_cp1252_write_file(tmp_path):
+    """have one latin-1 file and one that is specific cp1252 (euro sign)
+    
+    Currently both return cp1252, as is is hard to distinguish them and cp1252 is more general
+    """
+    testDir = tmp_path / testFolderName
+    testDir.mkdir()
+    mock_files_list = os.listdir(mock_readwritefiledir)
+
+    assert 'latin1.txt' in mock_files_list
+    assert 'cp1252.txt' in mock_files_list
+    
+    rwfilelatin1 = ReadWriteFile()
+    rwfilecp1252 = ReadWriteFile()
+    latin1_path = mock_readwritefiledir/'latin1.txt'
+    cp1252_path = mock_readwritefiledir/'cp1252.txt'
+    
+    rwfilelatin1.readAnything(latin1_path)
+    
+    assert rwfilelatin1.bom == ''
+    assert rwfilelatin1.encoding == 'cp1252'
+
+    rwfilecp1252.readAnything(cp1252_path)
+    assert rwfilecp1252.bom == ''
+    assert rwfilecp1252.encoding == 'cp1252'
+    
+
 
     # TODO (QH) to be done, these encodings do not take all characters,
     # and need special attention.
@@ -117,11 +172,15 @@ def test_read_write_file(tmp_path):
     assert len(mock_files_list) > 0
 
     for F in mock_files_list:
+        encodings = None
+        if F.startswith('nsapps'):
+            encodings = ['utf-16le']
+            continue    # utf16-le is not caught by the standard function, but needs its own encoding
         if not F.startswith('output-'):
             Fout = 'output-' + F
             #read the file from the mock folder
             F_path =   mock_readwritefiledir / F
-            rwfile = ReadWriteFile()
+            rwfile = ReadWriteFile(encodings=encodings)
             text = rwfile.readAnything(F_path)
             trunk, _ext = splitext(F)
             Fout = trunk + ".txt"
@@ -129,16 +188,51 @@ def test_read_write_file(tmp_path):
             #write to our temp folder
             rwfile.writeAnything(Fout_path, text)
             #make sure they are the same
-            assert open(F_path, 'rb').read() == open(Fout_path, 'rb').read()
+            org = open(F_path, 'rb').read()
+            new = open(Fout_path, 'rb').read()
+            for i, (o,n) in enumerate(zip(org, new)):
+                if o != n:
+                    parto = org[i:i+2]
+                    partn = new[i:i+2]
+                    raise ValueError(f'old: "{F_path}", new: "{Fout_path}", differ at pos {i}: Old: "{o}", new: "{n}", partold (i:i+2): "{parto}", partnew: "{partn}"')
 
 def test_acoustics_ini(tmp_path):
+    """this is a utf-8 file with a bom mark. Try also writing back!
+    """
+    testDir = tmp_path / testFolderName
+    testDir.mkdir()
+
+
     F='acoustic.ini'
     F_path = mock_readwritefiledir/F
     rwfile = ReadWriteFile()
     config_text = rwfile.readAnything(F_path)
     Config = configparser.ConfigParser()
     Config.read_string(config_text)
-    assert Config.get('Acoustics', '2 2') == '2_2' 
+    assert Config.get('Acoustics', '2 2') == '2_2'
+    
+    newFile1 = 'output1' + F
+    newPath1 = testDir/newFile1
+    rwfile.writeAnything(newPath1, config_text)
+    
+    assert filecmp.cmp(F_path, newPath1)
+    
+    rwfile2 = ReadWriteFile() 
+    text2 = rwfile2.readAnything(newPath1)
+    bom2 = rwfile2.bom
+    encoding2 = rwfile2.encoding
+
+    tRaw = rwfile.rawText
+    tRaw2 = rwfile2.rawText
+
+    assert tRaw2 == tRaw
+    assert text2[0:5] == '[Base'
+    assert bom2 == [239, 187, 191]
+    assert encoding2 == 'utf-8'
+    
+    
+
+
 
 @pytest.mark.parametrize("F", ['originalnatlink.ini', 'natlinkconfigured.ini'])
 def test_config_ini(tmp_path,F):
