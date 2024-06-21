@@ -38,8 +38,6 @@ class ReadWriteFile:
     
     `encodings` and `encoding` can be overridden at creation of an instance.
     `encodings` must then be a list of possible encodings
-    `encoding` is then 
-    when `encoding` is a str, `encodings` is set to a list only containing this encoding
     
     the default `encodings` are: `['ascii', 'utf-8', 'cp1252',  'latin-1']`
     
@@ -47,6 +45,9 @@ class ReadWriteFile:
     
     When the encoding is 'ascii' and at write time, non ascii characters are present, care is taken to
     encode the output to another encoding, most often (default) 'utf-8'.
+    
+    When you need a 'utf-16le' encoding (for 'nsapps.ini' of Dragon),
+    pass `encodings = ['utf16-le']` when creating the instance. 
     """
     def __init__(self, encodings=None):
         self.input_path = ''
