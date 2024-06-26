@@ -442,7 +442,7 @@ class NatlinkConfig:
         if not vocola_user_dir:
             return
         # vocGrammarsDir = self.status.getVocolaGrammarsDirectory()
-        vocGrammarsDir = r'natlink_userdir\vocolagrammars'
+        vocGrammarsDir = r'natlink_settings\vocolagrammars'
         self.setDirectory('vocoladirectory','vocola2')  #always vocola2
         self.setDirectory('vocolagrammarsdirectory', vocGrammarsDir)
         self.copyUnimacroIncludeFile()
