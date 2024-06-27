@@ -675,6 +675,9 @@ class NatlinkConfig:
     def openConfigFile(self):
         """open the natlink.ini config file
         """
+        assert self.config_path and os.path.isfile(self.config_path)
+        #     logging.warning(f'openConfigFile, no valid config_path specified: "{self.config_path}"')
+        #     return False
         os.startfile(self.config_path)
         logging.info(f'opened "{self.config_path}" in a separate window')
         return True
