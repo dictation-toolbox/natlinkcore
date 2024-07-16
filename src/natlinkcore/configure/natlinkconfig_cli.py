@@ -4,14 +4,16 @@ import getopt
 import cmd
 import os
 import os.path
-from natlinkcore.configure import extensions_and_folders
-from platformdirs import  user_log_dir
-from pathlib  import Path
-from natlinkcore.configure import natlinkconfigfunctions
 import logging
+from pathlib  import Path
+from natlinkcore.configure import extensions_and_folders
+from natlinkcore.configure import natlinkconfigfunctions
+from platformdirs import  user_log_dir
+
+
 appname="natlink"
 logdir =  Path(user_log_dir(appname=appname,ensure_exists=True))
-logfilename=logdir/f"cli_log.txt"
+logfilename=logdir/"cli_log.txt"
 file_handler = logging.FileHandler(logfilename)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(formatter)

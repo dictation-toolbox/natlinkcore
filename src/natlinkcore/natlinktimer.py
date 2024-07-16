@@ -156,7 +156,7 @@ class NatlinkTimer(metaclass=singleton.Singleton):
 
         # outside in_timer:
         try:
-            print('remove 1 timer')
+            print(f'natlinktimer, remove timer {callback.__name__}')
             del self.callbacks[callback]
         except KeyError:
             pass
@@ -361,7 +361,7 @@ def removeTimerCallback(callback, debug=None):
     callback: the function to be called
     """
     if not natlinktimer:
-        print(f'no timers active, cannot remove {callback} from natlinktimer')
+        # print(f'no timers active, cannot remove {callback} from natlinktimer')
         return
     
     if callback is None:

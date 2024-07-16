@@ -2,7 +2,7 @@
 import sys
 import platform
 
-import PySimpleGUI as sg
+import FreeSimpleGUI as sg
 import logging
 from platformdirs import  user_log_dir
 from pathlib import Path

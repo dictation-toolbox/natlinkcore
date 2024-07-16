@@ -1,12 +1,10 @@
-#pylint:disable=C0114, C0115, C0116, R1705, R0902, R0904, R0911, R0912, R0915, W0703, E1101
+#pylint:disable=C0114, C0115, C0116, R1705, R0902, R0904, R0911, R0912, R0915, W0703, E1101, W1203
 import importlib
 import importlib.machinery
 import importlib.util
 import logging
-from pydebugstring import outputDebugString,OutputDebugStringHandler
 import os
 import copy
-import sys
 import sys
 import time
 import traceback
@@ -15,6 +13,7 @@ import configparser
 from pathlib import Path
 from types import ModuleType
 from typing import List, Dict, Set, Iterable, Any, Tuple, Callable
+from pydebugstring import outputDebugString,OutputDebugStringHandler
 import debugpy
 
 import natlink
@@ -604,16 +603,22 @@ def get_config_info_from_registry(key_name: str) -> str:
         result, _ = winreg.QueryValueEx(natlink_key, key_name)
         return result
 
+
+had_msg_error = False
+had_msg_warning = False
+
 def config_locations() -> Iterable[str]:
     """give two possible locations, the wanted and the "fallback" location
     
-    wanted: in the '.natlink' subdirectory of `home` or in "NATLINK_USERDIR".
+    wanted: in the '.natlink' subdirectory of `home` or in "NATLINK_USERDIR", this variable is
+    going to be replaced by "NATLINK_SETTINGSDIR".
     name is always 'natlink.ini'
     
     the fallback location is in the installed files, and provides the frame for the config file.
     with the configurenatlink (natlinkconfigfunction.py or configfurenatlink.pyw) the fallback version
     of the config file is copied into the wanted location.
     """
+    global had_msg_warning, had_msg_error
     join, expanduser, getenv, isfile = os.path.join, os.path.expanduser, os.getenv, os.path.isfile
     home = expanduser('~')
     config_sub_dir = '.natlink'
@@ -621,53 +626,71 @@ def config_locations() -> Iterable[str]:
     fallback_config_file = join(get_natlinkcore_dirname(), "DefaultConfig", natlink_inifile)
     if not isfile(fallback_config_file):
         raise OSError(f'fallback_config_file does not exist: "{fallback_config_file}"')
-    # try NATLINKUSERDIR setting:
-    natlink_userdir_from_env = getenv("NATLINK_USERDIR")
-    if natlink_userdir_from_env:
-        nl_user_dir = expand_path(natlink_userdir_from_env)
-        nl_user_file = join(nl_user_dir, natlink_inifile)
-        return [nl_user_file, fallback_config_file]
+    # try NATLINK_USERDIR setting (obsolete) and NATLINK_SETTINGSDIR (new):
+    natlink_settingsdir_from_env = getenv("NATLINK_SETTINGSDIR")
+    natlink_userdir_from_env_obsolete = getenv("NATLINK_USERDIR")
+    ## issue warnings if old setting is still there and conflicts with new setting:
+    if natlink_userdir_from_env_obsolete:
+        if natlink_settingsdir_from_env and natlink_userdir_from_env_obsolete:
+            pass
+        elif natlink_settingsdir_from_env:
+            if not had_msg_error:
+                logging.warning('You defined env variable "NATLINK_SETTINGSDIR", but different from the obsolete env variable "NATLINK_USERDIR"...')
+                logging.warning('"NATLINK_SETTINGSDIR (valid): "%s"', natlink_settingsdir_from_env)
+                logging.warning('"NATLINK_USERDIR (obsolete): "%s"', natlink_userdir_from_env_obsolete)
+                had_msg_error = True
+        else:
+            ## natlink_settingsdir_from_env is not set, but natlink_userdir_from_env_obsolete IS
+            if not had_msg_warning:
+                logging.warning('You have set env variable "NATLINK_USERDIR", but this variable is obsolete.')
+                logging.warning('Please specify the env variable "NATLINK_SETTINGSDIR" to "%s", and restart Dragon', natlink_userdir_from_env_obsolete)
+                had_msg_warning = True
+                
+    if natlink_settingsdir_from_env:
+        nl_settings_dir = expand_path(natlink_settingsdir_from_env)
+        nl_settings_file = join(nl_settings_dir, natlink_inifile)
+        return [nl_settings_file, fallback_config_file]
 
     # choose between .natlink/natlink.ini in home or the fallback_directory:         
     return [join(home, config_sub_dir, natlink_inifile), fallback_config_file]
 
 def startDap(config : NatlinkConfig) -> bool:
-        """
-        Starts DAP (Debug Adapter Protocol) if there a DAP port specified in the config object.
-        returns True if the  dap was started.      
+    """
+    Starts DAP (Debug Adapter Protocol) if there a DAP port specified in the config object.
+    returns True if the  dap was started.      
 
-        Natlink will startDap automatically if configured in the run method below.   
-        If you need to start the DAP sooner, edit your code to make a call to startDap.
-        Similarly, if you want to start the DAP later, call startDap.  You can call it from your grammar or 
-        anywhere else.
-        """
+    Natlink will startDap automatically if configured in the run method below.   
+    If you need to start the DAP sooner, edit your code to make a call to startDap.
+    Similarly, if you want to start the DAP later, call startDap.  You can call it from your grammar or 
+    anywhere else.
+    """
 
-        dap_started=False
-        logging.debug(f"testing dap , enabled {config.dap_enabled} port {config.dap_port}")
-        try:
-            logging.debug("Debugpy.configure ...")
-            debugpy.configure(python=f"{python_exec}")
-            logging.debug("Debugpy.listen ...")
+    dap_started=False
+    logging.debug(f"testing dap , enabled {config.dap_enabled} port {config.dap_port}")
+    try:
+        logging.debug("Debugpy.configure ...")
+        debugpy.configure(python=f"{python_exec}")
+        logging.debug("Debugpy.listen ...")
 
-            debugpy.listen(config.dap_port)
-            dap_started=True
+        debugpy.listen(config.dap_port)
+        dap_started=True
 
-            logging.debug(f"DAP Started on Port {config.dap_port} in {__file__}")
-            if config.dap_wait_for_debugger_attach_on_startup:
-                #use info level logging, the user will need to know as natlink and dragon will hang here.
-                #unti debuger is attached.
-                logging.info(f"waiting for debugger to attach using DAP in {__file__} ")
-                debugpy.wait_for_client()
-            return dap_started
-            
-        except Exception as ee:
-            logging.info(f"""
-                Exception {ee} while starting DAP in {__file__}.  Possible cause is incorrect python executable specified {python_exec}
-                """     )
+        logging.debug(f"DAP Started on Port {config.dap_port} in {__file__}")
+        if config.dap_wait_for_debugger_attach_on_startup:
+            #use info level logging, the user will need to know as natlink and dragon will hang here.
+            #unti debuger is attached.
+            logging.info(f"waiting for debugger to attach using DAP in {__file__} ")
+            debugpy.wait_for_client()
+        return dap_started
+        
+    except Exception as ee:
+        logging.info(f"""
+            Exception {ee} while starting DAP in {__file__}.  Possible cause is incorrect python executable specified {python_exec}
+            """     )
 
 
 def run() -> None:
-    default_logger=logging.getLogger()
+    default_logger=logging.getLogger("natlink")
     dh = OutputDebugStringHandler()
     sh=logging.StreamHandler(sys.stdout)
     for h in [sh,dh]:
@@ -688,7 +711,7 @@ def run() -> None:
         config = NatlinkConfig.from_first_found_file(config_locations())
     
         dap_started = config.dap_enabled and startDap(config)           
-        logger=logging.getLogger("natlink")
+        logger=logging.getLogger("natlinkcore")
         logger.setLevel(logging.DEBUG)
 
         main = NatlinkMain(logger, config)
