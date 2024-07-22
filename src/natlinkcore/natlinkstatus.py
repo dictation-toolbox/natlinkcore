@@ -366,7 +366,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         """get the directory where "natlink.ini" should be stored
         
         This must be a local directory, default `~`, but can be changed by
-        setting `NATLINK_SETTINGSDIR` to for example `~/Documents`.
+        setting `NATLINK_SETTINGSDIR` to for example `~/Documents/.natlink`.
         
         Other directories that are created and checked by packages, and should be local, can be
         stored here, for example `VocolaGrammarsDirectory` (VocolaGrammars) and
@@ -374,7 +374,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         
         """
         natlink_ini_path = Path(self.getNatlinkIni())
-        natlink_settings_dir = natlink_ini_path.parent.parent
+        natlink_settings_dir = natlink_ini_path.parent
         
         return str(natlink_settings_dir)
     

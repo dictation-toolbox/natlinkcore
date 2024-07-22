@@ -75,7 +75,7 @@ class NatlinkConfig:
         
         """check the location/locations as given by the loader
         """
-        config_path, fallback_path = loader.config_locations()
+        config_path, fallback_path = loader.config_locations()  
         
         if not isfile(config_path):
             config_dir = Path(config_path).parent
@@ -123,11 +123,11 @@ class NatlinkConfig:
         
         if loader.had_msg_error:
             logging.error('The environment variable "NATLINK_USERDIR" has been changed to "NATLINK_SETTINGSDIR" by the user, but has a conclicting value')
-            logging.error('Please remove "NATLINK_USERDIR", in the windows environment variables, dialog User variables, and restart your program')
+            logging.error('Please remove "NATLINK_USERDIR", in the windows "environment variables", dialog User variables, and restart your program')
 
         if loader.had_msg_warning:
-            logging.error('The key of the environment variable "NATLINK_USERDIR" should be changed to "NATLINK_SETTINGSDIR"')
-            logging.error('You can do so in "windows environment variables", dialog "User variables". Then your program')
+            logging.error('The key of the environment variable "NATLINK_USERDIR" should be changed to "NATLINK_SETTINGSDIR".')
+            logging.error('You can do so in windows "environment variables", dialog "User variables".')
             
             
         # for key, value in self.Config[section].items():
