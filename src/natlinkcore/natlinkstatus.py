@@ -73,10 +73,9 @@ getUnimacroUserDirectory: get the directory of Unimacro INI files, if not return
       the Unimacro user directory
 
 getUnimacroDataDirectory: get the directory where Unimacro grammars can store data, this should be per computer, and is set 
-      into the natlink_user area
+      into the natlink_settingsdir area 
 
-getUnimacroGrammarsDirectory: get the directory where Unimacro grammars are (by default) located in a sub directory 'UnimacroGrammars' of the
-      UnimacroDirectory
+getUnimacroGrammarsDirectory: get the directory where Unimacro grammars are (by default) located in the python site-packagers directory 'unimacro'
 
 getVocolaDirectory: get the directory where the Vocola system is. When cloned from git, in Vocola, relative to
       the Core directory. Otherwise (when pipped) in some site-packages directory. It holds (and should hold) the
@@ -88,7 +87,7 @@ getVocolaUserDirectory: get the directory of Vocola User files, if not return ''
 
 getVocolaGrammarsDirectory: get the directory, where the compiled Vocola grammars are/will be.
     This will be the `CompiledGrammars` subdirectory of `~/.vocolaGrammars` or
-    `%NATLINK_USERDIR%/.vocola`.
+    `%NATLINK_SETTINGSDIR%/.vocola`.
 
 getVocolaTakesLanguages: additional settings for Vocola
 
@@ -363,11 +362,11 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             raise OSError(f'getNatlinkIni: not a valid file: "{path}"')
         return path
     
-    def getNatlink_Userdir(self):
+    def getNatlink_Settingsdir(self):
         """get the directory where "natlink.ini" should be stored
         
         This must be a local directory, default `~`, but can be changed by
-        setting `NATLINK_USERDIR` to for example `~/Documents`.
+        setting `NATLINK_SETTINGSDIR` to for example `~/Documents/.natlink`.
         
         Other directories that are created and checked by packages, and should be local, can be
         stored here, for example `VocolaGrammarsDirectory` (VocolaGrammars) and
@@ -375,8 +374,9 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         
         """
         natlink_ini_path = Path(self.getNatlinkIni())
-        natlink_user_dir = natlink_ini_path.parent
-        return str(natlink_user_dir)
+        natlink_settings_dir = natlink_ini_path.parent
+        
+        return str(natlink_settings_dir)
     
     def getUnimacroUserDirectory(self):
         isdir, abspath = os.path.isdir, os.path.abspath
@@ -435,6 +435,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         key = 'unimacrogrammarsdirectory'
         value =  self.natlinkmain.getconfigsetting(section='directories', option=key)
+        if not value:
+            return ""
         um_grammars_dir = natlinkcore.config.expand_path(value)
 
         self.UnimacroGrammarsDirectory = um_grammars_dir
@@ -450,9 +452,9 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         if self.UnimacroDataDirectory is not None:
             return self.UnimacroDataDirectory
         
-        natlink_user_dir = self.getNatlink_Userdir()
+        natlink_settings_dir = self.getNatlink_Settingsdir()
         
-        um_data_dir = Path(natlink_user_dir)/'UnimacroData'
+        um_data_dir = Path(natlink_settings_dir)/'UnimacroData'
         if not um_data_dir.is_dir():
             um_data_dir.mkdir()
         um_data_dir = str(um_data_dir)
@@ -753,7 +755,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         for key in ['DNSIniDir', 'WindowsVersion', 'DNSVersion',
                     'PythonVersion',
-                    'DNSName', 'NatlinkIni', 'Natlink_Userdir',
+                    'DNSName', 'NatlinkIni', 'Natlink_Settingsdir',
                     'UnimacroDirectory', 'UnimacroUserDirectory', 'UnimacroGrammarsDirectory', 'UnimacroDataDirectory',
                     'VocolaDirectory', 'VocolaUserDirectory', 'VocolaGrammarsDirectory',
                     'VocolaTakesLanguages', 'VocolaTakesUnimacroActions',
@@ -797,7 +799,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         # Natlink::
         L.append('')
-        for key in ['NatlinkDirectory', 'NatlinkcoreDirectory', 'InstallVersion', 'NatlinkIni', 'Natlink_Userdir']:
+        for key in ['NatlinkDirectory', 'NatlinkcoreDirectory', 'InstallVersion', 'NatlinkIni', 'Natlink_Settingsdir']:
             self.appendAndRemove(L, D, key)
 
         ## Dragonfly:

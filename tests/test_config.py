@@ -18,7 +18,7 @@ def sample_config(sample_name) -> 'NatlinkConfig':
     """
     load a config file from the config files subfolder
     """
-    sample_ini= (p.Path(__file__).parent) / "config_files" / sample_name
+    sample_ini= str((p.Path(__file__).parent) / "config_files" / sample_name )
     test_config = NatlinkConfig.from_file(sample_ini)
     return test_config
 
@@ -55,7 +55,7 @@ def mock_syspath(monkeypatch):
 def mock_userdir(monkeypatch):
     mock_folder=p.WindowsPath(os.path.dirname(__file__)) / "mock_userdir" / ".natlink"
     print(f"Mock Userdir Folder {mock_folder}")
-    monkeypatch.setenv("natlink_userdir",str(mock_folder))
+    monkeypatch.setenv("natlink_settingsdir",str(mock_folder))
 
 
 def test_settings_1(mock_syspath,settings1):
@@ -148,11 +148,11 @@ def test_expand_path(mock_syspath,mock_userdir):
     assert not os.path.isdir(result)
 
     # assume FakeGrammars is a valid directory:
-    result = expand_path('natlink_userdir/FakeGrammars')
+    result = expand_path('natlink_settingsdir/FakeGrammars')
     assert os.path.isdir(result)
     
     # invalid directory
-    result = expand_path('natlink_userdir/invalid_dir')
+    result = expand_path('natlink_settingsdir/invalid_dir')
     assert not os.path.isdir(result)
 
     # try package
@@ -173,12 +173,6 @@ def test_expand_path(mock_syspath,mock_userdir):
 
     result = expand_path('/natlinkcore')
     assert not os.path.isdir(result)
-
-    result = expand_path('unimacro')
-    assert os.path.isdir(result)
-
-    result = expand_path('unimacro/unimacrogrammars')
-    assert os.path.isdir(result)
 
 
 

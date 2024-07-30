@@ -506,10 +506,10 @@ class NatlinkMain(metaclass=Singleton):
         if args:
             self.user, self.profile = args
             self.language = self.get_user_language(self.profile)
-            self.logger.debug(f'set_user_language, user: "{self.user}", profile: "{self.profile}", language: "{self.language}"')
+            # self.logger.debug(f'set_user_language, user: "{self.user}", profile: "{self.profile}", language: "{self.language}"')
         else:
             self.user, self.profile = '', ''
-            self.logger.warning('set_user_language, cannot get input for get_user_language, set to "enx",\n\tprobably Dragon is not running or you are preforming pytests')
+            # self.logger.warning('set_user_language, cannot get input for get_user_language, set to "enx",\n\tprobably Dragon is not running or you are preforming pytests')
             self.language = 'enx'
 
     def start(self) -> None:
