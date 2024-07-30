@@ -5,6 +5,7 @@ import cmd
 import os
 import os.path
 import logging
+import configparser
 from pathlib  import Path
 from natlinkcore.configure import extensions_and_folders
 from natlinkcore.configure import natlinkconfigfunctions
@@ -165,9 +166,13 @@ help <command>: give more explanation on <command>
     # info----------------------------------------------------------
     def do_i(self, arg):
         self.Config.status.__init__()
-        S = self.Config.status.getNatlinkStatusString()
-        S = S + '\n\nIf you changed things, you must restart Dragon'
-        print(S)
+        try:
+            S = self.Config.status.getNatlinkStatusString()
+            S = S + '\n\nIf you changed things, you must restart Dragon'
+            print(S)
+        except configparser.NoSectionError:
+            print('No directories specified (yet). \nPlease specify one or more directories that Natlink should visit for grammar files')
+            
     def do_I(self, arg):
         # inifile natlinkstatus.ini settings:
         self.Config.status.__init__()

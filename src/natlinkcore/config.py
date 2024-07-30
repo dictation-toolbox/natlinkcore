@@ -133,8 +133,13 @@ class NatlinkConfig:
         for fn in files:
             if not isfile(fn):
                 continue
-            if config.read(fn):
-                return cls.from_config_parser(config, config_path=fn)
+            try:
+                if config.read(fn):
+                    return cls.from_config_parser(config, config_path=fn)
+            except Exception as exc:
+                mess = 'Error reading config file, %s\nPlease try to correct'% exc
+                os.startfile(fn)
+                raise OSError(mess) from exc
         # should not happen, because of DefaultConfig (was InstallTest)
         raise NoGoodConfigFoundException('No natlink config file found, please run configure natlink program\n\t(***configurenatlink***)')
 
@@ -178,9 +183,9 @@ def expand_path(input_path: str) -> str:
             dir_path = normpath(dir_path)
             if isdir(dir_path):
                 return dir_path
-            print(f'no valid directory found with "natlink_userdir": "{dir_path}"')
+            print(f'no valid directory found with "natlink_userdir": "{dir_path}"\nbut "natlink_userdir" should be replaced by "natlink_settingsdir" anyway')
             return dir_path
-        print(f'natlink_userdir does not expand to a valid directory: "{nud}"')
+        print(f'natlink_userdir does not expand to a valid directory: "{nud}"\nbut "natlink_userdir" should be replaced by "natlink_settingsdir" anyway')
         return normpath(nud)
 
     if input_path.startswith('natlink_settingsdir/') or input_path.startswith('natlink_settingsdir\\'):
@@ -204,16 +209,19 @@ def expand_path(input_path: str) -> str:
     else:
         package_trunk, rest = input_path, ''
         # find path for package.  not an alternative way without loading the package is to use importlib.util.findspec.
-    try:
-        pack = __import__(package_trunk)
-        package_path = pack.__path__[-1]
-        if rest:
-            dir_expanded = str(Path(package_path)/rest)
-            return dir_expanded
-        return package_path
-
-    except ModuleNotFoundError:
-        pass
+    
+    # first check for exclude "C:" as trunk:
+    if package_trunk and package_trunk[-1] != ":":
+        try:
+            pack = __import__(package_trunk)
+            package_path = pack.__path__[-1]
+            if rest:
+                dir_expanded = str(Path(package_path)/rest)
+                return dir_expanded
+            return package_path
+    
+        except (ModuleNotFoundError, OSError):
+            pass
     
     env_expanded = expandvars(input_path)
     # print(f'env_expanded: "{env_expanded}", from envvar: "{input_path}"')
@@ -222,25 +230,22 @@ def expand_path(input_path: str) -> str:
 def expand_natlink_settingsdir():
     """not with envvariables, but special:
     
-    if NATLINK_USERDIR is set: return this, but... it should end with ".natlink"
-    if NATLINK_USERDIR is NOT set: return Path.home()/'.natlink'
-    """
-    normpath = os.path.normpath
-    nud = os.getenv('natlink_userdir') or str(Path.home()/'.natlink')
-    nud = normpath(expand_path(nud))
-    if not nud.endswith('.natlink'):
-        raise ValueError(f'expand_natlink_settingsdir: directory "{nud}" should end with ".natlink"\n\tprobably you did not set the windows environment variable "NATLINK_USERDIR" incorrect, let it end with ".natlink".\n\tNote: if this ".natlink" directory does not exist yet, it will be created there.')
-    return nud
-
-def expand_natlink_settingsdir():
-    """not with envvariables, but special:
-    
-    if NATLINK_SETTINGsDIR is set: return this, but... it should end with ".natlink"
+    if NATLINK_SETTINGSDIR is set: return this, but... it should end with ".natlink"
     if NATLINK_SETTINGSDIR is NOT set: return Path.home()/'.natlink'
     """
     normpath = os.path.normpath
-    nsd = os.getenv('natlink_settingsdir') or str(Path.home()/'.natlink')
+    nsd = os.getenv('natlink_settingsdir')
+    if nsd:
+        if not os.path.isdir(nsd):
+            # this one should not happen, because .natlink is automatically created when it does not exist yet...
+            raise OSError(f'Environment variable "NATLINK_SETTINGSDIR" should hold a valid directory, ending with ".natlink", not: "{nsd}"\n\tCreate your directory likewise or remove this environment variable, and go back to the default directory (~\\.natlink)\n')
+            
+        if not normpath(nsd).endswith('.natlink'):
+            raise ValueError(f'Environment variable "NATLINK_SETTINGSDIR" should end with ".natlink", not: "{nsd}"\n\tCreate your directory likewise or remove this environment variable, returning to the default directory (~\\.natlink)\n')
+    else:
+        nsd = str(Path.home()/'.natlink')
+        
     nsd = normpath(expand_path(nsd))
-    if not nsd.endswith('.natlink'):
-        raise ValueError(f'expand_natlink_settingsdir: directory "{nsd}" should end with ".natlink"\n\tprobably you did not set the windows environment variable "NATLINK_SETTINGSDIR" incorrect, let it end with ".natlink".\n\tNote: if this ".natlink" directory does not exist yet, it will be created there.')
+    # if not nsd.endswith('.natlink'):
+    #     raise ValueError(f'expand_natlink_settingsdir: directory "{nsd}" should end with ".natlink"\n\tprobably you did not set the windows environment variable "NATLINK_SETTINGSDIR" incorrect, let it end with ".natlink".\n\tNote: if this ".natlink" directory does not exist yet, it will be created there.')
     return nsd
