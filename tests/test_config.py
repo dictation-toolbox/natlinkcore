@@ -1,4 +1,4 @@
-#pylint:disable= C0114, C0116, W0401, W0614, W0621, W0108. W0212
+#pylint:disable= C0114, C0116, W0401, W0614, W0621, W0108, W0212, C3001,
 
 import pathlib as p
 import sys
@@ -44,6 +44,7 @@ package_load_test1 = make_sample_config_fixture('package_load_test1.ini')
 dap_settings1 = make_sample_config_fixture("dap_settings_1.ini")
 dap_settings2 = make_sample_config_fixture("dap_settings_2.ini")
 dap_settings3 = make_sample_config_fixture("dap_settings_3.ini")
+
 @pytest.fixture()
 def mock_syspath(monkeypatch):
     """Add a tempory path to mock modules in sys.pythonpath"""
@@ -52,9 +53,10 @@ def mock_syspath(monkeypatch):
     monkeypatch.syspath_prepend(str(mock_folder))
 
 @pytest.fixture()
-def mock_userdir(monkeypatch):
-    mock_folder=p.WindowsPath(os.path.dirname(__file__)) / "mock_userdir" / ".natlink"
-    print(f"Mock Userdir Folder {mock_folder}")
+def mock_settingsdir(monkeypatch):
+    """Mock Config folder with natlink_settingsdir """
+    mock_folder=p.WindowsPath(os.path.dirname(__file__)) / "mock_settingsdir" / ".natlink"
+    print(f"Mock Config folder with natlink_settingsdir mocked env variable: {mock_folder}")
     monkeypatch.setenv("natlink_settingsdir",str(mock_folder))
 
 
@@ -70,18 +72,18 @@ def test_settings_1(mock_syspath,settings1):
     def filt(s,sub):
         return s.upper().find(sub.upper()) >=0
 
-    filt1=lambda s : filt(s, "fake_package1")
-    filt2=lambda s : filt(s, "C:\\")
+    filt1 = lambda s : filt(s, "fake_package1")
+    filt2 = lambda s : filt(s, "C:\\")
     filt3 = lambda s:  filt(s,"nonexistant")   #gets loaded anyway even though doesnt exist.
 
     def lenlistfilter(f,l):
         return len(list(filter(f,l)))
  
 
-    assert lenlistfilter(filt1,test_cfg.directories_for_user('')) >0
+    assert lenlistfilter(filt1,test_cfg.directories_for_user('')) > 0
    
-    assert lenlistfilter(filt2,test_cfg.directories_for_user('')) >0
-#    assert lenlistfilter(filt3,test_cfg.directories_for_user('')) >0
+    assert lenlistfilter(filt2,test_cfg.directories_for_user('')) > 0
+    assert lenlistfilter(filt3,test_cfg.directories_for_user('')) == 0   # relevant? QH
 
         
     assert test_cfg.log_level is LogLevel.DEBUG 
@@ -105,22 +107,22 @@ def test_settings_2(mock_syspath,settings2):
 
 def test_dap_settings(dap_settings1,dap_settings2,dap_settings3):
     test_cfg=dap_settings1
-    assert test_cfg.dap_enabled == False
+    assert test_cfg.dap_enabled is False
     assert test_cfg.dap_port == 7474
-    assert test_cfg.dap_wait_for_debugger_attach_on_startup == False
+    assert test_cfg.dap_wait_for_debugger_attach_on_startup is False
 
     test_cfg=dap_settings2
-    assert test_cfg.dap_enabled ==True
+    assert test_cfg.dap_enabled is True
     assert test_cfg.dap_port == 0
-    assert test_cfg.dap_wait_for_debugger_attach_on_startup == True
+    assert test_cfg.dap_wait_for_debugger_attach_on_startup is True
 
     test_cfg=dap_settings3
-    assert test_cfg.dap_enabled ==False
+    assert test_cfg.dap_enabled is False
     assert test_cfg.dap_port == 0
-    assert test_cfg.dap_wait_for_debugger_attach_on_startup == False
+    assert test_cfg.dap_wait_for_debugger_attach_on_startup is False
 
 
-def test_expand_path(mock_syspath,mock_userdir):
+def test_expand_path(mock_syspath,mock_settingsdir):
     """test the different expand_path possibilities, including finding a directory along   sys.path 
     since we know users might pip a package to  a few different spots depending on whether they are in an elevated shell.
     We specifically aren't testing unimacro and vocola2 since they might be in the sys.path or maybe not""" 
@@ -208,4 +210,4 @@ if __name__ == "__main__":
     print("-----------------------------------------")
     pprint(sys.path)
 
-    pytest.main([f'test_config.py'])
+    pytest.main(['test_config.py'])
