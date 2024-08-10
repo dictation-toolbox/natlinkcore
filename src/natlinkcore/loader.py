@@ -1,4 +1,5 @@
-#pylint:disable=C0114, C0115, C0116, R1705, R0902, R0904, R0911, R0912, R0915, W0703, E1101, W1203
+#pylint:disable=C0114, C0115, C0116, R1705, R0902, R0904, R0911, R0912, R0915, W0703, E1101, W1203, W0719
+#pylint:disable=R1710, W0603
 import importlib
 import importlib.machinery
 import importlib.util
@@ -514,6 +515,11 @@ class NatlinkMain(metaclass=Singleton):
 
     def start(self) -> None:
         self.logger.info(f'Starting natlink loader from config file:\n\t"{self.config.config_path}"')
+        nsd = os.getenv('natlink_settingsdir')
+        if nsd:
+            self.logger.info('\t(You set environment variable "NATLINK_SETTINGSDIR")')
+                
+
         natlink.active_loader = self
 
         # checking for default config location (probably when no natlinkconfig_gui has been run)
@@ -687,7 +693,6 @@ def startDap(config : NatlinkConfig) -> bool:
         logging.info(f"""
             Exception {ee} while starting DAP in {__file__}.  Possible cause is incorrect python executable specified {python_exec}
             """     )
-
 
 def run() -> None:
     default_logger=logging.getLogger("natlink")

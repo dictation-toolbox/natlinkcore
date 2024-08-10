@@ -160,7 +160,7 @@ class ThisGrammar(GrammarBase):
             natlink.setTimerCallback(None,0)
             self.haveCallback = 0
         self.activateSet(['start'],exclusive=0)
-        natlink.setTrayIcon()
+        # natlink.setTrayIcon()
 
     # This function is called on a timer event.  If we are in a movement
     # mode then we move the mouse or caret by the indicated amount.
@@ -176,7 +176,7 @@ class ThisGrammar(GrammarBase):
         if self.curMode == 1:
             moduleInfo = natlink.getCurrentModule()
             if natlink.getMicState() == 'on' and moduleInfo == self.moduleInfo:
-                self.setTrayIcon(1)
+                # self.setTrayIcon(1)
                 # Note: it is often during a playString operation that the
                 # "stop moving" command occurs
                 natlink.playString('{'+self.curDirection+'}')
@@ -224,10 +224,10 @@ class ThisGrammar(GrammarBase):
         direction = findKeyWord(words,self.listDefn['direction'])
         self.curMode = 1
         self.curDirection = direction
-        self.setTrayIcon(0)
+        # self.setTrayIcon(0)
         self.moduleInfo = natlink.getCurrentModule()
         self.curSpeed = defaultMoveSpeed
-        self.lastClock = time.clock()
+        self.lastClock = time.time()
         natlink.setTimerCallback(self.onTimer,defaultMoveSpeed)
         self.haveCallback = 1
         self.activateSet(['nowMoving'],exclusive=1)
@@ -239,7 +239,7 @@ class ThisGrammar(GrammarBase):
         direction = findKeyWord(words,self.listDefn['direction'])
         if direction:
             self.curDirection = direction
-            self.setTrayIcon(0)
+            # self.setTrayIcon(0)
         elif 'stop' in words:
             self.cancelMode()
         elif 'faster' in words:
@@ -319,7 +319,7 @@ class ThisGrammar(GrammarBase):
         else:
             self.iconState = 1
             iconName = iconName + '2'
-        natlink.setTrayIcon(iconName,toolTip,self.onTrayIcon)
+        # natlink.setTrayIcon(iconName,toolTip,self.onTrayIcon)
 
     # This is called if the user clicks on the tray icon.  We simply cancel
     # movement in all cases.

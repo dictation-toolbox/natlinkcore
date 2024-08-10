@@ -480,37 +480,8 @@ def showStateFlags(state):
 
 #---------------------------------------------------------------------------
 
-def testSubroutine(state, Input, Output):
-
-    words = Input.split()
-    for i, _word in enumerate(words):
-        words[i] = words[i].replace('_', ' ')
-    actual,state = formatWords(words,state)
-    if actual != Output:
-        print(f'Expected {"Output"}')
-        print(f'Actually {"actual"}')
-        raise ValueError("test error")
-    return state
 
 #---------------------------------------------------------------------------
-def testFormatting():
-
-    state=None
-    # assume english, two spaces after .:
-    # note _ is converted into a space, inside a word ()
-
-    state=testSubroutine(state,
-        r'first .\period\period next',
-        'First.  Next')
-    # continuing the previous:
-    state=testSubroutine(state,
-        r'this is a second sentence .\period\period',
-        ' this is a second sentence.')
-    state=testSubroutine(state,
-        r'\caps-on\Caps-On as you can see ,\comma\comma this yours_truly works \caps-off\caps_off well',
-        '  As You Can See, This Yours Truly Works well')
-
-    print('Example Formatting tests (11) passed, more in unittestNsformat (in PyTest directory)')
 
 if __name__=='__main__':
     import doctest

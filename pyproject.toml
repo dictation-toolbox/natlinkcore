@@ -12,7 +12,7 @@ dependencies= [
     "natlink>=5.3.4",
     "FreeSimpleGUI>=5.1.0", 
     "pydebugstring >= 1.0.0.1",
-    "dtactions>=1.6.1",
+    "dtactions>=1.6.2",
     "platformdirs >= 4.2.0"
 ]
     classifiers=[

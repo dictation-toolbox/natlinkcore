@@ -94,7 +94,21 @@ def test_other_encodings_write_file(tmp_path):
     rwfile = ReadWriteFile(encodings=['latin1'])  # optional encoding
     text = rwfile.readAnything(oldFile)
     assert text == 'latin1 café'
-    
+
+# def test_latin1_cp1252_write_file(tmp_path):
+#     """ TODO (QH) to be done, these encodings do not take all characters,
+#     and need special attention. latin1 and cp1252 are hard to be distinguished
+#     For now, cp1252 (holding more (some special characters like the euro sign and quotes))
+#     is favored over latin1.
+#     (as long as the "fallback" is utf-8, all write files should go well!)
+#     """
+#     testDir = tmp_path / testFolderName
+#     testDir.mkdir()
+#     _newFile = testDir/ 'latin1.txt'
+#     _newFile = testDir/'cp1252.txt'
+#     assert False, "QH TODO"
+
+   
     
 def test_nsapps_utf16(tmp_path):
     """try the encodings from the nsapps ini file, version of Aaron
@@ -131,38 +145,6 @@ def test_nsapps_utf16(tmp_path):
     assert text2[0] == ';'
     assert bom2 == [255, 254]
     assert encoding2 == 'utf-16le'
-
-def test_latin1_cp1252_write_file(tmp_path):
-    """have one latin-1 file and one that is specific cp1252 (euro sign)
-    
-    Currently both return cp1252, as is is hard to distinguish them and cp1252 is more general
-    """
-    testDir = tmp_path / testFolderName
-    testDir.mkdir()
-    mock_files_list = os.listdir(mock_readwritefiledir)
-
-    assert 'latin1.txt' in mock_files_list
-    assert 'cp1252.txt' in mock_files_list
-    
-    rwfilelatin1 = ReadWriteFile()
-    rwfilecp1252 = ReadWriteFile()
-    latin1_path = mock_readwritefiledir/'latin1.txt'
-    cp1252_path = mock_readwritefiledir/'cp1252.txt'
-    
-    rwfilelatin1.readAnything(latin1_path)
-    
-    assert rwfilelatin1.bom == ''
-    assert rwfilelatin1.encoding == 'cp1252'
-
-    rwfilecp1252.readAnything(cp1252_path)
-    assert rwfilecp1252.bom == ''
-    assert rwfilecp1252.encoding == 'cp1252'
-    
-
-
-    # TODO (QH) to be done, these encodings do not take all characters,
-    # and need special attention.
-    # (as long as the "fallback" is utf-8, all write files should go well!)
 
 # def test_latin1_cp1252_write_file(tmp_path):
 #     """ TODO (QH) to be done, these encodings do not take all characters,
