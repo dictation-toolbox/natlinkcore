@@ -15,9 +15,10 @@
 import os
 import sys
 
-src_directory = os.path.join(os.path.abspath('..'), 'src', 'natlinkcore')
+src_directory = os.path.join(os.path.abspath('..'), 'src')
 sys.path.insert(0, src_directory)
-# print(f'src_directory: {src_directory}')
+# print(sys.path)
+print('='*20)
 import natlinkcore
 
 # -- Project information -----------------------------------------------------
@@ -60,6 +61,7 @@ mock_modules = {
     'win32process',
     'winreg',
     'winxpgui',
+    'natlink'
 }
 
 for module_name in mock_modules:
