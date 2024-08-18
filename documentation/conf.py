@@ -61,9 +61,12 @@ mock_modules = {
     'win32process',
     'winreg',
     'winxpgui',
-    'natlink'
+    'natlink',
+    'pydebugstring',
+    'debugpy',
+    'vocola2',
+    'unimacro'
 }
-
 for module_name in mock_modules:
     sys.modules[module_name] = Mock()
 

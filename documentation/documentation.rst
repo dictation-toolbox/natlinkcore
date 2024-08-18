@@ -24,17 +24,23 @@ Then run the following command on Windows to build the documentation:
 
 .. code:: shell
 
-   $ make.bat html
-
-Or use the Makefile on other systems:
-
-.. code:: shell
-
    $ make html
+
+
 
 If there were no errors during the build process, open the
 *_build/html/index.html* file in a web browser. Make changes, rebuild the
 documentation and reload the doc page(s) in your browser as you go.
+
+
+Python versions
+--------------------------
+Note that Natlink is running on a 32 bits python version.
+
+It appears that Sphinx is not running on a 32 bits python version. So the documentation must be compiled on another (64bit) python version than you are running Natlink on!
+
+
+
 
 
 .. Links.
