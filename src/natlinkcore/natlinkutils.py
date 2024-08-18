@@ -6,11 +6,8 @@ Python Macro Language for Dragon NaturallySpeaking
 
   This file contains utility classes and functions for grammar files.
 
-  Documentation
-
-  This file contains three base classes and some useful constants and
-    utility functions:
-
+Grammar classes
+===============
   GrammarBase - base class for all command and control grammars.
       See documentation below just before the class definition.
 
@@ -20,17 +17,23 @@ Python Macro Language for Dragon NaturallySpeaking
   SelectGramBase - base class for all selection grammars.
       See documentation below just before the class definition.
 
+
+Functions
+==========
+
+among others, see below:
+
   buttonClick( btnName='left',count=1 )
       This function simulates a button click or button double click.  Pass
       in the button name ('left','right' or 'middle') and the count (1 or
       2)
 
+  
   matchWindow( moduleInfo, modName, wndText )
       A utility function which determines whether moduleInfo matches a
       specified module name and window title.  Returns window handle on
       match and None on mismatch. Note that moduleInfo may be ("","",0)
       which we should handle cleanly.
-
 
 """
 #pylint:disable=C0116, C0209, C0302, R0902, W0702, E1101, W0703, R1735
@@ -179,7 +182,7 @@ def matchWindow(moduleInfo, modName, wndText):
        
        Returns window handle on match and None on mismatch.
 
-       Note that moduleInfo may be ("","",0) which we should handle cleanly.
+       Note that moduleInfo may be `("", "", 0)` which we should handle cleanly.
     """
     if len(moduleInfo) < 3 or not moduleInfo[0]:
         return None
@@ -288,16 +291,33 @@ def getModifierKeyCodes(modifiers):
     return [modifier_dict[m] for m in modifiers]
 
 def playString(keys, hooks=None):
-    """Deprecated.
+    """natlink.playString was deprecated, but is repaired via a python function with version 5.4.0
     
-    natlink.playString, but sometimes has a drop or double of the first character it plays on the screen.
+Therefore this function in natlinkutils is obsolete.
     
-    dtactions has a sendkeys function, which can replace playSting most of the time...
+`playString` outputs a string of (keyboard) characters, including
+control characters (like `{ctrl+c}` or `{right 3}`)
+to the foreground window.
+
+It is implemented via the `sendkeys` function in repository `dtactions`.
+
+::
+
+    So you can either do:
+
     from dtactions.sendkeys import sendkeys
     (...)
     sendkeys('hello world')
+
+    or:
+    
+    from natlink import playString
+    (...)
+    playString('hello world again')
+    
+And forget about `natlinkutils.playString`!!
     """
-    raise DeprecationWarning('use natlink.playString or another sendkeys or sendinput function...')
+    natlink.playString(keys)
  
 #Classes--------------------------------------------------------------------
 
@@ -630,24 +650,25 @@ And assume that {list} contains the words "good" and "bad".
 
 Now if "this big red object is good" is recognized, the following callbacks
 will be made (in the order indicated).  
-
-(Note: The second parameter to gotResults_XXX and gotResults is the same as
-the second parameter to gotResultsInit.  The example has been abbreviated
-to save space.)
-
-  gotBegin( ??? )
-  gotResultsObject( 'self', resObj )
-  gotResultsInit( 
-      ['this','big','red','object','is','good'],
-      [('this','start'),('big','ruleOne'),('red','RuleTwo'),
-          ('object','ruleOne'),('is','start'),('good','start')] )
-  gotResults_start( ['this'], ... )
-  gotResults_ruleOne( ['big'], ... )
-  gotResults_ruleTwo( ['red'], ... )
-  gotResults_ruleOne( ['object'], ... )
-  gotResults_start( ['is','good'], ... )
-  gotResults( ['this','big','red','object','is','good'], ... )
-    """
+"""
+# 
+# (Note: The second parameter to gotResults_XXX and gotResults is the same as
+# the second parameter to gotResultsInit.  The example has been abbreviated
+# to save space.)
+# 
+#   gotBegin( ??? )
+#   gotResultsObject( 'self', resObj )
+#   gotResultsInit( 
+#       ['this','big','red','object','is','good'],
+#       [('this','start'),('big','ruleOne'),('red','RuleTwo'),
+#           ('object','ruleOne'),('is','start'),('good','start')] )
+#   gotResults_start( ['this'], ... )
+#   gotResults_ruleOne( ['big'], ... )
+#   gotResults_ruleTwo( ['red'], ... )
+#   gotResults_ruleOne( ['object'], ... )
+#   gotResults_start( ['is','good'], ... )
+#   gotResults( ['this','big','red','object','is','good'], ... )
+#     """
 
     def __init__(self):
         GramClassBase.__init__(self)
@@ -1139,7 +1160,9 @@ make default select and through words "select" and "through" (lower case)
 Quintijn december 2010
 adapt to throughWords as well, for future enhancement VoiceCode
 Quintijn August, 2009
+
   load( selectWords=['Select'], throughWord='Through', throughWords=None, allResults=0, hypothesis=0 )
+
       selectWords is a list of words or phrases which can introduce a
           comand of this type.  For example, you can pass in a list like
           ['Select','Correct','Insert Before','Insert After'] to simulate
@@ -1202,17 +1225,21 @@ results.  The following callback functions can be defined:
   gotResults( words, start, end )
       called when results are available for this grammar.
 
-      words = list of recognized words; the first word will be one of
+      words = list of recognized words
+          the first word will be one of
           the words or phrases in selectWords (passed in when the grammar
           was created).
+
       start = index into getSelectText of the start of the selection
+
       end = index into getSelectText of the end of the selection
 
+ 
   gotHypothesis( words )
       only called when the hypothesis flag is set on load, this callback
       contains the partial recognition hypothesis during recognition.
-
-
+  
+  
     """
     def load( self, selectWords=None, throughWord='through',
               throughWords=None,allResults=0, hypothesis=0 ):
@@ -1269,9 +1296,10 @@ results.  The following callback functions can be defined:
     def makeGrammar(self, selectWords, throughWords):
         """make a selection grammar, which is similar to a Microsoft SAPI grammar.
         
-    Use the routines in gramparser.py to build the grammar just like with
+    Uses the routines in `gramparser.py` to build the grammar just like with
     command grammars.
-    selectWords and throughWords are lists or words
+    
+    `selectWords` and `throughWords` are lists or words.
         """
         output = []
         output.append(struct.pack("LL", 10, 0))
@@ -1294,14 +1322,16 @@ results.  The following callback functions can be defined:
         
 #---------------------------------------------------------------------------        
 
-# Utility subroutine.  This returns the base module name from a complete path
 
 def getBaseName(name):
+    """Utility subroutine.  This returns the base module name from a complete path
+    """
     return os.path.splitext(os.path.split(name)[1])[0]
 
 
 def convertResults(fullResults):
     """This utility routine converts a fullResults parameter into a dictionary
+::
 
    [ ('red','color'), ('flower','object'), ('and','conj'), ('green','color') ]
    Becomes:
