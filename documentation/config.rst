@@ -7,3 +7,4 @@ The :code:`config` module reads the Natlink config file (`natlink.ini`), as used
 
 .. automodule:: natlinkcore.config
    :members:
+

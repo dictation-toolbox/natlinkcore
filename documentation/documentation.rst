@@ -49,3 +49,4 @@ It appears that Sphinx is not running on a 32 bits python version. So the docume
 .. _reStructuredText format: http://docutils.sourceforge.net/rst.html
 .. _restructuredText primer: http://docutils.sourceforge.net/docs/user/rst/quickstart.html
 .. _sphinx.ext.autodoc: https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html
+

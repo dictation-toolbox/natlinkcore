@@ -11,3 +11,4 @@ Moreover, it also handles callbacks from Dragon/Natlink.
 
 .. automodule:: natlinkcore.loader
    :members:
+

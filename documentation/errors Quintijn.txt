@@ -1,82 +1,394 @@
+Microsoft Windows [Version 10.0.19045.4780]
+(c) Microsoft Corporation. Alle rechten voorbehouden.
 
-Copyright (C) Microsoft Corporation. All rights reserved.
+C:\Users\Gebruiker>cd \dt\natlinkcore\documentation
 
-Try the new cross-platform PowerShell https://aka.ms/pscore6
+C:\DT\natlinkcore\documentation>cd \dt\natlinkcoredoug
 
-PS C:\Users\Gebruiker> cd C:\dt\NatlinkcoreDoug\documentation\
-PS C:\dt\NatlinkcoreDoug\documentation> .\make html                                                                     Running Sphinx v5.1.1
-natlinkcore, version: "5.3", release: "5.3.8"
+C:\DT\natlinkcoreDoug>cd documentations
+Het systeem kan het opgegeven pad niet vinden.
+
+C:\DT\natlinkcoreDoug>cd documentation
+
+C:\DT\natlinkcoreDoug\documentation>make html
+Running Sphinx v7.4.7
+====================
+natlinkcore, version: "5.3", release: "5.3.13"
+loading translations [en]... done
+Converting `source_suffix = '.rst'` to `source_suffix = {'.rst': 'restructuredtext'}`.
 loading pickled environment... done
 building [mo]: targets for 0 po files that are out of date
-building [html]: targets for 0 source files that are out of date
-updating environment: 0 added, 3 changed, 0 removed
-reading sources... [100%] natlinkstatus
-WARNING: autodoc: failed to import module 'config' from module 'natlink'; the following exception was raised:
-Traceback (most recent call last):
-  File "C:\Python310-32\lib\site-packages\sphinx\ext\autodoc\importer.py", line 58, in import_module
-    return importlib.import_module(modname)
-  File "C:\Python310-32\lib\importlib\__init__.py", line 126, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 688, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 883, in exec_module
-  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
-  File "C:\Program Files (x86)\Natlink\site-packages\natlink\__init__.py", line 90, in <module>
-    _original_natconnect=natConnect
-NameError: name 'natConnect' is not defined
+writing output...
+building [html]: targets for 2 source files that are out of date
+updating environment: 0 added, 2 changed, 0 removed
+from_config_parser: skip "vocola2" ("vocoladirectory"): is not a valid directory
+from_config_parser: skip "unimacro" ("unimacrodirectory"): is not a valid directory
+from_config_parser: skip "unimacro/unimacrogrammars" ("unimacrogrammarsdirectory"):
+        expanded to directory "unimacro\unimacrogrammars" is not a valid directory
 
-WARNING: autodoc: failed to import module 'loader' from module 'natlink'; the following exception was raised:
-Traceback (most recent call last):
-  File "C:\Python310-32\lib\site-packages\sphinx\ext\autodoc\importer.py", line 58, in import_module
-    return importlib.import_module(modname)
-  File "C:\Python310-32\lib\importlib\__init__.py", line 126, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 688, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 883, in exec_module
-  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
-  File "C:\Program Files (x86)\Natlink\site-packages\natlink\__init__.py", line 90, in <module>
-    _original_natconnect=natConnect
-NameError: name 'natConnect' is not defined
+C:\DT\natlinkcoreDoug\documentation\modules.rst:7: ERROR: Error in "toctree" directive:
+invalid option block.
 
-WARNING: autodoc: failed to import module 'natlinkstatus' from module 'natlinkcore'; the following exception was raised:
-Traceback (most recent call last):
-  File "C:\Python310-32\lib\site-packages\sphinx\ext\autodoc\importer.py", line 58, in import_module
-    return importlib.import_module(modname)
-  File "C:\Python310-32\lib\importlib\__init__.py", line 126, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "<frozen importlib._bootstrap>", line 1050, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1027, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1006, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 688, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 883, in exec_module
-  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
-  File "C:\DT\NatlinkcoreDoug\src\natlinkcore\natlinkstatus.py", line 110, in <module>
-    import natlink
-  File "C:\Program Files (x86)\Natlink\site-packages\natlink\__init__.py", line 90, in <module>
-    _original_natconnect=natConnect
-NameError: name 'natConnect' is not defined
-
+..  toctree::
+    :maxdepth: 2
+    config
+    loader
+    natlinkstatus
+    natlinkutils
 looking for now-outdated files... none found
 pickling environment... done
-checking consistency... C:\DT\NatlinkcoreDoug\documentation\config.rst: WARNING: document isn't included in any toctree
-C:\DT\NatlinkcoreDoug\documentation\developers.rst: WARNING: document isn't included in any toctree
-C:\DT\NatlinkcoreDoug\documentation\loader.rst: WARNING: document isn't included in any toctree
-C:\DT\NatlinkcoreDoug\documentation\natlinkstatus.rst: WARNING: document isn't included in any toctree
+checking consistency... C:\DT\natlinkcoreDoug\documentation\config.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\loader.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkstatus.rst: WARNING: document isn't included in any toctree
 done
 preparing documents... done
-writing output... [100%] natlinkstatus
-generating indices... genindex done
-writing additional pages... search done
+copying assets...
 copying static files... done
 copying extra files... done
+copying assets: done
+writing output... [100%] natlinkstatus
+generating indices... genindex py-modindex done
+highlighting module code... [100%] natlinkcore.natlinkstatus
+writing additional pages... search done
 dumping search index in English (code: en)... done
 dumping object inventory... done
-build succeeded, 7 warnings.
+build succeeded, 4 warnings.
 
 The HTML pages are in _build\html.
-PS C:\dt\NatlinkcoreDoug\documentation>
+
+C:\DT\natlinkcoreDoug\documentation>cd build
+Het systeem kan het opgegeven pad niet vinden.
+
+C:\DT\natlinkcoreDoug\documentation>make html
+Running Sphinx v7.4.7
+====================
+natlinkcore, version: "5.3", release: "5.3.13"
+loading translations [en]... done
+Converting `source_suffix = '.rst'` to `source_suffix = {'.rst': 'restructuredtext'}`.
+loading pickled environment... done
+building [mo]: targets for 0 po files that are out of date
+writing output...
+building [html]: targets for 1 source files that are out of date
+updating environment: 0 added, 1 changed, 0 removed
+reading sources... [100%] modules
+C:\DT\natlinkcoreDoug\documentation\modules.rst:7: ERROR: Error in "toctree" directive:
+invalid option block.
+
+..  toctree::
+    :maxdepth: 2
+    natlinkutils
+    config
+    loader
+    natlinkstatus
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... C:\DT\natlinkcoreDoug\documentation\config.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\loader.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkstatus.rst: WARNING: document isn't included in any toctree
+done
+preparing documents... done
+copying assets...
+copying static files... done
+copying extra files... done
+copying assets: done
+writing output... [100%] modules
+generating indices... genindex py-modindex done
+from_config_parser: skip "vocola2" ("vocoladirectory"): is not a valid directory
+from_config_parser: skip "unimacro" ("unimacrodirectory"): is not a valid directory
+from_config_parser: skip "unimacro/unimacrogrammars" ("unimacrogrammarsdirectory"):
+        expanded to directory "unimacro\unimacrogrammars" is not a valid directory
+
+writing additional pages... search done
+dumping search index in English (code: en)... done
+dumping object inventory... done
+build succeeded, 4 warnings.
+
+The HTML pages are in _build\html.
+
+C:\DT\natlinkcoreDoug\documentation>make html
+Running Sphinx v7.4.7
+====================
+natlinkcore, version: "5.3", release: "5.3.13"
+loading translations [en]... done
+Converting `source_suffix = '.rst'` to `source_suffix = {'.rst': 'restructuredtext'}`.
+loading pickled environment... done
+building [mo]: targets for 0 po files that are out of date
+writing output...
+building [html]: targets for 0 source files that are out of date
+updating environment: 1 added, 0 changed, 0 removed
+reading sources... [100%] natlinkutils
+C:\DT\natlinkcoreDoug\src\natlinkcore\natlinkutils.py:docstring of natlinkcore.natlinkutils.GrammarBase:128: ERROR: Unexpected indentation.
+C:\DT\natlinkcoreDoug\src\natlinkcore\natlinkutils.py:docstring of natlinkcore.natlinkutils.GrammarBase:130: ERROR: Unexpected indentation.
+C:\DT\natlinkcoreDoug\src\natlinkcore\natlinkutils.py:docstring of natlinkcore.natlinkutils.GrammarBase:131: WARNING: Block quote ends without a blank line; unexpected unindent.
+C:\DT\natlinkcoreDoug\src\natlinkcore\natlinkutils.py:docstring of natlinkcore.natlinkutils.SelectGramBase:14: ERROR: Unexpected indentation.
+C:\DT\natlinkcoreDoug\src\natlinkcore\natlinkutils.py:docstring of natlinkcore.natlinkutils.SelectGramBase:80: WARNING: Definition list ends without a blank line; unexpected unindent.
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... C:\DT\natlinkcoreDoug\documentation\config.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\loader.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkstatus.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkutils.rst: WARNING: document isn't included in any toctree
+done
+preparing documents... done
+copying assets...
+copying static files... done
+copying extra files... done
+copying assets: done
+writing output... [100%] natlinkutils
+generating indices... genindex py-modindex done
+from_config_parser: skip "vocola2" ("vocoladirectory"):tatus
+        expanded to directory "<MagicMock name='mock.__getitem__()' id='2546067660176'>" is not a valid directory
+from_config_parser: skip "unimacro" ("unimacrodirectory"):
+        expanded to directory "<MagicMock name='mock.__getitem__()' id='2546066507344'>" is not a valid directory
+from_config_parser: skip "unimacro/unimacrogrammars" ("unimacrogrammarsdirectory"):
+        expanded to directory "MagicMock\mock.__getitem__()\2546067778640\unimacrogrammars" is not a valid directory
+highlighting module code... [100%] natlinkcore.natlinkutils
+writing additional pages... search done
+dumping search index in English (code: en)... done
+dumping object inventory... done
+build succeeded, 9 warnings.
+
+The HTML pages are in _build\html.
+
+C:\DT\natlinkcoreDoug\documentation>make html
+Running Sphinx v7.4.7
+====================
+natlinkcore, version: "5.3", release: "5.3.13"
+loading translations [en]... done
+Converting `source_suffix = '.rst'` to `source_suffix = {'.rst': 'restructuredtext'}`.
+loading pickled environment... done
+building [mo]: targets for 0 po files that are out of date
+writing output...
+building [html]: targets for 1 source files that are out of date
+updating environment: 0 added, 1 changed, 0 removed
+reading sources... [100%] modules
+C:\DT\natlinkcoreDoug\documentation\modules.rst:7: ERROR: Error in "toctree" directive:
+invalid option block.
+
+..  toctree::
+    :maxdepth: 2
+    natlinkutils.rst
+    config.rst
+    loader.rst
+    natlinkstatus.rst
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... C:\DT\natlinkcoreDoug\documentation\config.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\loader.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkstatus.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkutils.rst: WARNING: document isn't included in any toctree
+done
+preparing documents... done
+copying assets...
+copying static files... done
+copying extra files... done
+copying assets: done
+writing output... [100%] modules
+generating indices... genindex py-modindex done
+from_config_parser: skip "vocola2" ("vocoladirectory"):tatus
+        expanded to directory "<MagicMock name='mock.__getitem__()' id='2389399671440'>" is not a valid directory
+from_config_parser: skip "unimacro" ("unimacrodirectory"):
+        expanded to directory "<MagicMock name='mock.__getitem__()' id='2389399709200'>" is not a valid directory
+from_config_parser: skip "unimacro/unimacrogrammars" ("unimacrogrammarsdirectory"):
+        expanded to directory "MagicMock\mock.__getitem__()\2389399509136\unimacrogrammars" is not a valid directory
+highlighting module code... [100%] natlinkcore.natlinkutils
+writing additional pages... search done
+dumping search index in English (code: en)... done
+dumping object inventory... done
+build succeeded, 5 warnings.
+
+The HTML pages are in _build\html.
+
+C:\DT\natlinkcoreDoug\documentation>make html
+Running Sphinx v7.4.7
+====================
+natlinkcore, version: "5.3", release: "5.3.13"
+loading translations [en]... done
+Converting `source_suffix = '.rst'` to `source_suffix = {'.rst': 'restructuredtext'}`.
+loading pickled environment... done
+building [mo]: targets for 0 po files that are out of date
+writing output...
+building [html]: targets for 1 source files that are out of date
+updating environment: 0 added, 1 changed, 0 removed
+reading sources... [100%] modules
+C:\DT\natlinkcoreDoug\documentation\modules.rst:7: ERROR: Error in "toctree" directive:
+invalid option block.
+
+..  toctree::
+    :maxdepth: 2
+    natlinkutils
+    config
+    loader
+    natlinkstatus
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... C:\DT\natlinkcoreDoug\documentation\config.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\loader.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkstatus.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkutils.rst: WARNING: document isn't included in any toctree
+done
+preparing documents... done
+copying assets...
+copying static files... done
+copying extra files... done
+copying assets: done
+writing output... [100%] modules
+generating indices... genindex py-modindex done
+from_config_parser: skip "vocola2" ("vocoladirectory"):tatus
+        expanded to directory "<MagicMock name='mock.__getitem__()' id='2383906872784'>" is not a valid directory
+from_config_parser: skip "unimacro" ("unimacrodirectory"):
+        expanded to directory "<MagicMock name='mock.__getitem__()' id='2383906680464'>" is not a valid directory
+from_config_parser: skip "unimacro/unimacrogrammars" ("unimacrogrammarsdirectory"):
+        expanded to directory "MagicMock\mock.__getitem__()\2383906996304\unimacrogrammars" is not a valid directory
+highlighting module code... [100%] natlinkcore.natlinkutils
+writing additional pages... search done
+dumping search index in English (code: en)... done
+dumping object inventory... done
+build succeeded, 5 warnings.
+
+The HTML pages are in _build\html.
+
+C:\DT\natlinkcoreDoug\documentation>make html
+Running Sphinx v7.4.7
+====================
+natlinkcore, version: "5.3", release: "5.3.13"
+loading translations [en]... done
+Converting `source_suffix = '.rst'` to `source_suffix = {'.rst': 'restructuredtext'}`.
+loading pickled environment... done
+building [mo]: targets for 0 po files that are out of date
+writing output...
+building [html]: targets for 0 source files that are out of date
+updating environment: 0 added, 0 changed, 0 removed
+reading sources...
+looking for now-outdated files... none found
+no targets are out of date.
+build succeeded.
+
+The HTML pages are in _build\html.
+
+C:\DT\natlinkcoreDoug\documentation>make html
+Running Sphinx v7.4.7
+====================
+natlinkcore, version: "5.3", release: "5.3.13"
+loading translations [en]... done
+Converting `source_suffix = '.rst'` to `source_suffix = {'.rst': 'restructuredtext'}`.
+loading pickled environment... done
+building [mo]: targets for 0 po files that are out of date
+writing output...
+building [html]: targets for 1 source files that are out of date
+updating environment: 0 added, 1 changed, 0 removed
+reading sources... [100%] modules
+C:\DT\natlinkcoreDoug\documentation\modules.rst:7: ERROR: Error in "toctree" directive:
+invalid option block.
+
+..  toctree::
+    :maxdepth: 2
+    natlinkutils
+    config
+    loader
+    natlinkstatus
+    natlinktimer
+    readwritefile
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... C:\DT\natlinkcoreDoug\documentation\config.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\loader.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkstatus.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkutils.rst: WARNING: document isn't included in any toctree
+done
+preparing documents... done
+copying assets...
+copying static files... done
+copying extra files... done
+copying assets: done
+writing output... [100%] modules
+generating indices... genindex py-modindex done
+from_config_parser: skip "vocola2" ("vocoladirectory"):tatus
+        expanded to directory "<MagicMock name='mock.__getitem__()' id='2731594390672'>" is not a valid directory
+from_config_parser: skip "unimacro" ("unimacrodirectory"):
+        expanded to directory "<MagicMock name='mock.__getitem__()' id='2731595082192'>" is not a valid directory
+from_config_parser: skip "unimacro/unimacrogrammars" ("unimacrogrammarsdirectory"):
+        expanded to directory "MagicMock\mock.__getitem__()\2731595383760\unimacrogrammars" is not a valid directory
+highlighting module code... [100%] natlinkcore.natlinkutils
+writing additional pages... search done
+dumping search index in English (code: en)... done
+dumping object inventory... done
+build succeeded, 5 warnings.
+
+The HTML pages are in _build\html.
+
+C:\DT\natlinkcoreDoug\documentation>make html
+Running Sphinx v7.4.7
+====================
+natlinkcore, version: "5.3", release: "5.3.13"
+loading translations [en]... done
+Converting `source_suffix = '.rst'` to `source_suffix = {'.rst': 'restructuredtext'}`.
+loading pickled environment... done
+building [mo]: targets for 0 po files that are out of date
+writing output...
+building [html]: targets for 0 source files that are out of date
+updating environment: 0 added, 0 changed, 0 removed
+reading sources...
+looking for now-outdated files... none found
+no targets are out of date.
+build succeeded.
+
+The HTML pages are in _build\html.
+
+C:\DT\natlinkcoreDoug\documentation>make html
+Running Sphinx v7.4.7
+====================
+natlinkcore, version: "5.3", release: "5.3.13"
+loading translations [en]... done
+Converting `source_suffix = '.rst'` to `source_suffix = {'.rst': 'restructuredtext'}`.
+loading pickled environment... done
+building [mo]: targets for 0 po files that are out of date
+writing output...
+building [html]: targets for 8 source files that are out of date
+updating environment: 0 added, 8 changed, 0 removed
+from_config_parser: skip "vocola2" ("vocoladirectory"):
+        expanded to directory "<MagicMock name='mock.__getitem__()' id='2039310332496'>" is not a valid directory
+from_config_parser: skip "unimacro" ("unimacrodirectory"):
+        expanded to directory "<MagicMock name='mock.__getitem__()' id='2039311115856'>" is not a valid directory
+from_config_parser: skip "unimacro/unimacrogrammars" ("unimacrogrammarsdirectory"):
+        expanded to directory "MagicMock\mock.__getitem__()\2039310573712\unimacrogrammars" is not a valid directory
+reading sources... [100%] project
+C:\DT\natlinkcoreDoug\documentation\modules.rst:7: ERROR: Error in "toctree" directive:
+invalid option block.
+
+..  toctree::
+    :maxdepth: 2
+    natlinkutils
+    config
+    loader
+    natlinkstatus
+    natlinktimer
+    readwritefile
+C:\DT\natlinkcoreDoug\src\natlinkcore\natlinkutils.py:docstring of natlinkcore.natlinkutils.GrammarBase:128: ERROR: Unexpected indentation.
+C:\DT\natlinkcoreDoug\src\natlinkcore\natlinkutils.py:docstring of natlinkcore.natlinkutils.GrammarBase:130: ERROR: Unexpected indentation.
+C:\DT\natlinkcoreDoug\src\natlinkcore\natlinkutils.py:docstring of natlinkcore.natlinkutils.GrammarBase:131: WARNING: Block quote ends without a blank line; unexpected unindent.
+C:\DT\natlinkcoreDoug\src\natlinkcore\natlinkutils.py:docstring of natlinkcore.natlinkutils.SelectGramBase:14: ERROR: Unexpected indentation.
+C:\DT\natlinkcoreDoug\src\natlinkcore\natlinkutils.py:docstring of natlinkcore.natlinkutils.SelectGramBase:80: WARNING: Definition list ends without a blank line; unexpected unindent.
+looking for now-outdated files... none found
+pickling environment... done
+checking consistency... C:\DT\natlinkcoreDoug\documentation\config.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\loader.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkstatus.rst: WARNING: document isn't included in any toctree
+C:\DT\natlinkcoreDoug\documentation\natlinkutils.rst: WARNING: document isn't included in any toctree
+done
+preparing documents... done
+copying assets...
+copying static files... done
+copying extra files... done
+copying assets: done
+writing output... [100%] project
+generating indices... genindex py-modindex done
+highlighting module code... [100%] natlinkcore.natlinkutils
+writing additional pages... search done
+dumping search index in English (code: en)... done
+dumping object inventory... done
+build succeeded, 10 warnings.
+
+The HTML pages are in _build\html.
+
+C:\DT\natlinkcoreDoug\documentation>

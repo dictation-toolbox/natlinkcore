@@ -10,5 +10,6 @@ This section includes the available modules in the natlinkcore repository
     config
     loader
     natlinkstatus
-    
+    natlinktimer
+    readwritefile
     

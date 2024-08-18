@@ -65,7 +65,10 @@ mock_modules = {
     'pydebugstring',
     'debugpy',
     'vocola2',
-    'unimacro'
+    'unimacro',
+    'vocoladirectory',
+    'unimacrodirectory',
+    'unimacrogrammarsdirectory',
 }
 for module_name in mock_modules:
     sys.modules[module_name] = Mock()
