@@ -24,7 +24,7 @@ Then run the following command on Windows to build the documentation:
 
 .. code:: shell
 
-   $ make html
+   $ ./make html
 
 
 
