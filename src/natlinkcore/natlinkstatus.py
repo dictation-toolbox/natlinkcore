@@ -365,6 +365,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
     
     getnatlinkini = getNatlinkIni
     
+
     def getNatlink_Settingsdir(self):
         """get the directory where "natlink.ini" should be stored
         

@@ -9,5 +9,6 @@ modules according to the config file `natlink.ini`.
 Moreover, it also handles callbacks from Dragon/Natlink.
 
 
-.. automodule:: natlink.loader
+.. automodule:: natlinkcore.loader
    :members:
+
