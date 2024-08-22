@@ -1,4 +1,4 @@
-#pylint:disable=C0114, C0115, C0116, R0913, E1101, R0911, R0914, W0702
+#pylint:disable=C0114, C0115, C0116, R0913, E1101, R0911, R0914, W0702, R0912, C0209
 import sys
 import configparser
 import logging

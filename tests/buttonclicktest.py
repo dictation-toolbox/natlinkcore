@@ -5,7 +5,7 @@
 # the "ESP" error is hit.
 
 # When Dragon is running, it freezes, and must be closed with the windows task manager
-
+# with release 5.5.7 this should be OK, because PlayEvents has been disabled.
 
 import natlink
 from natlinkcore import natlinkutils
