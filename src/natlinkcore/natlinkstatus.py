@@ -326,9 +326,10 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         uuDir = self.getUnimacroUserDirectory()
         if not uuDir:
             return False
-        # ugDir = uuDir    # only _control  self.getUnimacroGrammarsDirectory()
+        
+        # ugDir = self.getUnimacroGrammarsDirectory()
         # if not (ugDir and isdir(ugDir)):
-        #     print(f'UnimacroGrammarsDirectory ({ugDir}) not present, please create')
+        #     print(f'UnimacroGrammarsDirectory ({ugDir}) is not present, should be a subdirectory "unimacrogrammars" of {uDir}, please (re)run your pip install unimacro command, of rerun the "Configure Natlink with GUI" or "Configure Natlink with CLI"')
         #     return False
         return True            
 
@@ -362,6 +363,9 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             raise OSError(f'getNatlinkIni: not a valid file: "{path}"')
         return path
     
+    getnatlinkini = getNatlinkIni
+    
+
     def getNatlink_Settingsdir(self):
         """get the directory where "natlink.ini" should be stored
         
@@ -377,6 +381,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         natlink_settings_dir = natlink_ini_path.parent
         
         return str(natlink_settings_dir)
+    
+    getnatlink_settingsdir = getNatlink_Settingsdir
     
     def getUnimacroUserDirectory(self):
         isdir, abspath = os.path.isdir, os.path.abspath
@@ -400,7 +406,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
 
         self.UnimacroUserDirectory = ''
         return ''
-    
+    getunimacrouserdirectory = getUnimacroUserDirectory
     
     def getUnimacroDirectory(self):
         """return the path to the UnimacroDirectory
@@ -418,6 +424,9 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             return ""
         self.UnimacroDirectory = unimacro.__path__[-1]
         return self.UnimacroDirectory
+
+    getunimacrodirectory = getUnimacroDirectory
+
 
     def getUnimacroGrammarsDirectory(self):
         """return the path to the UnimacroGrammarDirectory
@@ -442,6 +451,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         self.UnimacroGrammarsDirectory = um_grammars_dir
         return um_grammars_dir
     
+    getunimacrogrammarsdirectory = getUnimacroGrammarsDirectory
+    
     def getUnimacroDataDirectory(self):
         """return the path to the directory where grammars can store data.
         
@@ -451,6 +462,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         """
         if self.UnimacroDataDirectory is not None:
             return self.UnimacroDataDirectory
+        if not self.unimacroIsEnabled():
+            return ''
         
         natlink_settings_dir = self.getNatlink_Settingsdir()
         
@@ -461,16 +474,22 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         self.UnimacroDataDirectory = um_data_dir
 
         return um_data_dir
+    
+    getunimacrodatadirectory = getUnimacroDataDirectory
 
     def getNatlinkDirectory(self):
         """return the path of the NatlinkDirectory, where the _natlink_core.pyd package (C++ code) is
         """
         return self.NatlinkDirectory
 
+    getnatlinkdirectory = getNatlinkDirectory
+    
     def getNatlinkcoreDirectory(self):
         """return the path of the natlinkcore package directory, same as thisDir!
         """
         return self.NatlinkcoreDirectory
+    getnatlinkcoredirectory = getNatlinkcoreDirectory
+    
     
     def getUserDirectory(self):
         """return the path to the Natlink User directory
@@ -500,7 +519,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         print('invalid path for UserDirectory: "{value}"')
         self.UserDirectory = ''
         return ''
-  
+    getuserdirectory = getUserDirectory
+    
     def getDragonflyDirectory(self):
         """return the path to the DragonflyDirectory
         
@@ -519,7 +539,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
     
         self.DragonflyDirectory = str(Path(dragonfly2.__file__).parent)
         return self.DragonflyDirectory
-        
+    getdragonflydirectory = getDragonflyDirectory     
 
 
     def getDragonflyUserDirectory(self):
@@ -550,7 +570,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         print('invalid path for DragonflyUserDirectory: "{value}"')
         self.DragonflyUserDirectory = ''
         return ''
-    
+    getdragonflyuserdirectory = getDragonflyUserDirectory
     
     def getVocolaUserDirectory(self):
 
@@ -576,6 +596,8 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         print(f'invalid path for VocolaUserDirectory: "{value}" (expanded: "{expanded}")')
         self.VocolaUserDirectory = ''
         return ''
+    getvocolauserdirectory = getVocolaUserDirectory
+    
     
     def getVocolaDirectory(self):
         if self.VocolaDirectory is not None:
@@ -588,7 +610,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             return ''
         self.VocolaDirectory = vocola2.__path__[-1]
         return self.VocolaDirectory
-
+    getvocoladirectory = getVocolaDirectory
     
     def getVocolaGrammarsDirectory(self):
         """return the VocolaGrammarsDirectory, but only if Vocola is enabled
@@ -611,6 +633,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         voc_grammars_dir = natlinkcore.config.expand_path(value)
         self.VocolaGrammarsDirectory = voc_grammars_dir
         return voc_grammars_dir
+    getvocolagrammarsdirectory = getVocolaGrammarsDirectory
     
     def getDtactionsDirectory(self):
         """dtactions directory should be found with an import (like getUnimacroDirectory)
@@ -625,10 +648,12 @@ class NatlinkStatus(metaclass=singleton.Singleton):
             return ""
         self.DtactionsDirectory = dtactions.__path__[-1]
         return self.DtactionsDirectory
+    getdtactionsdirectory = getDtactionsDirectory
+
 
     def getAhkUserDir(self):
         return self.getAhkUserDirFromIni()
-
+    getahkuserdir = getAhkUserDir
     
     def getAhkUserDirFromIni(self):
         isdir, abspath = os.path.isdir, os.path.abspath
@@ -655,7 +680,7 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         if not self.AhkExeDir is None:
             return self.AhkExeDir
         return self.getAhkExeDirFromIni()
-
+    getahkexedir = getAhkExeDir
     
     def getAhkExeDirFromIni(self):
         isdir, abspath = os.path.isdir, os.path.abspath
