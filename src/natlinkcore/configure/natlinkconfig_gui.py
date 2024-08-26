@@ -56,14 +56,14 @@ def collapse(layout, key, visible):
 
 #### Hidden UI Columns ####
 dragonfly2_section = [[sg.Text('Dragonfly', text_color='black')],
-                     [sg.T('Dragonfly user directory:', tooltip='The directory to dragonfly2 user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly2', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly2', enable_events=True)]]
+                     [sg.T('Dragonfly user directory:', tooltip='The directory to dragonfly2 user scripts (UserDirectory can also be used)'), sg.Input(Status.getDragonflyUserDirectory(), key='Set_UserDir_Dragonfly2', enable_events=False, readonly=False), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Dragonfly2', enable_events=True)]]
 
 unimacro_section = [[sg.T('Unimacro', text_color='black')],
-                    [sg.T('Unimacro user directory:', tooltip=r'Where the Unimacro user INI files are located, and several other directories (~ or %HOME% allowed)'), sg.I(Status.getUnimacroUserDirectory(), key='Set_UserDir_Unimacro', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Unimacro', enable_events=True)]]
+                    [sg.T('Unimacro user directory:', tooltip=r'Where the Unimacro user INI files are located, and several other directories (~ or %HOME% allowed)'), sg.I(Status.getUnimacroUserDirectory(), key='Set_UserDir_Unimacro', enable_events=False, readonly=False), sg.FolderBrowse(), sg.B("Clear", key='Clear_UserDir_Unimacro', enable_events=True)]]
 
 extras_section = [[sg.T('Natlink Loglevel:'),  sg.Combo(default_value=Status.getLogging(), values=("Critical",  "Fatal",  "Error", "Warning", "Info" , "Debug"), key='Set_Logging_Natlink', enable_events=True, auto_size_text=True, readonly=True)],
-                  [sg.T('Autohotkey exe dir:'), sg.I(Status.getAhkExeDir(), key='Set_Exe_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_Exe_Ahk', enable_events=True)],
-                  [sg.T('Autohotkey scripts dir:'), sg.I(Status.getAhkUserDir(), key='Set_ScriptsDir_Ahk', enable_events=True, readonly=True), sg.FolderBrowse(), sg.B("Clear", key='Clear_ScriptsDir_Ahk', enable_events=True)],
+                  [sg.T('Autohotkey exe dir:'), sg.I(Status.getAhkExeDir(), key='Set_Exe_Ahk', enable_events=False, readonly=False), sg.FolderBrowse(), sg.B("Clear", key='Clear_Exe_Ahk', enable_events=False)],
+                  [sg.T('Autohotkey scripts dir:'), sg.I(Status.getAhkUserDir(), key='Set_ScriptsDir_Ahk', enable_events=False, readonly=False), sg.FolderBrowse(), sg.B("Clear", key='Clear_ScriptsDir_Ahk', enable_events=False)],
                   [sg.T('Natlink GUI Output')],
                   [sg.Output(size=(40,10), echo_stdout_stderr=True, expand_x=True, key='-OUTPUT-')]]
 
