@@ -69,6 +69,7 @@ mock_modules = {
     'vocoladirectory',
     'unimacrodirectory',
     'unimacrogrammarsdirectory',
+    'unimacro.spokenforms',
 }
 for module_name in mock_modules:
     sys.modules[module_name] = Mock()
