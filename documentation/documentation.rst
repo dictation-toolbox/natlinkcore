@@ -27,7 +27,6 @@ Then run the following command on Windows to build the documentation:
    $ ./make html
 
 
-
 If there were no errors during the build process, open the
 *_build/html/index.html* file in a web browser. Make changes, rebuild the
 documentation and reload the doc page(s) in your browser as you go.

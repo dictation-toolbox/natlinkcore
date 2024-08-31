@@ -95,6 +95,8 @@ MacroSystem/*_vcl.py
 src/dist/
 dist
 
+# git extensions
+*.orig
 #tests
 
 

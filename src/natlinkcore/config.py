@@ -144,20 +144,19 @@ class NatlinkConfig:
         raise NoGoodConfigFoundException('No natlink config file found, please run configure natlink program\n\t(***configurenatlink***)')
 
 def expand_path(input_path: str) -> str:
-    r"""expand path if it starts with "~" or has environment variables (%XXXX%)
+    r"""expand path if it starts with "~" or starts with an environment variable or name of python package
     
-    Paths can be:
-    
-    - the name of a python package, or a sub directory of a python package
-    - Obsolete: natlink_userdir/...: the directory where natlink.ini is is searched for, either %(NATLINK_USERDIR) or ~/.natlink
-    - ~/...: the home directory
-    - Now: natlink_settingsdir/...: the directory where natlink.ini is is searched for, either %(NATLINK_SETTINGSDIR) or ~/.natlink
-    - ~/...: the home directory
-    - some environment variable: this environment variable is expanded.
-    
-    The Documents directory can be found by "~\Documents"...
-    
-    When nothing to expand, return input
+Paths can be:
+
+- the name of a python package, or a sub directory of a python package
+- natlink_settingsdir/...: the directory where natlink.ini is is searched for, either`%(NATLINK_SETTINGSDIR)` or `~/.natlink`
+- `~/...`: the home directory
+- Obsolete: natlink_userdir/...: instead natlink_settingsdir will be searched for, and a message is thrown. In the config program things are checked more thoroughly.
+- some other environment variable: this environment variable is expanded 
+
+The Documents directory can be found by "~\Documents"...
+
+When there is nothing to expand, just return the input
     """
     expanduser, expandvars, normpath, isdir = os.path.expanduser, os.path.expandvars, os.path.normpath, os.path.isdir
     
@@ -228,10 +227,10 @@ def expand_path(input_path: str) -> str:
     return normpath(env_expanded)
 
 def expand_natlink_settingsdir():
-    """not with envvariables, but special:
+    """Return the location of the natlink config files
     
     if NATLINK_SETTINGSDIR is set: return this, but... it should end with ".natlink"
-    if NATLINK_SETTINGSDIR is NOT set: return Path.home()/'.natlink'
+    if NATLINK_SETTINGSDIR is NOT set: return `Path.home()/'.natlink'`
     """
     normpath = os.path.normpath
     nsd = os.getenv('natlink_settingsdir')
