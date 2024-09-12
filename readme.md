@@ -27,10 +27,52 @@ Mandy Python IDEs such as [Visual Studio Code](https://code.visualstudio.com/) h
 Publishing to PyPi is done through the [trusted publisher mechanism](https://docs.pypi.org/trusted-publishers/using-a-publisher/) when a release is created on github using github actions. 
 
 
-## Publishing checklist
-Before you bump the version number in __init__.py and publish:
-- Check the pyroject.toml file for package dependancies.  Do you need a specfic or newer version of
-a dependancy such as dtactions?  Then add or update the version # requirement in dtactions.  
+## Version Numbering and Publishing Checklist
+
+While you are developing, use a .dev release number.  When you are ready for alpha or beta or release candidate, use the appropriate version numbers.
+If you are submitting a pull request, the review should review and adjust the version number.  
+The version specificier is in pyroject.toml.
+
+
+The version number progression is explained in [PEP440](https://peps.python.org/pep-0440/#summary-of-permitted-suffixes-and-relative-ordering).  
+
+Hypothetical Progression of release numbers.  
+
+Working towards 5.4.0:
+- 5.4.0.dev1
+- 5.4.0.dev2
+- 5.4.0.dev_feature_x
+- 5.4.0a1
+- 5.4.0b1dev1
+- 5.4.0b1
+- 5.4.0rc1
+- 5.4.0rc2
+- 5.4.0
+
+Use alpha and beta specifiers (5.4a2, 5.4.b1, etc) to release alphas and betas.
+If you go through a release candidate phase, use 5.4rc1 etc.
+
+Non breaking changes, add a micro version number.  ie from version 5.4.1 to 5.4.2.
+Breaking changes, add a minor version number.
+
+*Before you publish to pypi*:
+- doublecheck the dependancies, especially on natlink.  You may want to specify a minimum natlink (i.e. 5.5.3) and 
+normally you should also specify that natlink has not had a breaking change by specifying the major and minor version numbers are as expected.  Note that this requires a release of natlinkcore if the minor version of natlink changes.  At minimum this will require an update to pyproject.toml and a release to pypi, even if no python code has changed. 
+
+
+
+This is how the version specifier should look for natlink (subsituting the version numbers appropriate).  In this case, we are saying that any natlink 5.5 is required, and that 
+we require greater than 5.5.7 as well because we are relying on a non-breaking change introduced in 5.5.7.
+`    "natlink ~= 5.5, >= 5.5.7"
+`
+Often, the natlink dependancy should just specify the major and minor version:
+`
+    "natlink ~= 5.5"
+`
+
+You could have a case where natlinkcore works with natlink 5.5 and 5.6, you could express this in pyproject.toml as
+    "natlink ~= 5.5, ~= 5.6".  
+
 
 ## Debugging Instructions
 

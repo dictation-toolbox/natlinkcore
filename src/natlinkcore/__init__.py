@@ -1,7 +1,10 @@
 '''Python portion of Natlink, a compatibility module for Dragon Naturally Speaking
 The python stuff including test modules'''
 
-__version__="5.4.1"
+import importlib.metadata
+
+__version__ = importlib.metadata.version('natlinkcore')  #version set in pyproject.toml now.
+
 #pylint:disable=
 from pathlib import Path
 
