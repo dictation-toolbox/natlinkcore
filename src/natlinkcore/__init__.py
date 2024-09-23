@@ -3,7 +3,7 @@ The python stuff including test modules'''
 
 import importlib.metadata
 
-__version__ = importlib.metadata.version('natlinkcore')  #version set in pyproject.toml now.
+__version__ = importlib.metadata.version(__package__)  #version set in pyproject.toml now.
 
 #pylint:disable=
 from pathlib import Path
