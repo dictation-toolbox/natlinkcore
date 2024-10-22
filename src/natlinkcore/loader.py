@@ -19,6 +19,7 @@ import debugpy
 
 import natlink
 from natlinkcore.config import LogLevel, NatlinkConfig, expand_path
+from natlinkcore.natlinkutils import idd_reload, idd_exit
 from natlinkcore.readwritefile import ReadWriteFile
 from natlinkcore.callbackhandler import CallbackHandler
 from natlinkcore.singleton import Singleton
@@ -257,6 +258,13 @@ class NatlinkMain(metaclass=Singleton):
             if d_expanded not in sys.path:
                 sys.path.insert(0, d_expanded)
 
+    @staticmethod
+    def _del_dirs_from_path(directories: Iterable[str]) -> None:
+        for d in directories:
+            d_expanded = expand_path(d)
+            if d_expanded in sys.path:
+                sys.path.remove(d_expanded)
+
     def _call_and_catch_all_exceptions(self, fn: Callable[[], None]) -> None:
         try:
             fn()
@@ -455,6 +463,14 @@ class NatlinkMain(metaclass=Singleton):
                 value -= 1
                 self.load_on_begin_utterance = value
             self.trigger_load()
+
+    def on_message_window_callback(self, event):
+        if event == idd_reload:
+            self.trigger_load(force_load=True)
+            natlink.setBeginCallback(self.on_begin_callback)
+            natlink.setChangeCallback(self.on_change_callback)
+        elif event == idd_exit:
+            self.finish()
                 
     def get_user_language(self, DNSuserDirectory):
         """return the user language (default "enx") from Dragon inifiles
@@ -545,6 +561,17 @@ class NatlinkMain(metaclass=Singleton):
             self.trigger_load()
         natlink.setBeginCallback(self.on_begin_callback)
         natlink.setChangeCallback(self.on_change_callback)
+        natlink.setMessageWindow(self.on_message_window_callback)
+
+    def finish(self) -> None:
+        # reverse changes made by start()
+        natlink.setMessageWindow(None)
+        natlink.setChangeCallback(None)
+        natlink.setBeginCallback(None)
+        self.unload_all_loaded_modules()
+        self._del_dirs_from_path(self.config.directories)
+        natlink.active_loader = None
+        self.logger.info('Stopping natlink loader')
 
     def setup_logger(self) -> None:
         for handler in list(self.logger.handlers):
