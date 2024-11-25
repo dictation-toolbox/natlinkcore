@@ -124,6 +124,11 @@ dgnwordflag_title_mode		= 0x02000000
 dgnwordflag_space_bar		= 0x08000000
 dgnwordflag_topicadded		= 0x40000000
 dgnwordflag_DNS8newwrdProp  = 0x20000000
+
+# The following constants define the window message codes which are passed
+# to the message window callback on menu command activation.
+idd_reload = 32768
+idd_exit = 32769
  
 ## temporary fix, remove as soon as natlinkmain is more secure QH (Febr 2021) 
  
