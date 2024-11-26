@@ -5,7 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "natlinkcore"
 authors = [{name = "Quintijn Hoogenboom (maintainer)", email = "q.hoogenboom@antenna.nl"}]
-version="5.4.2.dev2"
+version="5.4.2.dev3"
 dynamic = [ "description"]
 requires-python = ">=3.9"
 readme = "readme.md"
@@ -15,7 +15,7 @@ dependencies= [
     "pydebugstring >= 1.0.0.1",
     "dtactions ~= 1.6.4.dev3",
     "platformdirs >= 4.2.0",
-    "natlink ~= 5.5.8.dev1"
+    "natlink ~= 5.5.8.dev2"
 ]
     classifiers=[
         "Development Status :: 4 - Beta",
