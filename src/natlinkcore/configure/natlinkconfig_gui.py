@@ -34,7 +34,7 @@ parser.add_argument('--pre',action='store_true',help='Enable pre-release mode')
 args=parser.parse_args();
 prerelease_enabled=args.pre
 del parser,args #no longer required
-logging.debug(f"prerelease_enabled {prerelease_enabled} ")
+logging.debug(f"prerelease_enabled: {prerelease_enabled} ")
 extra_pip_options=['--pre'] if prerelease_enabled else []
 
 # Inlize the NatlinkConfig

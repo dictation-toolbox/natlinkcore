@@ -348,7 +348,7 @@ class NatlinkConfig:
                 return
         else:
             try:
-                self.do_pip("install",*self.extra_pip_options, "unimacro")
+                do_pip("install",*self.extra_pip_options, "unimacro")
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install unimacro\n====\n')
                 return
