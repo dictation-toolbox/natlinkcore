@@ -10,8 +10,9 @@ from pathlib  import Path
 from natlinkcore.configure import extensions_and_folders
 from natlinkcore.configure import natlinkconfigfunctions
 from platformdirs import  user_log_dir
+from argparse import ArgumentParser
 
-
+extra_pip_options=[]
 appname="natlink"
 logdir =  Path(user_log_dir(appname=appname,ensure_exists=True))
 logfilename=logdir/"cli_log.txt"
@@ -28,10 +29,12 @@ file_handler.setLevel(logging.DEBUG)
 logfile_logger.addHandler(file_handler)
 logfile_logger.setLevel(logging.DEBUG) 
 
+
 def _main(Options=None):
     """Catch the options and perform the resulting command line functions
 
     options: -i, --info: give status info
+            --pre   enable prerelease options
 
              -I, --reginfo: give the info in the registry about Natlink
              etc., usage above...
@@ -39,8 +42,6 @@ def _main(Options=None):
     """
 
 
-    cli = CLI()
-    cli.Config = natlinkconfigfunctions.NatlinkConfig()
     shortOptions = "DVNOHKaAiIxXbBuqe"
     shortArgOptions = "d:v:n:o:h:k:"
     if Options:
@@ -51,7 +52,7 @@ def _main(Options=None):
         Options = sys.argv[1:]
 
     try:
-        options, args = getopt.getopt(Options, shortOptions+shortArgOptions)
+        options, args = getopt.getopt(Options, shortOptions+shortArgOptions,["pre"])
     except getopt.GetoptError:
         print(f'invalid option: {Options}')
         cli.usage()
@@ -59,6 +60,15 @@ def _main(Options=None):
 
     if args:
         print(f'should not have extraneous arguments: {args}')
+    
+    if "--pre" in options:
+        extra_pip_options.append("--pre")
+        logging.info("pip extra option --pre")
+        options.remove("--pre")
+    cli = CLI(extra_pip_options=extra_pip_options)
+
+    cli.Config = natlinkconfigfunctions.NatlinkConfig(cli.extra_pip_options)
+
     for o, v in options:
         o = o.lstrip('-')
         funcName = f'do_{o}'
@@ -80,8 +90,9 @@ def _main(Options=None):
 class CLI(cmd.Cmd):
     """provide interactive shell control for the different options.
     """
-    def __init__(self, Config=None):
+    def __init__(self, Config=None,extra_pip_options=[]):
         cmd.Cmd.__init__(self)
+        self.extra_pip_options=extra_pip_options
         self.prompt = '\nNatlink config> '
         self.info = "type 'u' for usage"
         self.Config = None
@@ -467,9 +478,13 @@ Informational commands: i and I
 
 
 def main_cli():
-    if len(sys.argv) == 1:
-        Cli = CLI()
-        Cli.Config = natlinkconfigfunctions.NatlinkConfig()
+    #a hack until we switch to ArgParse from getopt, check for --pre
+    if len(sys.argv) == 2 and sys.argv[1]=="--pre":
+        extra_pip_options.append("--pre")
+    
+    if len(sys.argv) == 1 or ( len(sys.argv) == 2 and sys.argv[1]=="--pre"):  
+        Cli = CLI(extra_pip_options=extra_pip_options)
+        Cli.Config = natlinkconfigfunctions.NatlinkConfig(extra_pip_options=extra_pip_options)
         Cli.info = ""
         print('\nWelcome to the NatlinkConfig Command Line Interface\n')
         print('Type "I" for manual editing the "natlink.ini" config file\n')

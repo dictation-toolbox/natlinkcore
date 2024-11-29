@@ -6,6 +6,7 @@ import FreeSimpleGUI as sg
 import logging
 from platformdirs import  user_log_dir
 from pathlib import Path
+from argparse import ArgumentParser
 appname="natlink"
 logdir =  Path(user_log_dir(appname=appname,ensure_exists=True))
 logfilename=logdir/"config_gui_log.txt"
@@ -28,8 +29,16 @@ from natlinkcore import natlinkstatus
 pyVersion = platform.python_version()
 osVersion = sys.getwindowsversion()
 
+parser=ArgumentParser(description="check for --pre")
+parser.add_argument('--pre',action='store_true',help='Enable pre-release mode')
+args=parser.parse_args();
+prerelease_enabled=args.pre
+del parser,args #no longer required
+logging.debug(f"prerelease_enabled: {prerelease_enabled} ")
+extra_pip_options=['--pre'] if prerelease_enabled else []
+
 # Inlize the NatlinkConfig
-Config = NatlinkConfig()
+Config = NatlinkConfig(extra_pip_options=extra_pip_options)
 Status = natlinkstatus.NatlinkStatus()
 
 
@@ -157,7 +166,6 @@ natlink_dispatch = {'Set_Logging_Natlink': SetNatlinkLoggingOutput, 'Open_Config
 dragonfly2_dispatch = {'Set_UserDir_Dragonfly2': Dragonfly2UserDir, 'Clear_UserDir_Dragonfly2': Dragonfly2UserDir}
 unimacro_dispatch = {'Set_UserDir_Unimacro': UnimacroUserDir, 'Clear_UserDir_Unimacro': UnimacroUserDir}
 autohotkey_dispatch = {'Set_Exe_Ahk': AhkExeDir, 'Clear_Exe_Ahk': AhkExeDir, 'Set_ScriptsDir_Ahk': AhkUserDir,'Clear_ScriptsDir_Ahk': AhkUserDir}
-
 
 #### Event Loop ####
 try:

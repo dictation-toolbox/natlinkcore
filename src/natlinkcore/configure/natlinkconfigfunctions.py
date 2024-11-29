@@ -59,7 +59,9 @@ class NatlinkConfig:
 
     Changes are written in the config file, from which the path is taken from the loader instance.
     """
-    def __init__(self):
+    def __init__(self,extra_pip_options=None):
+        self.extra_pip_options = [] if extra_pip_options is None else extra_pip_options
+
         self.config_path = self.get_check_config_locations()
         self.config_dir = str(Path(self.config_path).parent)
         self.status = natlinkstatus.NatlinkStatus()
@@ -70,7 +72,7 @@ class NatlinkConfig:
         self.documents_path = str(Path.home()/'Documents')
         self.natlinkconfig_path = config.expand_natlink_settingsdir()
         pass
-
+    
     def get_check_config_locations(self):
         
         """check the location/locations as given by the loader
@@ -340,13 +342,13 @@ class NatlinkConfig:
         if uni_dir:
             logging.info('==== instal and/or update unimacro====\n')            
             try:
-                do_pip("install", "--upgrade", "unimacro")
+                do_pip("install", *self.extra_pip_options, "--upgrade", "unimacro")
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install --upgrade unimacro\n====\n')
                 return
         else:
             try:
-                do_pip("install", "unimacro")
+                do_pip("install",*self.extra_pip_options, "unimacro")
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install unimacro\n====\n')
                 return
@@ -385,13 +387,13 @@ class NatlinkConfig:
         if df_dir:
             logging.info('==== instal and/or update dragonfly2====\n')            
             try:
-                do_pip( "install", "--upgrade", "dragonfly2")
+                do_pip( "install", *self.extra_pip_options,"--upgrade", "dragonfly2")
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install --upgrade dragonfly2\n====\n')
                 return
         else:
             try:
-                do_pip( "install", "dragonfly2")
+                do_pip( "install", *self.extra_pip_options, "dragonfly2")
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install dragonfly2\n====\n')
                 return
@@ -424,13 +426,13 @@ class NatlinkConfig:
         if voc_dir:
             logging.info('==== instal and/or update vocola2====\n')
             try:
-                do_pip("install", "--upgrade", "vocola2")
+                do_pip("install",*self.extra_pip_options, "--upgrade", "vocola2")
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install --upgrade vocola2\n====\n')
                 return
         else:
             try:
-                do_pip("install", "vocola2")
+                do_pip("install",*self.extra_pip_options, "vocola2")
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install vocola2\n====\n')
                 return
