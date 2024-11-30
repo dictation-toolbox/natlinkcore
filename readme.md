@@ -11,6 +11,14 @@ You can install from [The Python Package Index (PyPI)](https://pypi.org/) with
 
 Note that natlinkcore will not install if you have not installed Natlink first.  Natlink is installed through running an installer.
 
+This will install utilties you can run from a shell prompt:  natlinkconfig_cli, natlinkconfig_gui, and natlink_extract_ini_value.
+
+You can use natlink_extract_ini_value to grab a directory or setting out of natlink.ini for copying and pasting or a shell script.
+``` 
+PS C:\Users\doug\code\dt\natlinkcore> natlink_extract_ini_value -s directories -k  dragonflyuserdirectory
+C:\Users\doug\Documents
+```
+
  
 ## Test Framework
 Tests use the [pytest](https://docs.pytest.org/) framework.  

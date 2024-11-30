@@ -5,7 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "natlinkcore"
 authors = [{name = "Quintijn Hoogenboom (maintainer)", email = "q.hoogenboom@antenna.nl"}]
-version="5.4.2.dev5"
+version="5.4.2.dev6"
 dynamic = [ "description"]
 requires-python = ">=3.10"
 readme = "readme.md"
@@ -54,6 +54,7 @@ testpaths= [
 [project.scripts]
 natlinkconfig_cli = "natlinkcore.configure.natlinkconfig_cli:main_cli"
 natlink_extensions = "natlinkcore.configure.natlink_extensions:main"
+natlink_extract_ini_value = "natlinkcore.configure.natlink_extract_ini_value:main"
 
 [project.gui-scripts]
 natlinkconfig_gui = "natlinkcore.configure.natlinkconfig_gui:main_gui"
