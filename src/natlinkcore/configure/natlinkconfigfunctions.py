@@ -36,23 +36,27 @@ from natlinkcore import tkinter_dialogs
 
 isfile, isdir, join = os.path.isfile, os.path.isdir, os.path.join
 
-def _am_elevated():
+def am_elevated():
     """return True is state is elevated
     """
     pass  # todoDoug
+    return False
 
-def _want_elevated():
+def want_elevated():
     """elevated mode is wanted?
     If sys.executable does not start with the home directory I would think
     """
     pass # todoDoug
+    return False
 
 def do_pip(*args):
     """
     Run a pip command with args.
     Diagnostic logging.3
     """
-    I_am-elevated = _am_elevated()
+    I_am_elevated = am_elevated()
+    I_want_elevated = want_elevated()
+    print(f'do_pip: I_am_elevated: {I_am_elevated}, I_want_elevated: {I_want_elevated}')
     # run pip in elevated mode:
     if not pyuac.isUserAdmin():
         # print('If you want to pip upgrade packages, a new "elevated" process is started. Please answer Y in that case')

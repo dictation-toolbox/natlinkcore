@@ -13,6 +13,10 @@ from platformdirs import  user_log_dir
 from argparse import ArgumentParser
 
 extra_pip_options=[]
+
+# packages that should go with the do_p or do_P command, upgrading with pip
+# is packages is already there:  todoDoug
+packages_to_pip = ['natlinkcore', 'dragonfly' 'unimacro', 'vocola2', 'caster']
 appname="natlink"
 logdir =  Path(user_log_dir(appname=appname,ensure_exists=True))
 logfilename=logdir/"cli_log.txt"
@@ -42,7 +46,7 @@ def _main(Options=None):
     """
 
 
-    shortOptions = "DVNOHKaAiIxXbBuqe"
+    shortOptions = "DVNOHKaAiIxXbBuqepP"
     shortArgOptions = "d:v:n:o:h:k:"
     if Options:
         if isinstance(Options, str):
@@ -192,6 +196,44 @@ help <command>: give more explanation on <command>
         # print PythonPath:
         
         self.Config.printPythonPath()
+
+    def do_p(self, arg):
+        """do pip according to runtime options or NOT in --pre mode
+        
+        upgrade all installed packages of the list natlinkcore, dragonfly, unimacro vocola2.
+        
+        Other packages (dtactions) should be in the dependencies of above.
+        
+        """
+        do_pre = arg == '--pre' or ''  ## todoDoug
+        for package in packages_to_pip:   ## global variable
+            try:
+                import package
+            except ImportError:
+                print(f'package not installed: "{package}", do not upgrade')
+                continue
+        
+            self.Config.do_pip(package)
+        
+    def do_P(self, arg):
+        """Upgrade pip packags with --pre mode on
+        
+        upgrade all installed packages of the list natlinkcore, dragonfly, unimacro vocola2.
+        
+        Other packages (dtactions) should be in the dependencies of above.
+        
+        """
+        self.do_p("--pre")
+
+    def help_p(self):
+        print(''*60)
+        print("""The commands "p" and "P" will pip upgrade the installed packages,
+like natlinkcore, vocola2, unimacro, dragonfly.
+Other modules will follow as dependencies.
+(lower case) "p" will take only major releases,
+(upper case) "P" will also take so called "pre" releases.
+              
+              """)
 
     def do_e(self,arg):
         print("extensions and folders for registered natlink extensions:")
