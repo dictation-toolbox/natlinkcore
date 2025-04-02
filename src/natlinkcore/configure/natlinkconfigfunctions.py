@@ -41,6 +41,12 @@ def _am_elevated():
     """
     pass  # todoDoug
 
+def _want_elevated():
+    """elevated mode is wanted?
+    If sys.executable does not start with the home directory I would think
+    """
+    pass # todoDoug
+
 def do_pip(*args):
     """
     Run a pip command with args.
