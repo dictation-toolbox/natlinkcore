@@ -230,10 +230,13 @@ class NatlinkConfig:
                 return
 
         dir_path = dir_path.strip()
+        directory = config.expand_path(dir_path)
+        if directory is False:
+            logging.error(f'Cannot expand dir_path: "{dir_path}"')
+            return
+        
         directory = createIfNotThere(dir_path, level_up=1)
         if not (directory and Path(directory).is_dir()):
-            if directory is False:
-                directory = config.expand_path(dir_path)
             if dir_path == directory:
                 logging.info(f'Cannot set "{option}", the given path is invalid: "{directory}"')
             else:

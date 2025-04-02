@@ -157,6 +157,10 @@ def test_expand_path(mock_syspath,mock_settingsdir):
     result = expand_path('natlink_settingsdir/invalid_dir')
     assert not os.path.isdir(result)
 
+    # invalid prefix (natlink_settingsdir)
+    result = expand_path('natlink_sssettingsdir/invalid_prefix')
+    assert not os.path.isdir(result)
+
     # try package
     result = expand_path('natlinkcore')
     assert os.path.isdir(result)
