@@ -36,12 +36,17 @@ from natlinkcore import tkinter_dialogs
 
 isfile, isdir, join = os.path.isfile, os.path.isdir, os.path.join
 
+def _am_elevated():
+    """return True is state is elevated
+    """
+    pass  # todoDoug
 
 def do_pip(*args):
     """
     Run a pip command with args.
     Diagnostic logging.3
     """
+    I_am-elevated = _am_elevated()
     # run pip in elevated mode:
     if not pyuac.isUserAdmin():
         # print('If you want to pip upgrade packages, a new "elevated" process is started. Please answer Y in that case')
