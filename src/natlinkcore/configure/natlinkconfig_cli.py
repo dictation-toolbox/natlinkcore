@@ -213,7 +213,7 @@ help <command>: give more explanation on <command>
                 print(f'package not installed: "{package}", do not upgrade')
                 continue
         
-            self.Config.do_pip(package)
+            self.Config.do_pip(package, do_pre)
         
     def do_P(self, arg):
         """Upgrade pip packags with --pre mode on

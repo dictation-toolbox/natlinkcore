@@ -53,7 +53,13 @@ def do_pip(*args):
     """
     Run a pip command with args.
     Diagnostic logging.3
+    
+    This one should go in the class below, I think (QH), because that is
+    self.Config in the natlinkconfig_cli.py (which is called from natlinkconfig_gui.py)
+    
+    
     """
+    # todoDoug
     I_am_elevated = am_elevated()
     I_want_elevated = want_elevated()
     print(f'do_pip: I_am_elevated: {I_am_elevated}, I_want_elevated: {I_want_elevated}')
