@@ -460,7 +460,8 @@ class NatlinkConfig:
         """enable vocola, by setting arg (prompting if False), and other settings
         """
         vocola_user_dir = self.status.getVocolaUserDirectory()
-        if vocola_user_dir and isdir(vocola_user_dir):
+        if self.status.vocolaIsEnabled(): 
+        # if vocola_user_dir and isdir(vocola_user_dir):
             logging.info(f'VocolaUserDirectory is already defined: "{vocola_user_dir}"\n\tto change, first clear (option "V") and then set again')
             logging.info('\nWhen you want to upgrade Vocola (vocola2), also first clear ("V"), then choose this option ("v") again.\n')
             return
@@ -468,11 +469,11 @@ class NatlinkConfig:
         voc_dir = self.status.getVocolaDirectory()
         if voc_dir:
             logging.info('==== instal and/or update vocola2====\n')
-            try:
-                do_pip("install",*self.extra_pip_options, "--upgrade", "vocola2")
-            except subprocess.CalledProcessError:
-                logging.info('====\ncould not pip install --upgrade vocola2\n====\n')
-                return
+            # try:
+            #     do_pip("install",*self.extra_pip_options, "--upgrade", "vocola2")
+            # except subprocess.CalledProcessError:
+            #     logging.info('====\ncould not pip install --upgrade vocola2\n====\n')
+            #     return
         else:
             try:
                 do_pip("install",*self.extra_pip_options, "vocola2")
@@ -487,10 +488,20 @@ class NatlinkConfig:
         if not vocola_user_dir:
             return
         # vocGrammarsDir = self.status.getVocolaGrammarsDirectory()
-        vocGrammarsDir = config.expand_path(r'natlink_settingsdir\vocolagrammars')
+        vocGrammarsDir = config.expand_path(r'natlink_settingsdir\vocolagrammars', must_exist=False)
         if not vocGrammarsDir:
-            logging.warning('Could not expand directory for vocola grammars')
+            logging.error('Could not expand directory for vocola grammars')
             return
+        vocGrammarsPath = Path(vocGrammarsDir)
+        if not vocGrammarsPath.is_dir():
+            parent = vocGrammarsPath.parent
+            if parent.is_dir():
+                vocGrammarsPath.mkdir()
+                assert vocGrammarsPath.is_dir()
+            else:
+                logging.error(f'vocolaGrammarsDirectory is not a valid directory: "{vocGrammarsDir}"')
+                return          
+            
         self.setDirectory('vocoladirectory','vocola2')  #always vocola2
         self.setDirectory('vocolagrammarsdirectory', vocGrammarsDir)
         self.copyUnimacroIncludeFile()

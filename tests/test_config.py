@@ -148,6 +148,14 @@ def test_expand_path(mock_syspath,mock_settingsdir):
     # testing nonexisting package (QH)
     result=expand_path('nonexisting_package')
     assert not os.path.isdir(result)
+    assert result == ''
+
+    # rare cases, must_exist specified, but results in this:
+    result=expand_path('nonexisting_package', must_exist=False)
+    assert not os.path.isdir(result)
+    assert result == 'nonexisting_package'
+
+
 
     # assume FakeGrammars is a valid directory:
     result = expand_path('natlink_settingsdir/FakeGrammars')
@@ -156,13 +164,20 @@ def test_expand_path(mock_syspath,mock_settingsdir):
     # invalid directory
     result = expand_path('natlink_settingsdir/invalid_dir')
     assert not os.path.isdir(result)
+    assert result == ''
+    
+    # invalid directory, must_exist == False:
+    result = expand_path('natlink_settingsdir/invalid_dir', must_exist=False)
+    assert not os.path.isdir(result)
+    assert result.endswith('invalid_dir')
 
     # invalid prefix (natlink_settingsdir)
     result = expand_path('natlink_sssettingsdir/invalid_prefix')
     assert not os.path.isdir(result)
-
+    assert result == ''
+    
     # try package
-    result = expand_path('natlinkcore')
+    result = expand_path('natlinkcore')  
     assert os.path.isdir(result)
 
     result = expand_path('natlinkcore/DefaultConfig')
@@ -177,8 +192,18 @@ def test_expand_path(mock_syspath,mock_settingsdir):
     result = expand_path('natlinkcore\\NonExisting')
     assert not os.path.isdir(result)
 
+    result = expand_path('natlinkcore\\NonExisting', must_exist=False)
+    assert not os.path.isdir(result)
+    assert result.endswith('NonExisting')
+
+
     result = expand_path('/natlinkcore')
     assert not os.path.isdir(result)
+    assert result == ''
+
+    result = expand_path('/natlinkcore', must_exist=False)
+    assert not os.path.isdir(result)
+    assert result == '/natlinkcore'
 
 
 
