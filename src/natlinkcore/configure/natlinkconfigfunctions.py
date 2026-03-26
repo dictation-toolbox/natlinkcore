@@ -24,7 +24,6 @@ from pprint import pformat
 from pathlib import Path
 import configparser
 import logging
-import pyuac
 try:
     from natlinkcore import natlinkstatus
 except OSError:
@@ -36,53 +35,10 @@ from natlinkcore import tkinter_dialogs
 
 isfile, isdir, join = os.path.isfile, os.path.isdir, os.path.join
 
-def am_elevated():
-    """return True is state is elevated
-    """
-    pass  # todoDoug
-    return False
-
-def want_elevated():
-    """elevated mode is wanted?
-    If sys.executable does not start with the home directory I would think
-    """
-    pass # todoDoug
-    return False
-
-def do_pip(*args):
-    """
-    Run a pip command with args.
-    Diagnostic logging.3
-    
-    This one should go in the class below, I think (QH), because that is
-    self.Config in the natlinkconfig_cli.py (which is called from natlinkconfig_gui.py)
-    
-    
-    """
-    # todoDoug
-    I_am_elevated = am_elevated()
-    I_want_elevated = want_elevated()
-    print(f'do_pip: I_am_elevated: {I_am_elevated}, I_want_elevated: {I_want_elevated}')
-    # run pip in elevated mode:
-    if not pyuac.isUserAdmin():
-        # print('If you want to pip upgrade packages, a new "elevated" process is started. Please answer Y in that case')
-        # print('Please run this program in "elevated" mode, when you want to pip upgrade packages')
-        # return 
-        pyuac.runAsAdmin()
-        
-    if pyuac.isUserAdmin():
-        print('continue in Admin (elevated) mode...')
-
-    command = [sys.executable,"-m", "pip"] + list(args)
-    logging.info(f"command:  {command} ")
-    completed_process=subprocess.run(command,capture_output=True)
-    logging.debug(f"completed_process:  {completed_process}")
-    completed_process.check_returncode()
-
 class NatlinkConfig:
     """performs the configuration tasks of Natlink
     
-    setting UserDirectory, UnimacroDirectory and options, VocolaDirectory and options,
+      setting UserDirectory, UnimacroDirectory and options, VocolaDirectory and options,
     DragonflyDirectory, Autohotkey options (ahk), and Debug option of Natlink.
     and also clearing the different directories.
 
@@ -90,7 +46,7 @@ class NatlinkConfig:
     """
     def __init__(self,extra_pip_options=None):
         self.extra_pip_options = [] if extra_pip_options is None else extra_pip_options
-
+        self.do_pip_with_pre = '--pre' in self.extra_pip_options
         self.config_path = self.get_check_config_locations()
         self.config_dir = str(Path(self.config_path).parent)
         self.status = natlinkstatus.NatlinkStatus()
@@ -120,7 +76,7 @@ class NatlinkConfig:
         """
         # ensure the [directories] section is present:
         try:
-            sect = self.Config['directories']
+            self.Config['directories']
         except KeyError:
             self.Config.add_section('directories')
             self.config_write()
@@ -373,6 +329,30 @@ class NatlinkConfig:
         if old_value:
             self.config_set('settings', key, old_value)
         self.config_set('settings', key, 'INFO')
+        
+    def pip_package(self, package, params, do_pre=None):
+        """
+        Run a pip command with possible pre option
+        Diagnostic logging.3
+        
+        """
+        # this check is in the natlinkconfig_cli:
+        # result = self.check_elevated_mode()
+        # print(f'result of check_elevated_mode: {result}')
+        # if not result:
+        #     return
+        command = [sys.executable,"-m", "pip"]
+        command.append('install')
+        command.append(package)
+        ## premature option:::
+        # if do_pre or self.do_pip_with_pre:
+        #     command.append("--pre")
+        command.extend(params)
+        logging.info(f' pip command:  {command} ')
+        completed_process = subprocess.run(command,capture_output=True)
+        logging.debug(f' completed_process:  {completed_process}')
+        completed_process.check_returncode()
+
 
     def enable_unimacro(self, arg):
         unimacro_user_dir = self.status.getUnimacroUserDirectory()
@@ -383,15 +363,17 @@ class NatlinkConfig:
 
         uni_dir = self.status.getUnimacroDirectory()
         if uni_dir:
-            logging.info('==== instal and/or update unimacro====\n')            
+            logging.info('==== instal and/or update unimacro====\n')
+            params = ["--upgrade"]
             try:
-                do_pip("install", *self.extra_pip_options, "--upgrade", "unimacro")
+                self.pip_package("unimacro", params, self.do_pip_with_pre)
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install --upgrade unimacro\n====\n')
                 return
         else:
+            params = []
             try:
-                do_pip("install",*self.extra_pip_options, "unimacro")
+                self.pip_package("unimacro", params, self.do_pip_with_pre)
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install unimacro\n====\n')
                 return
@@ -429,14 +411,16 @@ class NatlinkConfig:
         df_dir = self.status.getDragonflyDirectory()
         if df_dir:
             logging.info('==== instal and/or update dragonfly2====\n')            
+            params = ["--upgrade"]
             try:
-                do_pip( "install", *self.extra_pip_options,"--upgrade", "dragonfly2")
-            except subprocess.CalledProcessError:
+                self.pip_package("dragonfly2", params, self.do_pip_with_pre)
+            except subprocess.CalledProcessError:   
                 logging.info('====\ncould not pip install --upgrade dragonfly2\n====\n')
                 return
         else:
+            params = []
             try:
-                do_pip( "install", *self.extra_pip_options, "dragonfly2")
+                self.pip_package("dragonfly2",params, self.do_pip_with_pre)
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install dragonfly2\n====\n')
                 return
@@ -468,15 +452,18 @@ class NatlinkConfig:
 
         voc_dir = self.status.getVocolaDirectory()
         if voc_dir:
-            logging.info('==== instal and/or update vocola2====\n')
-            # try:
-            #     do_pip("install",*self.extra_pip_options, "--upgrade", "vocola2")
-            # except subprocess.CalledProcessError:
-            #     logging.info('====\ncould not pip install --upgrade vocola2\n====\n')
-            #     return
-        else:
+            logging.info('==== install --update vocola2====\n')            
+            params = ["--upgrade"]
             try:
-                do_pip("install",*self.extra_pip_options, "vocola2")
+                self.pip_package("vocola2", params, self.do_pip_with_pre)
+            except subprocess.CalledProcessError:   
+                logging.info('====\ncould not pip install --upgrade vocola2\n====\n')
+                return
+        else:
+            logging.info('==== install vocola2====\n')            
+            params = []
+            try:
+                self.pip_package("vocola2",params, self.do_pip_with_pre)
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install vocola2\n====\n')
                 return
@@ -768,6 +755,7 @@ class NatlinkConfig:
     def printPythonPath(self):
         logging.info('the python path:')
         logging.info(pformat(sys.path))
+
 
 
 def isValidDir(path):
