@@ -162,7 +162,7 @@ d/D     - enable/disable the DragonflyDirectory, the directory where
           you can put your Dragonfly scripts (UserDirectory can also be used)
 
 [Install/configure]
-f/F     - Force elevated mode for installing packages (F), or force normal mode (f).
+f/F     - Force (thinking this process is) in elevated mode for installing packages (F), or force normal mode (f).
           
 
 [UserDirectory]
