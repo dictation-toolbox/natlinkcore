@@ -8,7 +8,7 @@
 #   Quintijn Hoogenboom, January 2008 (...), August 2022
 #
 
-#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912, R1732, W1514, W0107, W1203
+#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912, R1732, W1514, W0107, W1203, W1309
 """With the functions in this module Natlink can be configured.
 
 These functions are called in different ways:
@@ -369,25 +369,28 @@ class NatlinkConfig:
                 self.pip_package("unimacro", params, self.do_pip_with_pre)
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install --upgrade unimacro\n====\n')
-                return
+                return False
         else:
             params = []
             try:
                 self.pip_package("unimacro", params, self.do_pip_with_pre)
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install unimacro\n====\n')
-                return
+                return False
         self.status.refresh()   # refresh status
         uni_dir = self.status.getUnimacroDirectory()
 
         self.setDirectory('UnimacroUserDirectory', arg, section='unimacro')
         unimacro_user_dir = self.config_get('unimacro', 'unimacrouserdirectory')
         if not unimacro_user_dir:
-            return
+            logging.warning(f' strange error, installing unimacro seemed to word,'
+                             ' but cannot find unimacro_user_dir in the inifile "{natlink.ini}"')
+            return False
         uniGrammarsDir = r'unimacro\unimacrogrammars'
         self.setDirectory('unimacrodirectory','unimacro')  #always unimacro
 
         self.setDirectory('unimacrogrammarsdirectory', uniGrammarsDir)
+        return True
 
     def disable_unimacro(self, arg=None):
         """disable unimacro, do not expect arg

@@ -15,7 +15,7 @@ from platformdirs import  user_log_dir
 
 # packages that should go with the do_p or do_P command, upgrading with pip
 # is packages is already there:  todoDoug
-packages_to_pip = ['natlinkcore', 'dragonfly', 'unimacro', 'vocola2', 'caster']
+packages_to_pip = ['natlinkcore', 'dragonfly', 'unimacro', 'vocola2']  ## 'caster' wanted here??]
 appname="natlink"
 logdir =  Path(user_log_dir(appname=appname,ensure_exists=True))
 logfilename=logdir/"cli_log.txt"
@@ -87,7 +87,7 @@ def _main(Options=None):
         else:
             print('options should not come here')
             cli.usage()
-
+    return cli
 
           
 class CLI(cmd.Cmd):
@@ -101,7 +101,7 @@ class CLI(cmd.Cmd):
         self.info = "type 'u' for usage"
         self.Config = None
         self.message = ''
-        self.accept_pip_commands = False
+        self.accept_pip_commands = None
         # if __name__ == "__main__":
         #     print("Type 'u' for usage ")
 
@@ -209,11 +209,11 @@ help <command>: give more explanation on <command>
         self.Config.printPythonPath()
 
     def do_p(self, arg):
-        """do pip according to runtime options or NOT in --pre mode
+        """do pip packages
+         
+        Pass as parameter one of natlinkcore, dragonfly, unimacro, vocola2 or dtactions,
         
-        upgrade all installed packages of the list natlinkcore, dragonfly, unimacro vocola2.
-        
-        Other packages (dtactions) should be in the dependencies of above.
+        or "all" to do them all.
         
         Check if elevated mode is required and prompt the user to restart in
         the correct mode if necessary.
@@ -221,58 +221,87 @@ help <command>: give more explanation on <command>
         """
         result = self.check_elevated_mode()
         if not result:
-            return
-            
-        do_pre = arg == '--pre' or ''  ## todoDoug
-        for package in packages_to_pip:   ## global variable
-            try:
-                import package
-            except ImportError:
-                print(f'package not installed: "{package}", do not upgrade')
-                continue
-            params = []
-            self.Config.pip_package(package, *params, do_pre)
+            return False
+        # packages_to_pip is global, see at top of thist file.
+        if not arg:
+            print(f'Please pass one of the packages {packages_to_pip}, or "all" to do them all.')
+            return False
+        
+        wanted = arg.lower()
+        if wanted == "all":
+            packageslist = packages_to_pip
+        elif wanted in packages_to_pip:
+            packageslist = [wanted]
+        else:
+            print(f'Please pass one of the packages {packages_to_pip}, or "all" to do them all.')
+            print(f'You passed: {arg}')
+            return False
+        
+        for package in packageslist:   ## global variable
+            logging.info(f'==== instal with --update {package} ===\n')
+            params = ["--upgrade"]
+                # self.config.do_pip_with_pre set to False for the moment. Not implemented
+            result = self.Config.pip_package(package, params, False)
+            if result:
+                logging.info(f' ===\nsuccesfully pip installed with --upgrade: {package}\n====\n')
+            else:
+                logging.info(f' ===\nCould not pip install --upgrade: {package}\n====\n')
+            return result
         
     def do_P(self, arg):
         """Upgrade pip packags with --pre mode on
-        
-        upgrade all installed packages of the list natlinkcore, dragonfly, unimacro vocola2.
-        
-        Other packages (dtactions) should be in the dependencies of above.
-        
+            
+            Not implemented here, because --pre does not not exist as a pip option.
+            Send a message instead...
+       
         """
-        self.do_p("--pre")
+        L = ['The command "P", pip with development updates, does not work as was expected.','',
+             'If you need this option, go to "pypi.org", find your package,'
+            'click on Releases, and on the wanted "pre" release.', '',
+             'You will then find the pip command, which you',
+             'can paste into "Windows Powershell" or "Command Prompt".', ''
+            ]
+        print('\n'.join(L))
+        if self.want_elevated():
+            print('Please start one of these programs in Elevated mode ("Run as Administrator"')
+        else:
+            print('You can start one of these programs in Normal mode (NOT as Administator)')
+        # self.do_p("--pre")
 
     def check_elevated_mode(self):
         """Check if you are in correct mode, for doing pip commands
         """
+        if self.pip_force_elevated is not None:
+            # set to True of False by the "f" or "F" command...
+            self.accept_pip_commands = None
         if self.accept_pip_commands is not None:
             return self.accept_pip_commands
-        if self.pip_force_elevated is not None:
-            self.accept_pip_commands = self.pip_force_elevated
-            return self.accept_pip_commands
+
+
         
-        I_am_elevated = self.am_elevated()
+        I_am_elevated = self.am_elevated() 
         I_want_elevated = self.want_elevated()
         print(f'check_elevated_mode: I_am_elevated: {I_am_elevated}, I_want_elevated: {I_want_elevated}')
         if I_am_elevated is I_want_elevated:
             self.accept_pip_commands = True
             return True
+        # TODO QH
+        self.accept_pip_commands = False
         if I_want_elevated:
             message = '\n'.join(["You need elevated mode for this function.",
                                 "Please quit this process and restart the config program in elevated mode.",
                                 "",
                                 "The checking can be wrong.",
-                                'If you still want to proceed in this process, use the command "F" to do so'])
+                                'If you still want to proceed in this process (normal mode), use the command "f" to do so'])
             print(message)
             return False
 
         # need non elevated, normal mode
-        message = '\n'.join(["You do not need elevated mode for this function.",
+        message = '\n'.join(["You do NOT need elevated mode for this function.",
                             "Please quit this process and restart the config program in normal mode.",
                             "",
                             'The checking can be wrong.',
-                            'If you want to proceed in this process, use the command "f" to do so'])
+                            'If you want to proceed in this "elevated" process, use the command "F" to do so'])
         print(message)
         return False
         
@@ -285,16 +314,25 @@ help <command>: give more explanation on <command>
         r"""check if sys.executable has "\Users" in its path, then not elevated.
         
         """
+        if self.pip_force_elevated in (True, False):
+            # option "f" or "F" has been used:
+            return self.pip_force_elevated
         exestr = sys.executable
-        return exestr.lower().lower().find(r'\users') == -1
+        return exestr.lower().find(r'\users') == -1
+        
 
     def do_f(self, arg):
         """normal mode for pip commands
         only needed if the default check does not give the wanted result
         """
+        self.accept_pip_commands = None
         self.pip_force_elevated = False
         
     def do_F(self, arg):
+        """want elevated mode for pip commands
+        only needed if the default check does not give the wanted result
+        """
+        self.accept_pip_commands = None
         self.pip_force_elevated = True
 
     def help_f(self):
@@ -321,7 +359,7 @@ help <command>: give more explanation on <command>
 like natlinkcore, dragonfly, vocola2, unimacro.
 Other modules will follow as dependencies.
 (lower case) "p" will take only major releases,
-(upper case) "P" will also take so called "pre" releases.
+(upper case) "P" will also take so called "pre" releases. This function does NOT WORK at the moment.
 
 If you need elevated mode, and are not, of vice versa, the program will prompt you
 to start in the correct mode.
