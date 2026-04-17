@@ -143,7 +143,7 @@ class NatlinkConfig:
         # should not happen, because of DefaultConfig (was InstallTest)
         raise NoGoodConfigFoundException('No natlink config file found, please run configure natlink program\n\t(***configurenatlink***)')
 
-def expand_path(input_path: str) -> str:
+def expand_path(input_dir: str, must_exist: bool = True) -> str:
     r"""expand path if it starts with "~" or starts with an environment variable or name of python package
     
 Paths can be:
@@ -154,77 +154,103 @@ Paths can be:
 - Obsolete: natlink_userdir/...: instead natlink_settingsdir will be searched for, and a message is thrown. In the config program things are checked more thoroughly.
 - some other environment variable: this environment variable is expanded 
 
+
+must_exist:
+    default: True, the expanded path should exist.
+    If not (possibly when in natlinkconfigfunctions a directory should be created), pass False
+
 The Documents directory can be found by "~\Documents"...
 
 When there is nothing to expand, just return the input
     """
-    expanduser, expandvars, normpath, isdir = os.path.expanduser, os.path.expandvars, os.path.normpath, os.path.isdir
+    expanduser, expandvars, normpath, isdir, join = os.path.expanduser, os.path.expandvars, os.path.normpath, os.path.isdir, os.path.join
     
-    # I think, this is tackled below, input_path is one word, without slashes or ~ or %(...) (QH)
+    # I think, this is tackled below, input_dir is one word, without slashes or ~ or %(...) (QH)
     # try:
-    #     package_spec=u.find_spec(input_path)
+    #     package_spec=u.find_spec(input_dir)
     #     if package_spec is not None:
     #         package_path=str(p.Path(package_spec.origin).parent)
     #         return normpath(package_path)
     # except:
     #     pass
-    if input_path.startswith('~'):
+    if input_dir.startswith('~'):
         home = expanduser('~')
-        env_expanded = home + input_path[1:]
-        # print(f'expand_path: "{input_path}" include "~": expanded: "{env_expanded}"')
-        return normpath(env_expanded)
+        home_expanded = home + input_dir[1:]
+        # print(f'expand_path: "{input_dir}" include "~": expanded: "{env_expanded}"')
+        if must_exist:
+            assert isdir(home_expanded)
+        return normpath(home_expanded)
+    
+    if isdir(input_dir):
+        return normpath(input_dir)
+
+    # split in trunk and rest:
+    if input_dir.find('/') > 0:
+        trunk, rest = input_dir.split('/', 1)
+    elif input_dir.find('\\') > 0:
+        trunk, rest = input_dir.split('\\', 1)
+    else:
+        trunk, rest = input_dir, ''
 
     ## "natlink_userdir" will go obsolete, to be replaced with "natlink_settingsdir" below:
-    if input_path.startswith('natlink_userdir/') or input_path.startswith('natlink_userdir\\'):
-        nud = expand_natlink_settingsdir()
-        if isdir(nud):
-            dir_path = input_path.replace('natlink_userdir', nud)
-            dir_path = normpath(dir_path)
-            if isdir(dir_path):
-                return dir_path
-            print(f'no valid directory found with "natlink_userdir": "{dir_path}"\nbut "natlink_userdir" should be replaced by "natlink_settingsdir" anyway')
-            return dir_path
-        print(f'natlink_userdir does not expand to a valid directory: "{nud}"\nbut "natlink_userdir" should be replaced by "natlink_settingsdir" anyway')
-        return normpath(nud)
+    if trunk == 'natlink_userdir':
+        trunk = expand_natlink_settingsdir()
+        if isdir(trunk):
+            replaced_dir = join(trunk, rest)
+            if must_exist:
+                if isdir(replaced_dir):
+                    return normpath(replaced_dir)
+            else:
+                print(f'no valid directory found with "natlink_userdir": "{input_dir}"\nbut "natlink_userdir" should be replaced by "natlink_settingsdir" anyway')
+                return ''
+            # must exist False:
+            return replaced_dir
+        # trunk is NOT a directory:
+        print(f'no valid directory found with "natlink_userdir": "{trunk}"\nbut "natlink_userdir" should be replaced by "natlink_settingsdir" anyway')
+        return ''
 
-    if input_path.startswith('natlink_settingsdir/') or input_path.startswith('natlink_settingsdir\\'):
+    if trunk == 'natlink_settingsdir':
         nsd = expand_natlink_settingsdir()
-        if isdir(nsd):
-            dir_path = input_path.replace('natlink_settingsdir', nsd)
-            dir_path = normpath(dir_path)
-            if isdir(dir_path):
-                return dir_path
-            print(f'no valid directory found with "natlink_settingsdir": "{dir_path}"')
-            return dir_path
-        print(f'natlink_settingsdir does not expand to a valid directory: "{nsd}"')
-        return normpath(nsd)
-    
+        if not isdir(nsd):
+            print(f'natlink_settingsdir does not expand to a valid directory: "{nsd}" (input_dir: "{input_dir}"')
+            return ''
+        
+        replaced_dir = normpath(join(nsd, rest))
+        if isdir(replaced_dir):
+            return replaced_dir
+        if must_exist:
+            return ''
+        return replaced_dir
     
     # try if package:
-    if input_path.find('/') > 0:
-        package_trunk, rest = input_path.split('/', 1)
-    elif input_path.find('\\') > 0:
-        package_trunk, rest = input_path.split('\\', 1)
-    else:
-        package_trunk, rest = input_path, ''
-        # find path for package.  not an alternative way without loading the package is to use importlib.util.findspec.
+    # find path for package.  not an alternative way without loading the package is to use importlib.util.findspec.
     
     # first check for exclude "C:" as trunk:
-    if package_trunk and package_trunk[-1] != ":":
+    if trunk and trunk[-1] != ":":
         try:
-            pack = __import__(package_trunk)
+            pack = __import__(trunk)
             package_path = pack.__path__[-1]
-            if rest:
-                dir_expanded = str(Path(package_path)/rest)
-                return dir_expanded
-            return package_path
+            replaced_dir = join(package_path, rest)
+            if isdir(replaced_dir):
+                return replaced_dir
+            if not must_exist:
+                return replaced_dir
     
         except (ModuleNotFoundError, OSError):
             pass
     
-    env_expanded = expandvars(input_path)
-    # print(f'env_expanded: "{env_expanded}", from envvar: "{input_path}"')
-    return normpath(env_expanded)
+    
+    # if here: try if there are extenden environment variables to expand:
+    env_expanded = expandvars(input_dir)
+    # print(f'env_expanded: "{env_expanded}", from envvar: "{input_dir}"')
+    env_expanded = normpath(env_expanded)
+    if isdir(env_expanded):
+        return env_expanded
+    
+    if not must_exist:
+        return env_expanded
+    # no valid path, but MUST exist (default)
+    return ''
 
 def expand_natlink_settingsdir():
     """Return the location of the natlink config files

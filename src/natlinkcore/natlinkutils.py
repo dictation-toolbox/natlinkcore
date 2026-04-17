@@ -750,6 +750,7 @@ will be made (in the order indicated).
             return
         
         if ruleName in self.activeRules:
+            print(f'want to activate rule "{ruleName}" for window {window}')
             if window == self.activeRules[ruleName]:
                 if not noError or debug_print:
                     print(f'rule "{ruleName}" already active for window {window}')
@@ -757,7 +758,11 @@ will be made (in the order indicated).
             debug_print(f'change rule "{ruleName}" from window {self.activeRules[ruleName]} to {window}')
             self.gramObj.deactivate(ruleName)
         # debug_print( print('activate rule %s (window: %s)'% (ruleName, window))
-        self.gramObj.activate(ruleName, window)
+        try:
+            self.gramObj.activate(ruleName, window)
+        except natlink.BadWindow:
+            print(f'Cannot activate rule "{ruleName}" for window {window}, BadWindow')
+            return
         self.activeRules[ruleName] = window
         if not exclusive is None:
             debug_print(f'set exclusive mode to {exclusive} for rule "{ruleName}"')

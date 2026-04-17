@@ -532,12 +532,12 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         if self.DragonflyDirectory is not None:
             return self.DragonflyDirectory
         try:
-            import dragonfly2
+            import dragonfly
         except ImportError:
             self.DragonflyDirectory = ""
             return ""
-    
-        self.DragonflyDirectory = str(Path(dragonfly2.__file__).parent)
+        
+        self.DragonflyDirectory = str(Path(dragonfly.__file__).parent)
         return self.DragonflyDirectory
     getdragonflydirectory = getDragonflyDirectory     
 

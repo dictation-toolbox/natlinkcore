@@ -1,4 +1,4 @@
-#pylint:disable= C0114, C0115, C0116, W0401, W0614, W0621, W0108. W0212, R0201
+#pylint:disable= C0114, C0115, C0116, W0401, W0614, W0621, W0108. W0212
 
 import pytest
 

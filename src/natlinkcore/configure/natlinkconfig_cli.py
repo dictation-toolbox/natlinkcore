@@ -1,4 +1,4 @@
-#pylint:disable=R0904
+#pylint:disable=R0904, C0415, W1203
 import sys
 import getopt
 import cmd
@@ -6,13 +6,16 @@ import os
 import os.path
 import logging
 import configparser
+# from argparse import ArgumentParser
 from pathlib  import Path
+import pyuac
 from natlinkcore.configure import extensions_and_folders
 from natlinkcore.configure import natlinkconfigfunctions
 from platformdirs import  user_log_dir
-from argparse import ArgumentParser
 
-extra_pip_options=[]
+# packages that should go with the do_p or do_P command, upgrading with pip
+# is packages is already there:  todoDoug
+packages_to_pip = ['natlinkcore', 'dragonfly', 'unimacro', 'vocola2']  ## 'caster' wanted here??]
 appname="natlink"
 logdir =  Path(user_log_dir(appname=appname,ensure_exists=True))
 logfilename=logdir/"cli_log.txt"
@@ -42,7 +45,7 @@ def _main(Options=None):
     """
 
 
-    shortOptions = "DVNOHKaAiIxXbBuqe"
+    shortOptions = "DVNOHKaAiIxXbBuqepPfF"
     shortArgOptions = "d:v:n:o:h:k:"
     if Options:
         if isinstance(Options, str):
@@ -55,18 +58,18 @@ def _main(Options=None):
         options, args = getopt.getopt(Options, shortOptions+shortArgOptions,["pre"])
     except getopt.GetoptError:
         print(f'invalid option: {Options}')
-        cli.usage()
+        # cli.usage()
         return
 
     if args:
         print(f'should not have extraneous arguments: {args}')
     
+    extra_pip_options = []
     if "--pre" in options:
         extra_pip_options.append("--pre")
         logging.info("pip extra option --pre")
         options.remove("--pre")
     cli = CLI(extra_pip_options=extra_pip_options)
-
     cli.Config = natlinkconfigfunctions.NatlinkConfig(cli.extra_pip_options)
 
     for o, v in options:
@@ -84,19 +87,21 @@ def _main(Options=None):
         else:
             print('options should not come here')
             cli.usage()
-
+    return cli
 
           
 class CLI(cmd.Cmd):
     """provide interactive shell control for the different options.
     """
-    def __init__(self, Config=None,extra_pip_options=[]):
+    def __init__(self, Config=None,extra_pip_options=None):
         cmd.Cmd.__init__(self)
-        self.extra_pip_options=extra_pip_options
+        self.extra_pip_options=extra_pip_options or []
+        self.pip_force_elevated = None  # command f or F
         self.prompt = '\nNatlink config> '
         self.info = "type 'u' for usage"
         self.Config = None
         self.message = ''
+        self.accept_pip_commands = None
         # if __name__ == "__main__":
         #     print("Type 'u' for usage ")
 
@@ -156,6 +161,10 @@ o/O     - enable/disable Unimacro, by setting/clearing the UnimacroUserDirectory
 d/D     - enable/disable the DragonflyDirectory, the directory where
           you can put your Dragonfly scripts (UserDirectory can also be used)
 
+[Install/configure]
+f/F     - Force (thinking this process is) in elevated mode for installing packages (F), or force normal mode (f).
+          
+
 [UserDirectory]
 n/N     - enable/disable UserDirectory, the directory where
           User Natlink grammar files are located (e.g., "~\UserDirectory")
@@ -176,9 +185,14 @@ help <command>: give more explanation on <command>
 
     # info----------------------------------------------------------
     def do_i(self, arg):
-        self.Config.status.__init__()
+        # self.Config.status()
         try:
             S = self.Config.status.getNatlinkStatusString()
+            if self.pip_force_elevated is not None:
+                if self.pip_force_elevated:
+                    S = S + '\n--  Pip commands will need User Admin mode (elevated)'
+                else:
+                    S = S + '\n--  Pip commands will need normal mode (non elevated)'
             S = S + '\n\nIf you changed things, you must restart Dragon'
             print(S)
         except configparser.NoSectionError:
@@ -186,12 +200,170 @@ help <command>: give more explanation on <command>
             
     def do_I(self, arg):
         # inifile natlinkstatus.ini settings:
-        self.Config.status.__init__()
+        self.Config.status()
         self.Config.openConfigFile()
+        
     def do_j(self, arg):
         # print PythonPath:
         
         self.Config.printPythonPath()
+
+    def do_p(self, arg):
+        """do pip packages
+         
+        Pass as parameter one of natlinkcore, dragonfly, unimacro, vocola2 or dtactions,
+        
+        or "all" to do them all.
+        
+        Check if elevated mode is required and prompt the user to restart in
+        the correct mode if necessary.
+        
+        """
+        result = self.check_elevated_mode()
+        if not result:
+            return False
+        # packages_to_pip is global, see at top of thist file.
+        if not arg:
+            print(f'Please pass one of the packages {packages_to_pip}, or "all" to do them all.')
+            return False
+        
+        wanted = arg.lower()
+        if wanted == "all":
+            packageslist = packages_to_pip
+        elif wanted in packages_to_pip:
+            packageslist = [wanted]
+        else:
+            print(f'Please pass one of the packages {packages_to_pip}, or "all" to do them all.')
+            print(f'You passed: {arg}')
+            return False
+        
+        for package in packageslist:   ## global variable
+            logging.info(f'==== instal with --update {package} ===\n')
+            params = ["--upgrade"]
+                # self.config.do_pip_with_pre set to False for the moment. Not implemented
+            result = self.Config.pip_package(package, params, False)
+            if result:
+                logging.info(f' ===\nsuccesfully pip installed with --upgrade: {package}\n====\n')
+            else:
+                logging.info(f' ===\nCould not pip install --upgrade: {package}\n====\n')
+            return result
+        
+    def do_P(self, arg):
+        """Upgrade pip packags with --pre mode on
+            
+            Not implemented here, because --pre does not not exist as a pip option.
+            Send a message instead...
+       
+        """
+        L = ['The command "P", pip with development updates, does not work as was expected.','',
+             'If you need this option, go to "pypi.org", find your package,'
+            'click on Releases, and on the wanted "pre" release.', '',
+             'You will then find the pip command, which you',
+             'can paste into "Windows Powershell" or "Command Prompt".', ''
+            ]
+        print('\n'.join(L))
+        if self.want_elevated():
+            print('Please start one of these programs in Elevated mode ("Run as Administrator"')
+        else:
+            print('You can start one of these programs in Normal mode (NOT as Administator)')
+        # self.do_p("--pre")
+
+    def check_elevated_mode(self):
+        """Check if you are in correct mode, for doing pip commands
+        """
+        if self.pip_force_elevated is not None:
+            # set to True of False by the "f" or "F" command...
+            self.accept_pip_commands = None
+        if self.accept_pip_commands is not None:
+            return self.accept_pip_commands
+
+
+        
+        I_am_elevated = self.am_elevated() 
+        I_want_elevated = self.want_elevated()
+        print(f'check_elevated_mode: I_am_elevated: {I_am_elevated}, I_want_elevated: {I_want_elevated}')
+        if I_am_elevated is I_want_elevated:
+            self.accept_pip_commands = True
+            return True
+        # TODO QH
+        self.accept_pip_commands = False
+        if I_want_elevated:
+            message = '\n'.join(["You need elevated mode for this function.",
+                                "Please quit this process and restart the config program in elevated mode.",
+                                "",
+                                "The checking can be wrong.",
+                                'If you still want to proceed in this process (normal mode), use the command "f" to do so'])
+            print(message)
+            return False
+
+        # need non elevated, normal mode
+        message = '\n'.join(["You do NOT need elevated mode for this function.",
+                            "Please quit this process and restart the config program in normal mode.",
+                            "",
+                            'The checking can be wrong.',
+                            'If you want to proceed in this "elevated" process, use the command "F" to do so'])
+        print(message)
+        return False
+        
+
+
+
+    def am_elevated(self):
+        return pyuac.isUserAdmin()
+    def want_elevated(self):
+        r"""check if sys.executable has "\Users" in its path, then not elevated.
+        
+        """
+        if self.pip_force_elevated in (True, False):
+            # option "f" or "F" has been used:
+            return self.pip_force_elevated
+        exestr = sys.executable
+        return exestr.lower().find(r'\users') == -1
+        
+
+    def do_f(self, arg):
+        """normal mode for pip commands
+        only needed if the default check does not give the wanted result
+        """
+        self.accept_pip_commands = None
+        self.pip_force_elevated = False
+        
+    def do_F(self, arg):
+        """want elevated mode for pip commands
+        only needed if the default check does not give the wanted result
+        """
+        self.accept_pip_commands = None
+        self.pip_force_elevated = True
+
+    def help_f(self):
+        print('-'*60)
+        T = ["Normally the configure program (GUI or CLI) decides correct",
+             "whether you need elevated mode or not.",
+             'Non elevated when Python is installed in your user area.', '',
+             r'The check is whether the path of "python.exe" starts with "\Users" (case insensitive).',
+             '(If so: normal (non elevated) mode.)', '',
+             'Only if this check does not give the correct result,',
+             'you will need the options "f" or "F", for overriding above check.',
+             'Do this command before you install (or update) pip modules,',
+             'for example when you configure one of the packages,',
+             'like Dragonfly, Vocola or Unimacro.', '',
+             'So: option "f" for non-elevated mode,',
+             'and option "F" for elevated (User Admin) mode.']
+        print('\n'.join(T))
+
+    help_F = help_f
+
+    def help_p(self):
+        print(''*60)
+        print("""The commands "p" and "P" will pip upgrade the installed packages,
+like natlinkcore, dragonfly, vocola2, unimacro.
+Other modules will follow as dependencies.
+(lower case) "p" will take only major releases,
+(upper case) "P" will also take so called "pre" releases. This function does NOT WORK at the moment.
+
+If you need elevated mode, and are not, of vice versa, the program will prompt you
+to start in the correct mode.
+              """)
 
     def do_e(self,arg):
         print("extensions and folders for registered natlink extensions:")
@@ -271,20 +443,7 @@ another environment variable (%%...%%). (example: "o ~\Documents\UnimacroUser")
 
     help_O = help_o
 
-    # Unimacro Command Files Editor-----------------------------------------------
-    # not needed for Aaron's GUI:
-    # def do_p(self, arg):
-    #     self.message = "Set Unimacro INI file editor"
-    #     print(f'do action: {self.message}')
-    #     key = "UnimacroIniFilesEditor"
-    #     self.Config.setFile(key, arg, section='unimacro')
-    #         
-    # def do_P(self, arg):
-    #     self.message = "Clear Unimacro INI file editor, go back to default Notepad"
-    #     print(f'do action: {self.message}')
-    #     key = "UnimacroIniFilesEditor"
-    #     self.Config.clearFile(key, section='unimacro')
-
+    ### possibly in future re-wanted functions:
     # Unimacro Vocola features-----------------------------------------------
     # managing the include file wrapper business.
     # can be called from the Vocola compatibility button in the config GUI.
@@ -479,11 +638,16 @@ Informational commands: i and I
 
 def main_cli():
     #a hack until we switch to ArgParse from getopt, check for --pre
+    extra_pip_options = []
     if len(sys.argv) == 2 and sys.argv[1]=="--pre":
         extra_pip_options.append("--pre")
     
-    if len(sys.argv) == 1 or ( len(sys.argv) == 2 and sys.argv[1]=="--pre"):  
-        Cli = CLI(extra_pip_options=extra_pip_options)
+    if len(sys.argv) == 1 or ( len(sys.argv) == 2 and sys.argv[1]=="--pre"):
+        if extra_pip_options:
+            Cli = CLI(extra_pip_options=extra_pip_options)
+        else:
+            Cli = CLI()
+            
         Cli.Config = natlinkconfigfunctions.NatlinkConfig(extra_pip_options=extra_pip_options)
         Cli.info = ""
         print('\nWelcome to the NatlinkConfig Command Line Interface\n')

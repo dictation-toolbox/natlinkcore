@@ -8,7 +8,7 @@
 #   Quintijn Hoogenboom, January 2008 (...), August 2022
 #
 
-#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912, R1732, W1514, W0107, W1203
+#pylint:disable=C0302, W0702, R0904, C0116, W0613, R0914, R0912, R1732, W1514, W0107, W1203, W1309
 """With the functions in this module Natlink can be configured.
 
 These functions are called in different ways:
@@ -24,7 +24,6 @@ from pprint import pformat
 from pathlib import Path
 import configparser
 import logging
-
 try:
     from natlinkcore import natlinkstatus
 except OSError:
@@ -36,24 +35,10 @@ from natlinkcore import tkinter_dialogs
 
 isfile, isdir, join = os.path.isfile, os.path.isdir, os.path.join
 
-
-def do_pip(*args):
-    """
-    Run a pip command with args. 
-    Diagnostic logging.3
-    """
- 
-
-    command = [sys.executable,"-m", "pip"] + list(args)
-    logging.info(f"command:  {command} ")
-    completed_process=subprocess.run(command,capture_output=True)
-    logging.debug(f"completed_process:  {completed_process}")
-    completed_process.check_returncode()
-
 class NatlinkConfig:
     """performs the configuration tasks of Natlink
     
-    setting UserDirectory, UnimacroDirectory and options, VocolaDirectory and options,
+      setting UserDirectory, UnimacroDirectory and options, VocolaDirectory and options,
     DragonflyDirectory, Autohotkey options (ahk), and Debug option of Natlink.
     and also clearing the different directories.
 
@@ -61,7 +46,7 @@ class NatlinkConfig:
     """
     def __init__(self,extra_pip_options=None):
         self.extra_pip_options = [] if extra_pip_options is None else extra_pip_options
-
+        self.do_pip_with_pre = '--pre' in self.extra_pip_options
         self.config_path = self.get_check_config_locations()
         self.config_dir = str(Path(self.config_path).parent)
         self.status = natlinkstatus.NatlinkStatus()
@@ -91,7 +76,7 @@ class NatlinkConfig:
         """
         # ensure the [directories] section is present:
         try:
-            sect = self.Config['directories']
+            self.Config['directories']
         except KeyError:
             self.Config.add_section('directories')
             self.config_write()
@@ -222,10 +207,13 @@ class NatlinkConfig:
                 return
 
         dir_path = dir_path.strip()
+        directory = config.expand_path(dir_path)
+        if directory is False:
+            logging.error(f'Cannot expand dir_path: "{dir_path}"')
+            return
+        
         directory = createIfNotThere(dir_path, level_up=1)
         if not (directory and Path(directory).is_dir()):
-            if directory is False:
-                directory = config.expand_path(dir_path)
             if dir_path == directory:
                 logging.info(f'Cannot set "{option}", the given path is invalid: "{directory}"')
             else:
@@ -235,11 +223,22 @@ class NatlinkConfig:
         nice_dir_path = self.prefix_home(dir_path)
         nice_dir_path = nice_dir_path.replace('/', '\\')        
         self.config_set(section, option, nice_dir_path)
+        dir_path = dir_path.strip()
+        directory = createIfNotThere(dir_path, level_up=1)
+        if not (directory and Path(directory).is_dir()):
+            logging.warning(f'Cannot set directory "{option}", the given path is invalid: "{directory}" ("{dir_path}")')
+        
         self.config_remove('previous settings', option)
-        if section == 'directories':
-            logging.info(f'Set option "{option}" to "{dir_path}"')
+        if nice_dir_path == dir_path:
+            if section == 'directories':
+                logging.info(f'Set option "{option}" to "{dir_path}"')
+            else:
+                logging.info(f'Set in section "{section}", option "{option}" to "{dir_path}"')
         else:
-            logging.info(f'Set in section "{section}", option "{option}" to "{dir_path}"')
+            if section == 'directories':
+                logging.info(f'Set option "{option}" to "{nice_dir_path}" (expanding to "{dir_path}")')
+            else:
+                logging.info(f'Set in section "{section}", option "{option}" to "{nice_dir_path}" (expanding to "{dir_path}")')
         return
         
     def clearDirectory(self, option, section=None):
@@ -330,6 +329,30 @@ class NatlinkConfig:
         if old_value:
             self.config_set('settings', key, old_value)
         self.config_set('settings', key, 'INFO')
+        
+    def pip_package(self, package, params, do_pre=None):
+        """
+        Run a pip command with possible pre option
+        Diagnostic logging.3
+        
+        """
+        # this check is in the natlinkconfig_cli:
+        # result = self.check_elevated_mode()
+        # print(f'result of check_elevated_mode: {result}')
+        # if not result:
+        #     return
+        command = [sys.executable,"-m", "pip"]
+        command.append('install')
+        command.append(package)
+        ## premature option:::
+        # if do_pre or self.do_pip_with_pre:
+        #     command.append("--pre")
+        command.extend(params)
+        logging.info(f' pip command:  {command} ')
+        completed_process = subprocess.run(command,capture_output=True)
+        logging.debug(f' completed_process:  {completed_process}')
+        completed_process.check_returncode()
+
 
     def enable_unimacro(self, arg):
         unimacro_user_dir = self.status.getUnimacroUserDirectory()
@@ -340,29 +363,34 @@ class NatlinkConfig:
 
         uni_dir = self.status.getUnimacroDirectory()
         if uni_dir:
-            logging.info('==== instal and/or update unimacro====\n')            
+            logging.info('==== instal and/or update unimacro====\n')
+            params = ["--upgrade"]
             try:
-                do_pip("install", *self.extra_pip_options, "--upgrade", "unimacro")
+                self.pip_package("unimacro", params, self.do_pip_with_pre)
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install --upgrade unimacro\n====\n')
-                return
+                return False
         else:
+            params = []
             try:
-                do_pip("install",*self.extra_pip_options, "unimacro")
+                self.pip_package("unimacro", params, self.do_pip_with_pre)
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install unimacro\n====\n')
-                return
+                return False
         self.status.refresh()   # refresh status
         uni_dir = self.status.getUnimacroDirectory()
 
         self.setDirectory('UnimacroUserDirectory', arg, section='unimacro')
         unimacro_user_dir = self.config_get('unimacro', 'unimacrouserdirectory')
         if not unimacro_user_dir:
-            return
+            logging.warning(f' strange error, installing unimacro seemed to word,'
+                             ' but cannot find unimacro_user_dir in the inifile "{natlink.ini}"')
+            return False
         uniGrammarsDir = r'unimacro\unimacrogrammars'
         self.setDirectory('unimacrodirectory','unimacro')  #always unimacro
 
         self.setDirectory('unimacrogrammarsdirectory', uniGrammarsDir)
+        return True
 
     def disable_unimacro(self, arg=None):
         """disable unimacro, do not expect arg
@@ -386,14 +414,16 @@ class NatlinkConfig:
         df_dir = self.status.getDragonflyDirectory()
         if df_dir:
             logging.info('==== instal and/or update dragonfly2====\n')            
+            params = ["--upgrade"]
             try:
-                do_pip( "install", *self.extra_pip_options,"--upgrade", "dragonfly2")
-            except subprocess.CalledProcessError:
+                self.pip_package("dragonfly2", params, self.do_pip_with_pre)
+            except subprocess.CalledProcessError:   
                 logging.info('====\ncould not pip install --upgrade dragonfly2\n====\n')
                 return
         else:
+            params = []
             try:
-                do_pip( "install", *self.extra_pip_options, "dragonfly2")
+                self.pip_package("dragonfly2",params, self.do_pip_with_pre)
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install dragonfly2\n====\n')
                 return
@@ -417,22 +447,26 @@ class NatlinkConfig:
         """enable vocola, by setting arg (prompting if False), and other settings
         """
         vocola_user_dir = self.status.getVocolaUserDirectory()
-        if vocola_user_dir and isdir(vocola_user_dir):
+        if self.status.vocolaIsEnabled(): 
+        # if vocola_user_dir and isdir(vocola_user_dir):
             logging.info(f'VocolaUserDirectory is already defined: "{vocola_user_dir}"\n\tto change, first clear (option "V") and then set again')
             logging.info('\nWhen you want to upgrade Vocola (vocola2), also first clear ("V"), then choose this option ("v") again.\n')
             return
 
         voc_dir = self.status.getVocolaDirectory()
         if voc_dir:
-            logging.info('==== instal and/or update vocola2====\n')
+            logging.info('==== install --update vocola2====\n')            
+            params = ["--upgrade"]
             try:
-                do_pip("install",*self.extra_pip_options, "--upgrade", "vocola2")
-            except subprocess.CalledProcessError:
+                self.pip_package("vocola2", params, self.do_pip_with_pre)
+            except subprocess.CalledProcessError:   
                 logging.info('====\ncould not pip install --upgrade vocola2\n====\n')
                 return
         else:
+            logging.info('==== install vocola2====\n')            
+            params = []
             try:
-                do_pip("install",*self.extra_pip_options, "vocola2")
+                self.pip_package("vocola2",params, self.do_pip_with_pre)
             except subprocess.CalledProcessError:
                 logging.info('====\ncould not pip install vocola2\n====\n')
                 return
@@ -444,7 +478,20 @@ class NatlinkConfig:
         if not vocola_user_dir:
             return
         # vocGrammarsDir = self.status.getVocolaGrammarsDirectory()
-        vocGrammarsDir = r'natlink_settings\vocolagrammars'
+        vocGrammarsDir = config.expand_path(r'natlink_settingsdir\vocolagrammars', must_exist=False)
+        if not vocGrammarsDir:
+            logging.error('Could not expand directory for vocola grammars')
+            return
+        vocGrammarsPath = Path(vocGrammarsDir)
+        if not vocGrammarsPath.is_dir():
+            parent = vocGrammarsPath.parent
+            if parent.is_dir():
+                vocGrammarsPath.mkdir()
+                assert vocGrammarsPath.is_dir()
+            else:
+                logging.error(f'vocolaGrammarsDirectory is not a valid directory: "{vocGrammarsDir}"')
+                return          
+            
         self.setDirectory('vocoladirectory','vocola2')  #always vocola2
         self.setDirectory('vocolagrammarsdirectory', vocGrammarsDir)
         self.copyUnimacroIncludeFile()
@@ -713,6 +760,7 @@ class NatlinkConfig:
         logging.info(pformat(sys.path))
 
 
+
 def isValidDir(path):
     """return the path, as str, if valid directory
     
@@ -758,7 +806,7 @@ def createIfNotThere(path_name, level_up=None):
     """
     level_up = level_up or 1
     dir_path = isValidDir(path_name)
-    if dir_path:
+    if dir_path and Path(dir_path).is_dir():
         return dir_path
     start_path = config.expand_path(path_name)
     up_path = Path(start_path)
