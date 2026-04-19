@@ -200,7 +200,6 @@ help <command>: give more explanation on <command>
             
     def do_I(self, arg):
         # inifile natlinkstatus.ini settings:
-        # erroneous line:
         # self.Config.status
         self.Config.openConfigFile()
         
