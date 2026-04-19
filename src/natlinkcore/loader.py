@@ -561,11 +561,18 @@ class NatlinkMain(metaclass=Singleton):
             self.trigger_load()
         natlink.setBeginCallback(self.on_begin_callback)
         natlink.setChangeCallback(self.on_change_callback)
-        natlink.setMessageWindow(self.on_message_window_callback)
+        try:
+            natlink.setMessageWindow(self.on_message_window_callback)
+        except AttributeError:
+            pass
+
 
     def finish(self) -> None:
         # reverse changes made by start()
-        natlink.setMessageWindow(None)
+        try:
+            natlink.setMessageWindow(None)
+        except AttributeError:
+            pass
         natlink.setChangeCallback(None)
         natlink.setBeginCallback(None)
         self.unload_all_loaded_modules()
