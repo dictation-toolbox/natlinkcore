@@ -200,7 +200,7 @@ help <command>: give more explanation on <command>
             
     def do_I(self, arg):
         # inifile natlinkstatus.ini settings:
-        self.Config.status()
+        # self.Config.status
         self.Config.openConfigFile()
         
     def do_j(self, arg):
