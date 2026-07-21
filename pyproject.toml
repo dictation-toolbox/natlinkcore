@@ -15,7 +15,8 @@ dependencies= [
 
     "FreeSimpleGUI>=5.1.0", 
     "pydebugstring >= 1.0.0.1",
-    "dtactions >= 1.6.5.dev1",
+    "pyuac", 
+    "dtactions >= 1.6.4.dev3",
     "platformdirs >= 4.2.0",
     "natlink >= 5.5.7"
     # "natlink >= 5.5.8.dev2"
