@@ -468,16 +468,14 @@ def test_vocola_include_lines_valid_path(vocola_config_setup, cli, monkeypatch):
         
     cli.do_a(True)         
     exp_dict = {'Uniactions.vch': '> 20 lines',
- 'generalincl.vch': ['include Uniactions.vch;',
-                     '#include file general refer to specialinclude.vch:',
+ 'generalincl.vch': ['#include file general refer to specialinclude.vch:',
                      'include specialinclude.vch;'],
  'grammar.vcl': ['include Uniactions.vch;',
                  '# should be changed to nld\\ and reactivated:',
                  'include nld\\specialinclude_nld.vch;',
                  '#invalidfile#include ..\\nld\\nonexist.vch;',
                  'include command = include_command;'],
- 'nld---generalincl_nld.vch': ['include ..\\Uniactions.vch;',
-                               '# include_nld',
+ 'nld---generalincl_nld.vch': ['# include_nld',
                                'include ..\\specialinclude.vch;'],
  'nld---grammar_nld.vcl': ['include ..\\Uniactions.vch;',
                            'include generalincl_nld.vch;',
@@ -485,11 +483,9 @@ def test_vocola_include_lines_valid_path(vocola_config_setup, cli, monkeypatch):
                            '# should be changed to ..\\:',
                            'include ..\\generalincl.vch;',
                            'include command = include_command;'],
- 'nld---specialinclude_nld.vch': ['include ..\\Uniactions.vch;',
-                                  '# include_nld',
+ 'nld---specialinclude_nld.vch': ['# include_nld',
                                   'include ..\\specialinclude.vch;'],
- 'specialinclude.vch': ['include Uniactions.vch;',
-                        '# include file special with Uniactions lines',
+ 'specialinclude.vch': ['# include file special with Uniactions lines',
                         '#function definition:',
                         'login(n,p) := "blah_blah" LW();']}
    

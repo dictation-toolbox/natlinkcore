@@ -559,7 +559,8 @@ class NatlinkConfig:
                 return          
             
         self.setDirectory('vocoladirectory','vocola2')  #always vocola2
-        self.setDirectory('vocolagrammarsdirectory', vocGrammarsDir)
+        self.setDirectory('vocolagrammarsdirectory', vocGrammarsDir)    
+        createIfNotThere(vocGrammarsDir)
 
         if self.status.getVocolaTakesUniactions():
             self.copyUniactionsIncludeFile()
@@ -672,6 +673,8 @@ class NatlinkConfig:
         Do this for the VocolaUserDirectory and sub directories (of non english languages,
         "nld", "esp", etc).
         
+        Check the .vcl files, ignore .vch header files.
+        
         The call from the natlinkconfig_cli (and therefore natlinkconfig_gui) should be
         without the subFolder specified.
         (tested in test_vocola_uniactions_include_lines_on_and_off and
@@ -698,7 +701,7 @@ class NatlinkConfig:
         changedFiles = 0
         for f in os.listdir(todoFolder):
             F = os.path.join(todoFolder, f)
-            if f.endswith(".vcl") or f.endswith(".vch"):
+            if f.endswith(".vcl"):
                 got_include_line = False
                 Output = []
                 rwfile = ReadWriteFile()
@@ -773,7 +776,7 @@ class NatlinkConfig:
         
         for f in os.listdir(todoFolder):
             F = os.path.join(todoFolder, f)
-            if f.endswith(".vcl") or f.endswith(".vch"):
+            if f.endswith(".vcl"):
                 changed = 0
                 Output = []
                 firstLine = True
@@ -903,7 +906,8 @@ class NatlinkConfig:
         """check vocola files for invalid or commented Usc commands
         
         When VocolaTakesUniactions is switched on, commented previous lines with Usc
-        should be re-activated
+        should be re-activated. This is only done in .vcl files,
+        header files .vch are kept outside this check.
         Older command lines with previous "Unimacro" prefix are changed into "Usc"
         """
         join, isdir = os.path.join, os.path.isdir
@@ -926,7 +930,7 @@ class NatlinkConfig:
         changedFiles = 0
         for f in os.listdir(todoFolder):
             F = os.path.join(todoFolder, f)
-            if f.endswith(".vcl") or f.endswith(".vch"):
+            if f.endswith(".vcl"):
                 got_changes = 0
                 multiple_command = []
                 Output = []
