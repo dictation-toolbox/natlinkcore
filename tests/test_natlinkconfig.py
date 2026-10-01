@@ -173,6 +173,9 @@ def test_prefix_home_appdata(cli):
     No "~" any more, use "localappdata". Most used for natlink config files!!!
     Also check "appdata", which expands to the roaming appdata directory (Handle with care!!!)
     
+    Note the previous home directory for Natlink config files is now reached by %homepath%,
+    (previous was %personalhome%, but this one appears to be not valid any more in Windows 11)
+    
     Check this with values on your computer, monkeypatching does not seem to worth the trouble...
     """
     # to_prefix = config.expand_path('%localappdata%\\Microsoft')
@@ -198,7 +201,7 @@ def test_prefix_home_appdata(cli):
     # check %personalhome% (~)
     to_prefix = config.expand_path('%personalhome%\\Documents')
     prefixed  = cli.Config.prefix_home_appdata(to_prefix)
-    assert prefixed == '%personalhome%\\Documents'
+    assert prefixed == '%userprofile%\\Documents'
 
     expanded = config.expand_path(prefixed)
     assert os.path.isdir(expanded)
@@ -209,8 +212,7 @@ def test_prefix_home_appdata(cli):
     expanded = config.expand_path(prefixed)
     assert os.path.isdir(expanded)
     prefixed_new  = cli.Config.prefix_home_appdata(expanded)
-    assert prefixed_new == '%personalhome%\\Documents'
-    
+    assert prefixed_new == '%userprofile%\\Documents'    
     
 def test_enable_disable_vocola(vocola_config_setup, cli, monkeypatch):
     """enable and disable vocola.
@@ -245,7 +247,10 @@ def test_enable_disable_vocola(vocola_config_setup, cli, monkeypatch):
                  'view source = {ctrl+u};']}
     
     cli.do_v(vocola_userdir)
-    assert cli.Config.status.vocolaIsEnabled()
+    if not cli.Config.status.vocolaIsEnabled():
+        print('*** Vocola tests will fail, probably because Vocola2 is not installed ***')
+    assert cli.Config.status.vocolaIsEnabled() 
+        
     assert cli.Config.status.getVocolaTakesUniactions() is False
 
    # check new state:

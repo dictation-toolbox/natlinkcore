@@ -661,7 +661,7 @@ def config_locations() -> Iterable[str]:
     going to be replaced by "NATLINK_SETTINGSDIR".
     name is always 'natlink.ini'
     
-    (Before, releases 5.?.? default was home (%personalhome%) with subdirectory '.natlink'
+    (Before, releases 5.6.0 default was home (%personalhome%, now changed to %userprofile%!!!) with subdirectory '.natlink'
     
     the fallback location is in the installed files, and provides the frame for the config file.
     with the configurenatlink (natlinkconfigfunction.py or configfurenatlink.pyw) the fallback version
