@@ -161,7 +161,7 @@ Paths can be:
 - `~/...`: the home directory
 - Obsolete: natlink_userdir/...: instead natlink_settingsdir will be searched for, and a message is thrown. In the config program things are checked more thoroughly.
 - some other environment variable: this environment variable is expanded 
-- Note instead of "~" %personalhome% was used for a short while. Change this to %homepath% for Windows 11
+- Note instead of "~" %personalhome% was used for a short while. Change this to %userprofile% for Windows 11
 
 must_exist:
     default: True, the expanded path should exist.
@@ -193,7 +193,7 @@ When there is nothing to expand, just return the input
 
     # quick fix for obsolete %personalhome% (QH)
     if input_dir.startswith('%personalhome%'):
-        input_dir = input_dir.replace('%personalhome%', '%homepath%')
+        input_dir = input_dir.replace('%personalhome%', '%userprofile%')
 
 
     if input_dir.startswith('%'):
