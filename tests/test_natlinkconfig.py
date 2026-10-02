@@ -173,7 +173,7 @@ def test_prefix_home_appdata(cli):
     No "~" any more, use "localappdata". Most used for natlink config files!!!
     Also check "appdata", which expands to the roaming appdata directory (Handle with care!!!)
     
-    Note the previous home directory for Natlink config files is now reached by %homepath%,
+    Note the previous home directory for Natlink config files is now reached by %userprofile%,
     (previous was %personalhome%, but this one appears to be not valid any more in Windows 11)
     
     Check this with values on your computer, monkeypatching does not seem to worth the trouble...
