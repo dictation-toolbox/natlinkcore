@@ -173,6 +173,9 @@ def test_prefix_home_appdata(cli):
     No "~" any more, use "localappdata". Most used for natlink config files!!!
     Also check "appdata", which expands to the roaming appdata directory (Handle with care!!!)
     
+    Note the previous home directory for Natlink config files is now reached by %userprofile%,
+    (previous was %personalhome%, but this one appears to be not valid any more in Windows 11)
+    
     Check this with values on your computer, monkeypatching does not seem to worth the trouble...
     """
     # to_prefix = config.expand_path('%localappdata%\\Microsoft')
@@ -198,7 +201,7 @@ def test_prefix_home_appdata(cli):
     # check %personalhome% (~)
     to_prefix = config.expand_path('%personalhome%\\Documents')
     prefixed  = cli.Config.prefix_home_appdata(to_prefix)
-    assert prefixed == '%personalhome%\\Documents'
+    assert prefixed == '%userprofile%\\Documents'
 
     expanded = config.expand_path(prefixed)
     assert os.path.isdir(expanded)
@@ -209,8 +212,7 @@ def test_prefix_home_appdata(cli):
     expanded = config.expand_path(prefixed)
     assert os.path.isdir(expanded)
     prefixed_new  = cli.Config.prefix_home_appdata(expanded)
-    assert prefixed_new == '%personalhome%\\Documents'
-    
+    assert prefixed_new == '%userprofile%\\Documents'    
     
 def test_enable_disable_vocola(vocola_config_setup, cli, monkeypatch):
     """enable and disable vocola.
@@ -245,7 +247,10 @@ def test_enable_disable_vocola(vocola_config_setup, cli, monkeypatch):
                  'view source = {ctrl+u};']}
     
     cli.do_v(vocola_userdir)
-    assert cli.Config.status.vocolaIsEnabled()
+    if not cli.Config.status.vocolaIsEnabled():
+        print('*** Vocola tests will fail, probably because Vocola2 is not installed ***')
+    assert cli.Config.status.vocolaIsEnabled() 
+        
     assert cli.Config.status.getVocolaTakesUniactions() is False
 
    # check new state:
@@ -468,16 +473,14 @@ def test_vocola_include_lines_valid_path(vocola_config_setup, cli, monkeypatch):
         
     cli.do_a(True)         
     exp_dict = {'Uniactions.vch': '> 20 lines',
- 'generalincl.vch': ['include Uniactions.vch;',
-                     '#include file general refer to specialinclude.vch:',
+ 'generalincl.vch': ['#include file general refer to specialinclude.vch:',
                      'include specialinclude.vch;'],
  'grammar.vcl': ['include Uniactions.vch;',
                  '# should be changed to nld\\ and reactivated:',
                  'include nld\\specialinclude_nld.vch;',
                  '#invalidfile#include ..\\nld\\nonexist.vch;',
                  'include command = include_command;'],
- 'nld---generalincl_nld.vch': ['include ..\\Uniactions.vch;',
-                               '# include_nld',
+ 'nld---generalincl_nld.vch': ['# include_nld',
                                'include ..\\specialinclude.vch;'],
  'nld---grammar_nld.vcl': ['include ..\\Uniactions.vch;',
                            'include generalincl_nld.vch;',
@@ -485,11 +488,9 @@ def test_vocola_include_lines_valid_path(vocola_config_setup, cli, monkeypatch):
                            '# should be changed to ..\\:',
                            'include ..\\generalincl.vch;',
                            'include command = include_command;'],
- 'nld---specialinclude_nld.vch': ['include ..\\Uniactions.vch;',
-                                  '# include_nld',
+ 'nld---specialinclude_nld.vch': ['# include_nld',
                                   'include ..\\specialinclude.vch;'],
- 'specialinclude.vch': ['include Uniactions.vch;',
-                        '# include file special with Uniactions lines',
+ 'specialinclude.vch': ['# include file special with Uniactions lines',
                         '#function definition:',
                         'login(n,p) := "blah_blah" LW();']}
    

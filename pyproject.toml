@@ -6,7 +6,7 @@ build-backend = "flit_core.buildapi"
 name = "natlinkcore"
 authors = [{name = "Quintijn Hoogenboom (maintainer)", email = "q.hoogenboom@antenna.nl"}]
 
-version="5.6.0"
+version="5.6.1"
 
 dynamic = [ "description"]
 requires-python = ">=3.10"
