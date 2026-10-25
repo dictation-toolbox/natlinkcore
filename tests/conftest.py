@@ -2,14 +2,14 @@
 # it has  a  purpose you can read about in the pytest documentation.
 #only needs to be called once
 #pylint:disable = C0411, W4901
-from string import Template
+# from string import Template
 from pathlib import Path
 import pytest
-from distutils.dir_util import copy_tree
 import natlink
 from functools import cache
 import importlib
 from shutil import copy as file_copy
+# from shutil import copytree
 thisDir = Path(__file__).parent
 
 

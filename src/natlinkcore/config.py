@@ -208,9 +208,6 @@ When there is nothing to expand, just return the input
                 return ''  
         return normpath(input_dir2)
     
-    
-    
-    
     if isdir(input_dir):
         return normpath(input_dir)
 

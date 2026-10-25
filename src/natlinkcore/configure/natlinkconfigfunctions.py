@@ -59,54 +59,60 @@ class NatlinkConfig:
         self.documents_path = str(Path.home()/'Documents')
         self.natlinkconfig_path = config.expand_natlink_settingsdir()
         self.AllUscCommands = None # for vocola/dtactions
-        self.check_correct_python_version()
-        
-        
-        
-    def check_correct_python_version(self):
-        """the python version of the running instance should be equal to the registry
-           at install of the installer.
-           
-           This one does not work (yet)
-        """
-        cur_python_dir = sys.exec_prefix
-        try:
-            wanted = loader.get_config_info_from_registry("pythonInstallPath")
-        except FileNotFoundError:
-            logging.error(f'Wanted python dir cannot be found from registry,\nCurrent is: {cur_python_dir}')
-            return False
-        if wanted.strip('\\').lower() == sys.exec_prefix.strip('\\').lower():
-            return True
-        mess = '\n'.join(["Current python version doesn't match wanted:\n",
-                         f'Current: {cur_python_dir}',
-                         f'Wanted: {wanted}'])
-        logging.error(mess)
-        sg.popup(mess, keep_on_top=True, title="Invalid Python Version")
-        return False
-    
+        if not check_correct_python_version():
+            sys.exit()
+            
     def get_check_config_locations(self):
         
         """check the location/locations as given by the loader
         """
+        isdir, getenv = os.path.isdir, os.getenv
         config_path, fallback_path = loader.config_locations()  
+        
+        # check if env var NATLINK_SETTINGDIR is set:
+        nsd = getenv("NATLINK_SETTINGDIR")
+        if nsd:
+            if isdir(nsd):
+                return nsd
+            mess = '\n'.join(['You specified  the environment variable "NATLINK_SETTINGDIR", but'
+                              'the value ({nsd}) is not a valid directory.\n',
+                              'The Configure Natlink program will continue with the standard directory and configure file ("natlink.ini")\n',
+                              'Please remove or correct this environment variable and rerun this program'])
+            sg.popup(mess, title='Configure Natlink', keep_on_top=True)
         
         if not os.path.isfile(config_path):
             config_dir = Path(config_path).parent
             if not config_dir.is_dir():
                 config_dir.mkdir(parents=True)
+            
+            ### here copy from previous location to current location,
+            ### only if config_dir equals the new_default_config_dir and is empty
+            ### (apart from directory Natlink for logging, set in line 10 of natlinkconfig_cli.py)
+        
+            ### Are we satisfied with only copying natlink.ini if not present with the copyfile line below
+            ### or do we want all the stuff in the old config directory???
+        
+            old_default_config_dir = config.expand_path(r'%userprofile%\.natlink')
+            new_default_config_dir = config.expand_path(r'%localappdata%\Natlink')
+            # note: in new config dir there can be one directory already, from the logging system.
+            
+            if str(config_dir) == new_default_config_dir and len(os.listdir(config_dir)) <= 1:
                 
-        # # #     ### here copy from previous location to current location,
-        # # #     ### only if config_dir equals the new_default_config_dir and is empty
-        # # #     (apart from directory Natlink for logging, set in line 10 of natlinkconfig_cli.py)
-        # # #
-        # # #     Are we satisfied with only copying natlink.ini if not present with the copyfile line below
-        # # #     or do we want all the stuff in the old config directory???
-        # # # 
-        # # #     old_default_config_dir = config.expand_path(r'%personalhome%\.natlink')
-        # # #     new_default_config_dir = config.expand_path(r'%localappdata%\Natlink')
-        # # #     if str(config_dir) == new_default_config_dir and len(os.listdir(config_dir)) <= 1:
-        # # #         copy_tree(old_default_config_dir, new_default_config_dir)
-        # # # ## just in case the config_path still does not exist::
+                # custom_config_dir = 
+                
+                
+                mess = '\n'.join(['Starting with Natlink 5.6.0 the config directory changes from old:\n',
+                                  f'"%userprofile%\\.natlink" (expanded: "{old_default_config_dir}")\n',
+                                  '        to new:\n',
+                                  f'"%localappdata\\Natlink" (expanded: "{new_default_config_dir}")\n\n',
+                                  'Do you want to copy your previous config files from the old the new config directory?'])
+                logging.info(mess)
+                answer = sg.popup_yes_no(mess, title='Configure Natlink', keep_on_top=True)
+                if answer == 'Yes':
+                    shutil.copytree(old_default_config_dir, new_default_config_dir)
+                    logging.info('Copied contents of old config dir to new config dir')
+                    
+        ## just in case the config_path still does not exist::
         if not os.path.isfile(config_path):
             shutil.copyfile(fallback_path, config_path)
 
@@ -1296,6 +1302,29 @@ def get_folder_dict(folderpath):
             D[key_prefix + fi] = lines if len(lines) <= 20 else '> 20 lines'
             
     return D
+
+def check_correct_python_version():
+    """the python version of the running instance should be equal to the registry
+       at install of the installer.
+       
+       when False, the interpreter should stop...
+    """
+    cur_python_dir = sys.exec_prefix
+    try:
+        wanted = loader.get_config_info_from_registry("pythonInstallPath")
+        wanted = os.path.normpath(wanted.strip('\\').strip())
+    except FileNotFoundError:
+        logging.error(f'Wanted python dir cannot be found from registry,\nCurrent is: {cur_python_dir}')
+        return False
+    if wanted.lower() == sys.exec_prefix.lower():
+        return True
+    mess = '\n'.join(["Current python version doesn't match wanted:\n",
+                     f'Current:  {cur_python_dir}',
+                     f'Wanted: {wanted}',
+                     '\nStop running this module/program'])
+    logging.error(mess)
+    sg.popup(mess, keep_on_top=True, title="Invalid Python Version")
+    return False
 
 
 if __name__ == "__main__":
