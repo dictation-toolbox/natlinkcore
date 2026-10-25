@@ -9,6 +9,7 @@ import configparser
 # from argparse import ArgumentParser
 from pathlib  import Path
 import pyuac
+import FreeSimpleGUI as sg
 from natlinkcore.configure import extensions_and_folders
 from natlinkcore.configure import natlinkconfigfunctions
 from platformdirs import  user_log_dir
@@ -59,7 +60,7 @@ def _main(Options=None):
     except getopt.GetoptError:
         print(f'invalid option: {Options}')
         # cli.usage()
-        return
+        return False
 
     if args:
         print(f'should not have extraneous arguments: {args}')
@@ -93,7 +94,7 @@ def _main(Options=None):
 class CLI(cmd.Cmd):
     """provide interactive shell control for the different options.
     """
-    def __init__(self, Config=None,extra_pip_options=None):
+    def __init__(self, Config=None, extra_pip_options=None):
         cmd.Cmd.__init__(self)
         self.extra_pip_options=extra_pip_options or []
         self.pip_force_elevated = None  # command f or F
@@ -199,6 +200,9 @@ help <command>: give more explanation on <command>
             
     def do_I(self, arg):
         # inifile natlinkstatus.ini settings:
+        confirm = sg.popup_yes_no('Do you want the see the config file "natlink.ini"', title="Configure Natlink", keep_on_top=True)
+        if confirm != 'Yes':
+            return
 
         self.Config.openConfigFile()
         
@@ -292,6 +296,7 @@ help <command>: give more explanation on <command>
                                 "",
                                 "The checking can be wrong.",
                                 'If you still want to proceed in this process (normal mode), use the command "f" to do so'])
+            sg.popup(message)
             print(message)
             return False
 
@@ -301,6 +306,7 @@ help <command>: give more explanation on <command>
                             "",
                             'The checking can be wrong.',
                             'If you want to proceed in this "elevated" process, use the command "F" to do so'])
+        sg.popup(message)
         print(message)
         return False
         

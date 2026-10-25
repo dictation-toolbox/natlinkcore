@@ -23,6 +23,7 @@ from pathlib import Path
 import re
 import configparser
 import logging
+import FreeSimpleGUI as sg
 try:
     from natlinkcore import natlinkstatus
 except OSError:
@@ -45,7 +46,7 @@ class NatlinkConfig:
     Changes are written in the config file, from which the path is taken from the loader instance.
     """
     def __init__(self,extra_pip_options=None):        
-
+    
         ## extra_pip_options currently not used...
         self.extra_pip_options = [] if extra_pip_options is None else extra_pip_options
         self.do_pip_with_pre = '--pre' in self.extra_pip_options
@@ -58,31 +59,60 @@ class NatlinkConfig:
         self.documents_path = str(Path.home()/'Documents')
         self.natlinkconfig_path = config.expand_natlink_settingsdir()
         self.AllUscCommands = None # for vocola/dtactions
-        pass
-    
+        if not check_correct_python_version():
+            sys.exit()
+            
     def get_check_config_locations(self):
         
         """check the location/locations as given by the loader
         """
+        isdir, getenv = os.path.isdir, os.getenv
         config_path, fallback_path = loader.config_locations()  
+        
+        # check if env var NATLINK_SETTINGDIR is set:
+        nsd = getenv("NATLINK_SETTINGDIR")
+        if nsd:
+            if isdir(nsd):
+                return nsd
+            mess = '\n'.join(['You specified  the environment variable "NATLINK_SETTINGDIR", but'
+                              'the value ({nsd}) is not a valid directory.\n',
+                              'The Configure Natlink program will continue with the standard directory and configure file ("natlink.ini")\n',
+                              'Please remove or correct this environment variable and rerun this program'])
+            sg.popup(mess, title='Configure Natlink', keep_on_top=True)
         
         if not os.path.isfile(config_path):
             config_dir = Path(config_path).parent
             if not config_dir.is_dir():
                 config_dir.mkdir(parents=True)
+            
+            ### here copy from previous location to current location,
+            ### only if config_dir equals the new_default_config_dir and is empty
+            ### (apart from directory Natlink for logging, set in line 10 of natlinkconfig_cli.py)
+        
+            ### Are we satisfied with only copying natlink.ini if not present with the copyfile line below
+            ### or do we want all the stuff in the old config directory???
+        
+            old_default_config_dir = config.expand_path(r'%userprofile%\.natlink')
+            new_default_config_dir = config.expand_path(r'%localappdata%\Natlink')
+            # note: in new config dir there can be one directory already, from the logging system.
+            
+            if str(config_dir) == new_default_config_dir and len(os.listdir(config_dir)) <= 1:
                 
-        # # #     ### here copy from previous location to current location,
-        # # #     ### only if config_dir equals the new_default_config_dir and is empty
-        # # #     (apart from directory Natlink for logging, set in line 10 of natlinkconfig_cli.py)
-        # # #
-        # # #     Are we satisfied with only copying natlink.ini if not present with the copyfile line below
-        # # #     or do we want all the stuff in the old config directory???
-        # # # 
-        # # #     old_default_config_dir = config.expand_path(r'%personalhome%\.natlink')
-        # # #     new_default_config_dir = config.expand_path(r'%localappdata%\Natlink')
-        # # #     if str(config_dir) == new_default_config_dir and len(os.listdir(config_dir)) <= 1:
-        # # #         copy_tree(old_default_config_dir, new_default_config_dir)
-        # # # ## just in case the config_path still does not exist::
+                # custom_config_dir = 
+                
+                
+                mess = '\n'.join(['Starting with Natlink 5.6.0 the config directory changes from old:\n',
+                                  f'"%userprofile%\\.natlink" (expanded: "{old_default_config_dir}")\n',
+                                  '        to new:\n',
+                                  f'"%localappdata\\Natlink" (expanded: "{new_default_config_dir}")\n\n',
+                                  'Do you want to copy your previous config files from the old the new config directory?'])
+                logging.info(mess)
+                answer = sg.popup_yes_no(mess, title='Configure Natlink', keep_on_top=True)
+                if answer == 'Yes':
+                    shutil.copytree(old_default_config_dir, new_default_config_dir)
+                    logging.info('Copied contents of old config dir to new config dir')
+                    
+        ## just in case the config_path still does not exist::
         if not os.path.isfile(config_path):
             shutil.copyfile(fallback_path, config_path)
 
@@ -247,14 +277,21 @@ class NatlinkConfig:
     #     self.clearDirectory('UserDirectory')
         
 
-    def setDirectory(self, option, dir_path, section=None):
+    def setDirectory(self, option, dir_path, section=None, text=None):
         """set the directory, specified with "key", to dir_path
         """
         section = section or 'directories'
         if not dir_path:
             logging.info('==== Please specify the wanted directory in Dialog window ====\n')
             prev_path = self.config_get('previous settings', option) or self.documents_path
-            dir_path = tkinter_dialogs.GetDirFromDialog(title=f'Please choose a "{option}"', initialdir=prev_path)
+            if not prev_path:
+                prev_path = r'%userprofile%\Documents'
+            # dir_path = tkinter_dialogs.GetDirFromDialog(title=f'Please choose a "{option}"', initialdir=prev_path)
+            if not text:
+                text = 'Please choose a folder where your ... grammars are/will be located.'
+            dir_path = sg.popup_get_folder(text, title=f'Natlink config, choose a folder',
+                                           initial_folder=prev_path,
+                                           keep_on_top=True)
             if not dir_path:
                 print('No valid directory specified')
                 return
@@ -435,6 +472,16 @@ class NatlinkConfig:
             logging.info('\nWhen you want to upgrade Unimacro, also first clear ("O"), then choose this option ("o") again.\n')
             return False
 
+        text = '\n'.join(['This will enable Unimacro.',
+                         'The unimacro package will be got from pypi.org.',
+                         'Next you are asked to define UnimacroUserDirectory, probably in your Documents directory.',
+                         '\nWhen you want to cancel this actions, choose "No"'])
+        if not arg:
+            answ = sg.popup_yes_no(text, title='Natlink config', keep_on_top=True)
+            if answ != 'Yes':
+                return False
+
+
         uni_dir = self.status.getUnimacroDirectory()
         if uni_dir:
             logging.info('==== instal and/or update unimacro====\n')
@@ -453,8 +500,8 @@ class NatlinkConfig:
                 return False
         self.status.refresh()   # refresh status
         uni_dir = self.status.getUnimacroDirectory()
-
-        self.setDirectory('UnimacroUserDirectory', arg, section='unimacro')
+        text = 'Please specify your UnimacroUserDirectory, where your unimacro config (".ini") files are/will be located'
+        self.setDirectory('UnimacroUserDirectory', arg, section='unimacro', text=text)
         unimacro_user_dir = self.config_get('unimacro', 'unimacrouserdirectory')
         if not unimacro_user_dir:
             logging.warning(f' strange error, installing unimacro seemed to word,'
@@ -1256,6 +1303,29 @@ def get_folder_dict(folderpath):
             
     return D
 
+def check_correct_python_version():
+    """the python version of the running instance should be equal to the registry
+       at install of the installer.
+       
+       when False, the interpreter should stop...
+    """
+    cur_python_dir = sys.exec_prefix
+    try:
+        wanted = loader.get_config_info_from_registry("pythonInstallPath")
+        wanted = os.path.normpath(wanted.strip('\\').strip())
+    except FileNotFoundError:
+        logging.error(f'Wanted python dir cannot be found from registry,\nCurrent is: {cur_python_dir}')
+        return False
+    if wanted.lower() == sys.exec_prefix.lower():
+        return True
+    mess = '\n'.join(["Current python version doesn't match wanted:\n",
+                     f'Current:  {cur_python_dir}',
+                     f'Wanted: {wanted}',
+                     '\nStop running this module/program'])
+    logging.error(mess)
+    sg.popup(mess, keep_on_top=True, title="Invalid Python Version")
+    return False
+
 
 if __name__ == "__main__":
     _nc = NatlinkConfig()
@@ -1264,4 +1334,6 @@ if __name__ == "__main__":
     _home_path = _nc.home_path
     _natlinkconfig_path = _nc.natlinkconfig_path
     print(f'natlinkconfig_path: {_natlinkconfig_path}')
+    # _result = sg.popup_yes_no('PPPPPPPplease answer Yes or No', title="Natlinkconfigfunctions test call")
+    # assert _result in ['Yes', 'No']
     pass

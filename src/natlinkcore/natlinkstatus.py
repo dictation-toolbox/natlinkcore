@@ -54,14 +54,11 @@ get_load_on_begin_utterance and set_load_on_begin_utterance:
     explicitly set this property.
     
 getPythonVersion:
-    return two character version, so without the dot! eg '38',
+    return the version string of the python package
     
-    Note, no indication of 32 bit version, so no '38-32'
-
-
 getUserDirectory: get the Natlink user directory, 
     Especially Dragonfly users will use this directory for putting their grammar files in.
-    Also users that have their own custom grammar files can use this user directory
+    Also users that have their own custom grammar files can use this user directory.
 
 getUnimacroDirectory: get the directory where the Unimacro system is.
     This directory is normally in the site-packages area of Python (name "unimacro"), but can be
@@ -73,7 +70,7 @@ getUnimacroUserDirectory: get the directory of Unimacro INI files, if not return
       the Unimacro user directory
 
 getUnimacroDataDirectory: get the directory where Unimacro grammars can store data, this should be per computer, and is set 
-      into the natlink_settingsdir area 
+      into the natlink_settingsdir area of %localappdata%/Natlink
 
 getUnimacroGrammarsDirectory: get the directory where Unimacro grammars are (by default) located in the python site-packagers directory 'unimacro'
 
@@ -207,15 +204,12 @@ class NatlinkStatus(metaclass=singleton.Singleton):
         return wVersion
     
     def getPythonVersion(self):
-        """get the version of python
+        """get the version string of python
 
-        Check if the version is supported on the "lower" side.
-        
-        length 2, without ".", so "38" etc.
         """
-        version = sys.version[:3]
-        version = version.replace(".", "")
-        return version
+        # version = sys.version[:3]
+        # version = version.replace(".", "")
+        return sys.version
 
     @property
     def user(self) -> str:

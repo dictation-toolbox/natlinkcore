@@ -10,6 +10,7 @@ import copy
 from pprint import pprint
 # import sysconfig
 import pytest
+import FreeSimpleGUI as sg
 from natlinkcore import config
 
 from natlinkcore.configure import natlinkconfig_cli
@@ -88,6 +89,7 @@ def test_check_elevated_mode_tt(cli, monkeypatch):
     #     return False
     monkeypatch.setattr(cli, 'am_elevated', return_true)
     monkeypatch.setattr(cli, 'want_elevated', return_true)
+    monkeypatch.setattr(sg, 'popup', return_true)
     result = cli.check_elevated_mode()
     assert result is True
     
@@ -101,6 +103,7 @@ def test_check_elevated_mode_ff(cli, monkeypatch):
         return False
     monkeypatch.setattr(cli, 'am_elevated', return_false)
     monkeypatch.setattr(cli, 'want_elevated', return_false)
+    monkeypatch.setattr(sg, 'popup', return_true)
     result = cli.check_elevated_mode()
     assert result is True
     
@@ -114,6 +117,8 @@ def test_check_elevated_mode_tf(cli, monkeypatch):
         return False
     monkeypatch.setattr(cli, 'am_elevated', return_true)
     monkeypatch.setattr(cli, 'want_elevated', return_false)
+    monkeypatch.setattr(sg, 'popup', return_true)
+
     result = cli.check_elevated_mode()
     assert result is False
     
@@ -127,6 +132,7 @@ def test_check_elevated_mode_ft(cli, monkeypatch):
         return False
     monkeypatch.setattr(cli, 'am_elevated', return_false)
     monkeypatch.setattr(cli, 'want_elevated', return_true)
+    monkeypatch.setattr(sg, 'popup', return_true)
     result = cli.check_elevated_mode()
     assert result is False
 
@@ -140,6 +146,7 @@ def test_check_elevated_mode_with_do_F(cli, monkeypatch):
         return False
     monkeypatch.setattr(cli, 'am_elevated', return_false)
     monkeypatch.setattr(cli, 'want_elevated', return_true)
+    monkeypatch.setattr(sg, 'popup', return_true)
     result = cli.check_elevated_mode()
     assert result is False
     # now force accepting am_elevated:
@@ -158,6 +165,7 @@ def test_check_elevated_mode_with_do_f(cli, monkeypatch):
         return False
     monkeypatch.setattr(cli, 'am_elevated', return_true)
     monkeypatch.setattr(cli, 'want_elevated', return_false)
+    monkeypatch.setattr(sg, 'popup', return_true)
     result = cli.check_elevated_mode()
     assert result is False
     # now force accepting am_elevated to false, non elevated
